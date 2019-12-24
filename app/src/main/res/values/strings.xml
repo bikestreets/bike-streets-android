@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">BikeStreets</string>
+    <string name="location_permission_denied">User denied permission for device location.</string>
 </resources>
