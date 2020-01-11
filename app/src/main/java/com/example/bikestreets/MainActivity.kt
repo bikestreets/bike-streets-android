@@ -9,12 +9,19 @@ import com.esri.arcgisruntime.mapping.view.MapView
 import com.esri.arcgisruntime.mapping.view.LocationDisplay
 import android.Manifest;
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.core.content.ContextCompat
 import 	androidx.core.app.ActivityCompat
 import android.widget.Toast
+import com.esri.arcgisruntime.layers.KmlLayer
+import com.esri.arcgisruntime.loadable.LoadStatus
+import com.esri.arcgisruntime.ogc.kml.KmlDataset
 
 class MainActivity : AppCompatActivity() {
     var mLocationDisplay: LocationDisplay ?= null
+    var mArcGISMap: ArcGISMap ?= null
+
+    val REPO_URL = "https://raw.githubusercontent.com/bikestreets/denver-map/master"
 
     fun dataSourceStatusChangedHandler(dataSourceStatusChangedEvent: LocationDisplay.DataSourceStatusChangedEvent) {
         if (dataSourceStatusChangedEvent.isStarted() || dataSourceStatusChangedEvent.getError() == null) return
@@ -54,15 +61,42 @@ class MainActivity : AppCompatActivity() {
         mLocationDisplay?.startAsync()
     }
 
+    fun addKmlLayers() {
+        var kmlMaster = KmlDataset("$REPO_URL/1-bikestreets-master-v0.3.kml")
+
+        // add listener to report load errors
+        kmlMaster.addDoneLoadingListener(fun () {
+            if (kmlMaster.loadStatus != LoadStatus.LOADED) {
+                var error = "Failed to load kml layer from URL: " + kmlMaster.loadError.message
+                Toast.makeText(this, error, Toast.LENGTH_LONG).show()
+                Log.e("addKmlLayers", error)
+            } else {
+                // press into a KML Layer
+                var kmlLayer = KmlLayer(kmlMaster)
+
+                // add layer to the map's set of operational layers
+                mArcGISMap?.operationalLayers?.add(kmlLayer)
+            }
+        })
+
+        // load from data source
+        kmlMaster.loadAsync()
+    }
+
+    fun setupArcGISMap() {
+        mArcGISMap = ArcGISMap(Basemap.Type.TOPOGRAPHIC, 87.740054, -104.946276, 16)
+
+        addKmlLayers()
+
+        mapView.map = mArcGISMap
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         // create a map with the BasemapType topographic
-        var map = ArcGISMap(Basemap.Type.TOPOGRAPHIC, 87.740054, -104.946276, 16)
-
-        // set the map to be displayed in the layout's MapView
-        mapView.map = map
+        setupArcGISMap()
 
         // setup Location Display
         setupLocationDisplay()
