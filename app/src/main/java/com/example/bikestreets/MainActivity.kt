@@ -22,6 +22,13 @@ class MainActivity : AppCompatActivity() {
     var mArcGISMap: ArcGISMap ?= null
 
     val REPO_URL = "https://raw.githubusercontent.com/bikestreets/denver-map/master"
+    val LAYERS_TO_LOAD = listOf(
+        "1-bikestreets-master-v0.3.kml",
+        "2-trails-master-v0.3.kml",
+        "3-bikelanes-master-v0.3.kml",
+        "4-bikesidewalks-master-v0.3.kml",
+        "5-walk-master-v0.3.kml"
+    )
 
     fun dataSourceStatusChangedHandler(dataSourceStatusChangedEvent: LocationDisplay.DataSourceStatusChangedEvent) {
         if (dataSourceStatusChangedEvent.isStarted() || dataSourceStatusChangedEvent.getError() == null) return
@@ -62,25 +69,28 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun addKmlLayers() {
-        var kmlMaster = KmlDataset("$REPO_URL/1-bikestreets-master-v0.3.kml")
+        for(layerName in LAYERS_TO_LOAD) {
+            // loop through all URIs to load
+            var dataset = KmlDataset("$REPO_URL/$layerName")
 
-        // add listener to report load errors
-        kmlMaster.addDoneLoadingListener(fun () {
-            if (kmlMaster.loadStatus != LoadStatus.LOADED) {
-                var error = "Failed to load kml layer from URL: " + kmlMaster.loadError.message
-                Toast.makeText(this, error, Toast.LENGTH_LONG).show()
-                Log.e("addKmlLayers", error)
-            } else {
-                // press into a KML Layer
-                var kmlLayer = KmlLayer(kmlMaster)
+            // add listener to report load errors
+            dataset.addDoneLoadingListener(fun () {
+                if (dataset.loadStatus != LoadStatus.LOADED) {
+                    var error = "Failed to load kml layer from URL: " + dataset.loadError.message
+                    Toast.makeText(this, error, Toast.LENGTH_LONG).show()
+                    Log.e("addKmlLayers", error)
+                } else {
+                    // press into a KML Layer
+                    var kmlLayer = KmlLayer(dataset)
 
-                // add layer to the map's set of operational layers
-                mArcGISMap?.operationalLayers?.add(kmlLayer)
-            }
-        })
+                    // add layer to the map's set of operational layers
+                    mArcGISMap?.operationalLayers?.add(kmlLayer)
+                }
+            })
 
-        // load from data source
-        kmlMaster.loadAsync()
+            // load from data source
+            dataset.loadAsync()
+        }
     }
 
     fun setupArcGISMap() {
