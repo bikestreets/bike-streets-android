@@ -76,16 +76,16 @@ class MainActivity : AppCompatActivity() {
         var locationComponent = mapboxMap.locationComponent
 
         // Activate with options
-        locationComponent.activateLocationComponent(locationComponentActivationOptions);
+        locationComponent.activateLocationComponent(locationComponentActivationOptions)
 
         // Enable to make component visible
-        locationComponent.setLocationComponentEnabled(true);
+        locationComponent.setLocationComponentEnabled(true)
 
         // Set the component's camera mode
-        locationComponent.setCameraMode(CameraMode.TRACKING);
+        locationComponent.setCameraMode(CameraMode.TRACKING, 10, 15.0, null, null, null)
 
         // Set the component's render mode
-        locationComponent.setRenderMode(RenderMode.COMPASS);
+        locationComponent.setRenderMode(RenderMode.COMPASS)
     }
 
     override fun onStart() {
