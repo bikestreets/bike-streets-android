@@ -1,14 +1,19 @@
 package com.example.bikestreets
 
-import android.os.Bundle;
-import com.mapbox.mapboxsdk.Mapbox;
-import com.mapbox.mapboxsdk.maps.MapView;
-import com.mapbox.mapboxsdk.maps.MapboxMap;
-import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
-import com.mapbox.mapboxsdk.maps.Style;
+import android.os.Bundle
+import android.graphics.Color
+import com.mapbox.mapboxsdk.Mapbox
+import com.mapbox.mapboxsdk.maps.MapView
+import com.mapbox.mapboxsdk.maps.MapboxMap
+import com.mapbox.mapboxsdk.location.modes.CameraMode
+import com.mapbox.mapboxsdk.location.modes.RenderMode
+
+import com.mapbox.mapboxsdk.maps.Style
 
 
-import androidx.annotation.NonNull;
+import com.mapbox.mapboxsdk.location.LocationComponentOptions
+import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
+
 import androidx.appcompat.app.AppCompatActivity;
 import com.mapbox.android.core.permissions.PermissionsManager
 import com.mapbox.android.core.permissions.PermissionsListener
@@ -29,6 +34,7 @@ class MainActivity : AppCompatActivity() {
         mapView?.getMapAsync { mapboxMap ->
             mapboxMap.setStyle(Style.MAPBOX_STREETS) {
                 // Map is set up and the style has loaded. Now you can add data or make other map adjustments
+                showDeviceLocation(mapboxMap, it)
             }
         }
 
@@ -54,6 +60,32 @@ class MainActivity : AppCompatActivity() {
             permissionsManager = PermissionsManager(permissionsListener)
             permissionsManager?.requestLocationPermissions(this)
         }
+    }
+
+    fun showDeviceLocation(mapboxMap: MapboxMap, style: Style) {
+
+        val locationComponentOptions = LocationComponentOptions
+            .builder(this)
+            .build()
+
+        val locationComponentActivationOptions = LocationComponentActivationOptions
+            .builder(this, style)
+            .locationComponentOptions(locationComponentOptions)
+            .build()
+
+        var locationComponent = mapboxMap.locationComponent
+
+        // Activate with options
+        locationComponent.activateLocationComponent(locationComponentActivationOptions);
+
+        // Enable to make component visible
+        locationComponent.setLocationComponentEnabled(true);
+
+        // Set the component's camera mode
+        locationComponent.setCameraMode(CameraMode.TRACKING);
+
+        // Set the component's render mode
+        locationComponent.setRenderMode(RenderMode.COMPASS);
     }
 
     override fun onStart() {
