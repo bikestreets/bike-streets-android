@@ -83,7 +83,7 @@ class MainActivity : AppCompatActivity() {
                 mAssetManager.open("$root/$fileName")
             )
 
-            createLineLayer(fileName, featureCollection, mapStyle)
+            renderFeatureCollection(fileName, featureCollection, mapStyle)
         }
 
     }
@@ -110,23 +110,25 @@ class MainActivity : AppCompatActivity() {
         return Color.parseColor(hexColor)
     }
 
-    fun createLineLayer(layerName: String, featureCollection: FeatureCollection, mapStyle: Style) {
+    fun createLineLayer(layerName: String): LineLayer {
+        val lineColor = colorForLayer(layerName)
+
+        return LineLayer("$layerName-id", layerName)
+            .withProperties(
+                PropertyFactory.lineCap(Property.LINE_CAP_SQUARE),
+                PropertyFactory.lineJoin(Property.LINE_JOIN_MITER),
+                PropertyFactory.lineOpacity(.7f),
+                PropertyFactory.lineWidth(7f),
+                PropertyFactory.lineColor(lineColor))
+    }
+
+    fun renderFeatureCollection(layerName: String, featureCollection: FeatureCollection, mapStyle: Style) {
         if(featureCollection.features() != null) {
+            // add the data itself to mapStyle
             mapStyle.addSource(GeoJsonSource(layerName, featureCollection))
 
-            val lineColor = colorForLayer(layerName)
-
-            // The layer properties for our line. This is where we make the line dotted, set the
-            // color, etc.
-            var lineLayer = LineLayer("$layerName-id", layerName)
-                .withProperties(
-                    PropertyFactory.lineCap(Property.LINE_CAP_SQUARE),
-                    PropertyFactory.lineJoin(Property.LINE_JOIN_MITER),
-                    PropertyFactory.lineOpacity(.7f),
-                    PropertyFactory.lineWidth(7f),
-                    PropertyFactory.lineColor(lineColor))
-
-            mapStyle.addLayer(lineLayer)
+            // create a line layer that reads the GeoJSON data that we just added
+            mapStyle.addLayer(createLineLayer(layerName))
         }
     }
 
