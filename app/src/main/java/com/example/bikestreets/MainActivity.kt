@@ -94,9 +94,27 @@ class MainActivity : AppCompatActivity() {
         return FeatureCollection.fromJson(geoJsonString)
     }
 
+    fun colorForLayer(layerName: String): Int {
+        // This is lazy coupling and will break, but I want to see it work as a proof-of-concept.
+        // A more flexible refactor involves inspecting the GeoJson file itself to get the layer
+        // name, then matching the color based on that (or we can save the layer color as metadata.)
+        val hexColor = when(layerName) {
+            "1-bikestreets-master-v0.3.geojson" -> "#061f78"
+            "3-bikelanes-master-v0.3.geojson" -> "#b00d0d"
+            "5-walk-master-v0.3.geojson" -> "#c9c219"
+            "2-trails-master-v0.3.geojson" -> "#eea800"
+            "4-bikesidewalks-master-v0.3.geojson" -> "#1500f2"
+            else -> "#000000"
+        }
+
+        return Color.parseColor(hexColor)
+    }
+
     fun createLineLayer(layerName: String, featureCollection: FeatureCollection, mapStyle: Style) {
         if(featureCollection.features() != null) {
             mapStyle.addSource(GeoJsonSource(layerName, featureCollection))
+
+            val lineColor = colorForLayer(layerName)
 
             // The layer properties for our line. This is where we make the line dotted, set the
             // color, etc.
@@ -106,7 +124,7 @@ class MainActivity : AppCompatActivity() {
                     PropertyFactory.lineJoin(Property.LINE_JOIN_MITER),
                     PropertyFactory.lineOpacity(.7f),
                     PropertyFactory.lineWidth(7f),
-                    PropertyFactory.lineColor(Color.parseColor("#3bb2d0")))
+                    PropertyFactory.lineColor(lineColor))
 
             mapStyle.addLayer(lineLayer)
         }
