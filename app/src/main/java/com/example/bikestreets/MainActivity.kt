@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun showMapLayers(activity: MainActivity, mapStyle: Style) {
+    private fun showMapLayers(activity: MainActivity, mapStyle: Style) {
         var mAssetManager: AssetManager = activity.getAssets()
         val root: String = "geojson"
 
@@ -88,13 +88,13 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun featureCollectionFromStream(fileStream: InputStream): FeatureCollection {
+    private fun featureCollectionFromStream(fileStream: InputStream): FeatureCollection {
         var geoJsonString = convertStreamToString(fileStream)
 
         return FeatureCollection.fromJson(geoJsonString)
     }
 
-    fun colorForLayer(layerName: String): Int {
+    private fun colorForLayer(layerName: String): Int {
         // This is lazy coupling and will break, but I want to see it work as a proof-of-concept.
         // A more flexible refactor involves inspecting the GeoJson file itself to get the layer
         // name, then matching the color based on that (or we can save the layer color as metadata.)
@@ -110,7 +110,7 @@ class MainActivity : AppCompatActivity() {
         return Color.parseColor(hexColor)
     }
 
-    fun createLineLayer(layerName: String): LineLayer {
+    private fun createLineLayer(layerName: String): LineLayer {
         val lineColor = colorForLayer(layerName)
 
         return LineLayer("$layerName-id", layerName)
@@ -122,7 +122,7 @@ class MainActivity : AppCompatActivity() {
                 PropertyFactory.lineColor(lineColor))
     }
 
-    fun renderFeatureCollection(layerName: String, featureCollection: FeatureCollection, mapStyle: Style) {
+    private fun renderFeatureCollection(layerName: String, featureCollection: FeatureCollection, mapStyle: Style) {
         if(featureCollection.features() != null) {
             // add the data itself to mapStyle
             mapStyle.addSource(GeoJsonSource(layerName, featureCollection))
@@ -132,12 +132,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun convertStreamToString(input: InputStream): String {
+    private fun convertStreamToString(input: InputStream): String {
         val scanner = Scanner(input).useDelimiter("\\A")
         return if (scanner.hasNext()) scanner.next() else ""
     }
 
-    fun showDeviceLocation(mapboxMap: MapboxMap, style: Style) {
+    private fun showDeviceLocation(mapboxMap: MapboxMap, style: Style) {
 
         val locationComponentOptions = LocationComponentOptions
             .builder(this)
