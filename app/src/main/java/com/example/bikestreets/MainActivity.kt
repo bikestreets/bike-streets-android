@@ -157,7 +157,7 @@ class MainActivity : AppCompatActivity() {
         locationComponent.setLocationComponentEnabled(true)
 
         // Set the component's camera mode
-        locationComponent.setCameraMode(CameraMode.TRACKING, 10, 15.0, null, null, null)
+        locationComponent.setCameraMode(CameraMode.TRACKING, 10, 17.0, null, null, null)
 
         // Set the component's render mode
         locationComponent.setRenderMode(RenderMode.COMPASS)
