@@ -26,6 +26,8 @@ import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
 import java.util.*
 
+import android.widget.Button
+import android.widget.Toast
 
 class MainActivity : AppCompatActivity() {
     private var mapView: MapView? = null
@@ -47,6 +49,15 @@ class MainActivity : AppCompatActivity() {
 
                 // add geojson layers
                 showMapLayers(this, it)
+
+                // recenter item
+                val btn_click_me = findViewById<Button>(R.id.follow_rider)
+                btn_click_me.setOnClickListener {
+                    // your code to perform when the user clicks on the button
+                    var locationComponent = mapboxMap.locationComponent
+                    locationComponent?.cameraMode = CameraMode.TRACKING
+                    Toast.makeText(this@MainActivity, "Sweet, following your position", Toast.LENGTH_SHORT).show()
+                }
             }
         }
 
