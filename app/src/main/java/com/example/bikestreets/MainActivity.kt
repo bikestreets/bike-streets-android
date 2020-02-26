@@ -24,6 +24,7 @@ import com.mapbox.mapboxsdk.location.modes.RenderMode
 import com.mapbox.mapboxsdk.maps.MapView
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
+
 import java.util.*
 
 import android.widget.Button
@@ -55,7 +56,7 @@ class MainActivity : AppCompatActivity() {
                 btn_click_me.setOnClickListener {
                     // your code to perform when the user clicks on the button
                     var locationComponent = mapboxMap.locationComponent
-                    locationComponent?.cameraMode = CameraMode.TRACKING
+                    locationComponent?.setCameraMode(CameraMode.TRACKING, 10, 17.0, null, null, null)
                     Toast.makeText(this@MainActivity, "Sweet, following your position", Toast.LENGTH_SHORT).show()
                 }
             }
