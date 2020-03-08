@@ -28,7 +28,7 @@ import com.mapbox.mapboxsdk.maps.Style
 import java.util.*
 
 import android.widget.Button
-import android.widget.Toast
+import com.mapbox.mapboxsdk.location.LocationComponent
 
 class MainActivity : AppCompatActivity() {
     private var mapView: MapView? = null
@@ -55,9 +55,7 @@ class MainActivity : AppCompatActivity() {
                 val btn_click_me = findViewById<Button>(R.id.follow_rider)
                 btn_click_me.setOnClickListener {
                     // your code to perform when the user clicks on the button
-                    var locationComponent = mapboxMap.locationComponent
-                    locationComponent?.setCameraMode(CameraMode.TRACKING, 10, 17.0, null, null, null)
-                    Toast.makeText(this@MainActivity, "Sweet, following your position", Toast.LENGTH_SHORT).show()
+                    setCameraMode(mapboxMap.locationComponent)
                 }
             }
         }
@@ -84,6 +82,10 @@ class MainActivity : AppCompatActivity() {
             permissionsManager = PermissionsManager(permissionsListener)
             permissionsManager?.requestLocationPermissions(this)
         }
+    }
+
+    private fun setCameraMode(locationComponent: LocationComponent ){
+        locationComponent?.setCameraMode(CameraMode.TRACKING, 10, 17.0, null, null, null)
     }
 
     private fun showMapLayers(activity: MainActivity, mapStyle: Style) {
@@ -169,8 +171,7 @@ class MainActivity : AppCompatActivity() {
         locationComponent.setLocationComponentEnabled(true)
 
         // Set the component's camera mode
-        locationComponent.setCameraMode(CameraMode.TRACKING, 10, 17.0, null, null, null)
-
+        setCameraMode(mapboxMap.locationComponent)
         // Set the component's render mode
         locationComponent.setRenderMode(RenderMode.COMPASS)
     }
