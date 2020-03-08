@@ -13,6 +13,7 @@ import android.graphics.Color
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import com.mapbox.android.core.permissions.PermissionsListener
 import com.mapbox.android.core.permissions.PermissionsManager
@@ -37,6 +38,9 @@ class MainActivity : AppCompatActivity() {
         Mapbox.getInstance(this, "pk.eyJ1Ijoianpvcm5vdyIsImEiOiJjazVsOWhkc2YwbWgwM2xuNXJvdnlhN2o3In0.tW5TbWlDY-ciFrYSv6qTOA")
 
         setContentView(R.layout.activity_main)
+
+        // keep the device from falling asleep
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         mapView = findViewById(R.id.mapView)
         mapView?.onCreate(savedInstanceState)
