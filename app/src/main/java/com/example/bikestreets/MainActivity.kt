@@ -25,8 +25,11 @@ import com.mapbox.mapboxsdk.location.modes.RenderMode
 import com.mapbox.mapboxsdk.maps.MapView
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
+
 import java.util.*
 
+import android.widget.ImageView
+import com.mapbox.mapboxsdk.location.LocationComponent
 
 class MainActivity : AppCompatActivity() {
     private var mapView: MapView? = null
@@ -51,6 +54,13 @@ class MainActivity : AppCompatActivity() {
 
                 // add geojson layers
                 showMapLayers(this, it)
+
+                // recenter item
+                val btn_click_me = findViewById<ImageView>(R.id.follow_rider)
+                btn_click_me.setOnClickListener {
+                    // your code to perform when the user clicks on the button
+                    setCameraMode(mapboxMap.locationComponent)
+                }
             }
         }
 
@@ -76,6 +86,10 @@ class MainActivity : AppCompatActivity() {
             permissionsManager = PermissionsManager(permissionsListener)
             permissionsManager?.requestLocationPermissions(this)
         }
+    }
+
+    private fun setCameraMode(locationComponent: LocationComponent ){
+        locationComponent?.setCameraMode(CameraMode.TRACKING, 10, 17.0, null, null, null)
     }
 
     private fun showMapLayers(activity: MainActivity, mapStyle: Style) {
@@ -161,8 +175,7 @@ class MainActivity : AppCompatActivity() {
         locationComponent.setLocationComponentEnabled(true)
 
         // Set the component's camera mode
-        locationComponent.setCameraMode(CameraMode.TRACKING, 10, 15.0, null, null, null)
-
+        setCameraMode(mapboxMap.locationComponent)
         // Set the component's render mode
         locationComponent.setRenderMode(RenderMode.COMPASS)
     }
