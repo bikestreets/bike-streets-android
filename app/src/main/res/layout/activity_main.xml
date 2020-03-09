@@ -17,7 +17,7 @@
         tools:layout_conversion_absoluteWidth="411dp" />
 
 
-    <ImageButton
+    <ImageView
         android:id="@+id/follow_rider"
         android:layout_width="50dp"
         android:layout_height="50dp"
@@ -25,11 +25,11 @@
         android:layout_marginEnd="16dp"
         android:layout_marginRight="16dp"
         android:layout_marginBottom="16dp"
+        android:padding="10dp"
         android:gravity="center"
-        android:src="@drawable/ic_nearme"
+        app:srcCompat="@drawable/ic_nearme"
         android:background="@drawable/circle"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 </FrameLayout>
 
-<!--    -->

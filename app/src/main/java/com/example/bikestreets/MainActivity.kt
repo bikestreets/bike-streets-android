@@ -27,7 +27,7 @@ import com.mapbox.mapboxsdk.maps.Style
 
 import java.util.*
 
-import android.widget.Button
+import android.widget.ImageView
 import com.mapbox.mapboxsdk.location.LocationComponent
 
 class MainActivity : AppCompatActivity() {
@@ -52,7 +52,7 @@ class MainActivity : AppCompatActivity() {
                 showMapLayers(this, it)
 
                 // recenter item
-                val btn_click_me = findViewById<Button>(R.id.follow_rider)
+                val btn_click_me = findViewById<ImageView>(R.id.follow_rider)
                 btn_click_me.setOnClickListener {
                     // your code to perform when the user clicks on the button
                     setCameraMode(mapboxMap.locationComponent)
