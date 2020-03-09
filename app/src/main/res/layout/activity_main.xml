@@ -17,16 +17,18 @@
         tools:layout_conversion_absoluteWidth="411dp" />
 
 
-    <Button
+    <ImageButton
         android:id="@+id/follow_rider"
-        android:text="Follow My Location"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:layout_gravity="bottom|right"
-        android:layout_marginEnd="16dp"
+        android:layout_marginEnd="32dp"
         android:layout_marginRight="16dp"
         android:layout_marginBottom="16dp"
+        android:gravity="center"
+        android:src="@drawable/ic_nearme"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent" />
 </FrameLayout>
 
+<!--    -->
