@@ -103,11 +103,11 @@ class MainActivity : AppCompatActivity() {
         // A more flexible refactor involves inspecting the GeoJson file itself to get the layer
         // name, then matching the color based on that (or we can save the layer color as metadata.)
         val hexColor = when(layerName) {
-            "1-bikestreets-master-v0.3.geojson" -> "#061f78"
-            "3-bikelanes-master-v0.3.geojson" -> "#b00d0d"
-            "5-walk-master-v0.3.geojson" -> "#c9c219"
-            "2-trails-master-v0.3.geojson" -> "#eea800"
-            "4-bikesidewalks-master-v0.3.geojson" -> "#1500f2"
+            "1-bikestreets-master-v0.3.geojson" -> "#0000FF"
+            "3-bikelanes-master-v0.3.geojson" -> "#000000"
+            "5-walk-master-v0.3.geojson" -> "#FF0000"
+            "2-trails-master-v0.3.geojson" -> "#008000"
+            "4-bikesidewalks-master-v0.3.geojson" -> "#FF0000"
             else -> "#000000"
         }
 
