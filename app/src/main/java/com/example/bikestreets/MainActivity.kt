@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity() {
         mapView = findViewById(R.id.mapView)
         mapView?.onCreate(savedInstanceState)
         mapView?.getMapAsync { mapboxMap ->
-            mapboxMap.setStyle(Style.MAPBOX_STREETS) {
+            mapboxMap.setStyle(Style.Builder().fromUri("asset://stylejson/style.json")) {
                 // Map is set up and the style has loaded. Now you can add data or make other map adjustments
                 showDeviceLocation(mapboxMap, it)
 
