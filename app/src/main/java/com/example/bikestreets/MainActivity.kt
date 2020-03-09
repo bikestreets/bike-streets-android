@@ -119,8 +119,8 @@ class MainActivity : AppCompatActivity() {
 
         return LineLayer("$layerName-id", layerName)
             .withProperties(
-                PropertyFactory.lineCap(Property.LINE_CAP_SQUARE),
-                PropertyFactory.lineJoin(Property.LINE_JOIN_MITER),
+                PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
+                PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
                 PropertyFactory.lineOpacity(.7f),
                 PropertyFactory.lineWidth(7f),
                 PropertyFactory.lineColor(lineColor))
