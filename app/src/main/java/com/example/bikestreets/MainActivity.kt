@@ -9,6 +9,10 @@ import com.mapbox.geojson.FeatureCollection
 import com.mapbox.mapboxsdk.style.layers.LineLayer
 import com.mapbox.mapboxsdk.style.layers.Property
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory
+import com.mapbox.mapboxsdk.style.expressions.Expression.interpolate
+import com.mapbox.mapboxsdk.style.expressions.Expression.linear
+import com.mapbox.mapboxsdk.style.expressions.Expression.zoom
+import com.mapbox.mapboxsdk.style.expressions.Expression.stop
 import android.graphics.Color
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 
@@ -165,9 +169,11 @@ class MainActivity : AppCompatActivity() {
                 PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
                 PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
                 PropertyFactory.lineOpacity(.7f),
-                PropertyFactory.lineWidth(7f),
+                PropertyFactory.lineWidth(interpolate(linear(), zoom(),
+                    stop(8, .2f),
+                    stop(16, 10f))),
                 PropertyFactory.lineColor(lineColor))
-    }
+}
 
     private fun renderFeatureCollection(layerName: String, featureCollection: FeatureCollection, mapStyle: Style) {
         if(featureCollection.features() != null) {
