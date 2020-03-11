@@ -9,10 +9,15 @@ import com.mapbox.geojson.FeatureCollection
 import com.mapbox.mapboxsdk.style.layers.LineLayer
 import com.mapbox.mapboxsdk.style.layers.Property
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory
+import com.mapbox.mapboxsdk.style.expressions.Expression.interpolate
+import com.mapbox.mapboxsdk.style.expressions.Expression.linear
+import com.mapbox.mapboxsdk.style.expressions.Expression.zoom
+import com.mapbox.mapboxsdk.style.expressions.Expression.stop
 import android.graphics.Color
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 
 import android.os.Bundle
+import android.view.View
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import com.mapbox.android.core.permissions.PermissionsListener
@@ -25,12 +30,20 @@ import com.mapbox.mapboxsdk.location.modes.RenderMode
 import com.mapbox.mapboxsdk.maps.MapView
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
+
 import java.util.*
 
+import android.widget.ImageView
+import com.mapbox.mapboxsdk.camera.CameraPosition
+import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
+import com.mapbox.mapboxsdk.geometry.LatLng
+import com.mapbox.mapboxsdk.location.LocationComponent
 
 class MainActivity : AppCompatActivity() {
     private var mapView: MapView? = null
     private var permissionsManager: PermissionsManager ?= null
+    private var followRiderButton: ImageView ?= null
+    private val activity: MainActivity = this
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,10 +55,17 @@ class MainActivity : AppCompatActivity() {
         // keep the device from falling asleep
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
+        // save off recentering button reference into global so that it can be used later
+        followRiderButton = findViewById<ImageView>(R.id.follow_rider)
+        followRiderButton?.setVisibility(View.INVISIBLE);
+
         mapView = findViewById(R.id.mapView)
         mapView?.onCreate(savedInstanceState)
         mapView?.getMapAsync { mapboxMap ->
             mapboxMap.setStyle(Style.Builder().fromUri("asset://stylejson/style.json")) {
+                // default the map to a zoomed in view of the city
+                centerMapDefault(mapboxMap)
+
                 // Map is set up and the style has loaded. Now you can add data or make other map adjustments
                 showDeviceLocation(mapboxMap, it)
 
@@ -53,29 +73,56 @@ class MainActivity : AppCompatActivity() {
                 showMapLayers(this, it)
             }
         }
+    }
 
-        if (PermissionsManager.areLocationPermissionsGranted(this)){
-            // Permission sensitive logic called here, such as activating the Maps SDK's LocationComponent to show the device's location
+    private fun enableFollowRiderButton(mapboxMap: MapboxMap) {
+        // show the button
+        followRiderButton?.setVisibility(View.VISIBLE)
+
+        // enable the button's functionality
+        followRiderButton?.setOnClickListener {
+            setCameraMode(mapboxMap.locationComponent)
+        }
+
+    }
+
+    private fun centerMapDefault(mapboxMap: MapboxMap) {
+        val position = CameraPosition.Builder()
+            .target(LatLng(39.7326381,-104.9687837))
+            .zoom(12.0)
+            .tilt(0.0)
+            .build()
+
+        val cameraUpdate = CameraUpdateFactory.newCameraPosition(position)
+
+        mapboxMap.moveCamera(cameraUpdate)
+    }
+
+    private fun showDeviceLocation(mapboxMap: MapboxMap, style: Style) {
+        if (PermissionsManager.areLocationPermissionsGranted(activity)){
+            enableFollowRiderButton(mapboxMap)
+            drawLocationOnMap(mapboxMap, style)
         } else {
             var permissionsListener: PermissionsListener = object : PermissionsListener {
-                override fun onExplanationNeeded(permissionsToExplain: List<String>) {
-                    // provides explanation of why permission is required
-                }
+                override fun onExplanationNeeded(permissionsToExplain: List<String>) { }
 
                 override fun onPermissionResult(granted: Boolean) {
                     if (granted) {
-                        // Permission sensitive logic called here, such as activating the Maps SDK's LocationComponent to show the device's location
-
-
+                        enableFollowRiderButton(mapboxMap)
+                        drawLocationOnMap(mapboxMap, style)
                     } else {
-                        // User denied the permission
+                        // User denied the permission: don't put a point on the map at all
                     }
                 }
             }
 
             permissionsManager = PermissionsManager(permissionsListener)
-            permissionsManager?.requestLocationPermissions(this)
+            permissionsManager?.requestLocationPermissions(activity)
         }
+    }
+
+    private fun setCameraMode(locationComponent: LocationComponent ){
+        locationComponent?.setCameraMode(CameraMode.TRACKING, 10, 17.0, null, null, null)
     }
 
     private fun showMapLayers(activity: MainActivity, mapStyle: Style) {
@@ -103,11 +150,11 @@ class MainActivity : AppCompatActivity() {
         // A more flexible refactor involves inspecting the GeoJson file itself to get the layer
         // name, then matching the color based on that (or we can save the layer color as metadata.)
         val hexColor = when(layerName) {
-            "1-bikestreets-master-v0.3.geojson" -> "#061f78"
-            "3-bikelanes-master-v0.3.geojson" -> "#b00d0d"
-            "5-walk-master-v0.3.geojson" -> "#c9c219"
-            "2-trails-master-v0.3.geojson" -> "#eea800"
-            "4-bikesidewalks-master-v0.3.geojson" -> "#1500f2"
+            "1-bikestreets-master-v0.3.geojson" -> "#0000FF"
+            "3-bikelanes-master-v0.3.geojson" -> "#000000"
+            "5-walk-master-v0.3.geojson" -> "#FF0000"
+            "2-trails-master-v0.3.geojson" -> "#008000"
+            "4-bikesidewalks-master-v0.3.geojson" -> "#FF0000"
             else -> "#000000"
         }
 
@@ -119,12 +166,14 @@ class MainActivity : AppCompatActivity() {
 
         return LineLayer("$layerName-id", layerName)
             .withProperties(
-                PropertyFactory.lineCap(Property.LINE_CAP_SQUARE),
-                PropertyFactory.lineJoin(Property.LINE_JOIN_MITER),
+                PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
+                PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
                 PropertyFactory.lineOpacity(.7f),
-                PropertyFactory.lineWidth(7f),
+                PropertyFactory.lineWidth(interpolate(linear(), zoom(),
+                    stop(8, .2f),
+                    stop(16, 10f))),
                 PropertyFactory.lineColor(lineColor))
-    }
+}
 
     private fun renderFeatureCollection(layerName: String, featureCollection: FeatureCollection, mapStyle: Style) {
         if(featureCollection.features() != null) {
@@ -141,8 +190,8 @@ class MainActivity : AppCompatActivity() {
         return if (scanner.hasNext()) scanner.next() else ""
     }
 
-    private fun showDeviceLocation(mapboxMap: MapboxMap, style: Style) {
 
+    private fun drawLocationOnMap(mapboxMap: MapboxMap, style: Style) {
         val locationComponentOptions = LocationComponentOptions
             .builder(this)
             .build()
@@ -161,8 +210,7 @@ class MainActivity : AppCompatActivity() {
         locationComponent.setLocationComponentEnabled(true)
 
         // Set the component's camera mode
-        locationComponent.setCameraMode(CameraMode.TRACKING, 10, 15.0, null, null, null)
-
+        setCameraMode(mapboxMap.locationComponent)
         // Set the component's render mode
         locationComponent.setRenderMode(RenderMode.COMPASS)
     }
