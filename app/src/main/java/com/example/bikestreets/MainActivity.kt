@@ -13,6 +13,7 @@ import android.graphics.Color
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 
 import android.os.Bundle
+import android.view.View
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import com.mapbox.android.core.permissions.PermissionsListener
@@ -29,11 +30,17 @@ import com.mapbox.mapboxsdk.maps.Style
 import java.util.*
 
 import android.widget.ImageView
+import com.mapbox.mapboxsdk.camera.CameraPosition
+import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
+import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.location.LocationComponent
 
 class MainActivity : AppCompatActivity() {
     private var mapView: MapView? = null
     private var permissionsManager: PermissionsManager ?= null
+    private var locationPermissionsGranted: Boolean = false
+    private var followRiderButton: ImageView ?= null
+    private val activity: MainActivity = this
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,46 +52,69 @@ class MainActivity : AppCompatActivity() {
         // keep the device from falling asleep
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
+        // save off recentering button reference into global so that it can be used later
+        followRiderButton = findViewById<ImageView>(R.id.follow_rider)
+        followRiderButton?.setVisibility(View.INVISIBLE);
+
         mapView = findViewById(R.id.mapView)
         mapView?.onCreate(savedInstanceState)
         mapView?.getMapAsync { mapboxMap ->
             mapboxMap.setStyle(Style.MAPBOX_STREETS) {
+                // default the map to a zoomed in view of the city
+                centerMapDefault(mapboxMap)
+
                 // Map is set up and the style has loaded. Now you can add data or make other map adjustments
                 showDeviceLocation(mapboxMap, it)
 
                 // add geojson layers
                 showMapLayers(this, it)
-
-                // recenter item
-                val btn_click_me = findViewById<ImageView>(R.id.follow_rider)
-                btn_click_me.setOnClickListener {
-                    // your code to perform when the user clicks on the button
-                    setCameraMode(mapboxMap.locationComponent)
-                }
             }
         }
+    }
 
-        if (PermissionsManager.areLocationPermissionsGranted(this)){
-            // Permission sensitive logic called here, such as activating the Maps SDK's LocationComponent to show the device's location
+    private fun enableFollowRiderButton(mapboxMap: MapboxMap) {
+        // show the button
+        followRiderButton?.setVisibility(View.VISIBLE)
+
+        // enable the button's functionality
+        followRiderButton?.setOnClickListener {
+            setCameraMode(mapboxMap.locationComponent)
+        }
+
+    }
+
+    private fun centerMapDefault(mapboxMap: MapboxMap) {
+        val position = CameraPosition.Builder()
+            .target(LatLng(39.7326381,-104.9687837))
+            .zoom(12.0)
+            .tilt(0.0)
+            .build()
+
+        val cameraUpdate = CameraUpdateFactory.newCameraPosition(position)
+
+        mapboxMap.moveCamera(cameraUpdate)
+    }
+
+    private fun showDeviceLocation(mapboxMap: MapboxMap, style: Style) {
+        if (PermissionsManager.areLocationPermissionsGranted(activity)){
+            enableFollowRiderButton(mapboxMap)
+            drawLocationOnMap(mapboxMap, style)
         } else {
             var permissionsListener: PermissionsListener = object : PermissionsListener {
-                override fun onExplanationNeeded(permissionsToExplain: List<String>) {
-                    // provides explanation of why permission is required
-                }
+                override fun onExplanationNeeded(permissionsToExplain: List<String>) { }
 
                 override fun onPermissionResult(granted: Boolean) {
                     if (granted) {
-                        // Permission sensitive logic called here, such as activating the Maps SDK's LocationComponent to show the device's location
-
-
+                        enableFollowRiderButton(mapboxMap)
+                        drawLocationOnMap(mapboxMap, style)
                     } else {
-                        // User denied the permission
+                        // User denied the permission: don't put a point on the map at all
                     }
                 }
             }
 
             permissionsManager = PermissionsManager(permissionsListener)
-            permissionsManager?.requestLocationPermissions(this)
+            permissionsManager?.requestLocationPermissions(activity)
         }
     }
 
@@ -155,8 +185,8 @@ class MainActivity : AppCompatActivity() {
         return if (scanner.hasNext()) scanner.next() else ""
     }
 
-    private fun showDeviceLocation(mapboxMap: MapboxMap, style: Style) {
 
+    private fun drawLocationOnMap(mapboxMap: MapboxMap, style: Style) {
         val locationComponentOptions = LocationComponentOptions
             .builder(this)
             .build()
