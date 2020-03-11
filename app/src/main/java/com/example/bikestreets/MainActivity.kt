@@ -38,7 +38,6 @@ import com.mapbox.mapboxsdk.location.LocationComponent
 class MainActivity : AppCompatActivity() {
     private var mapView: MapView? = null
     private var permissionsManager: PermissionsManager ?= null
-    private var locationPermissionsGranted: Boolean = false
     private var followRiderButton: ImageView ?= null
     private val activity: MainActivity = this
 
