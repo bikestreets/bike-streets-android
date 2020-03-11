@@ -62,7 +62,7 @@ class MainActivity : AppCompatActivity() {
         mapView = findViewById(R.id.mapView)
         mapView?.onCreate(savedInstanceState)
         mapView?.getMapAsync { mapboxMap ->
-            mapboxMap.setStyle(Style.MAPBOX_STREETS) {
+            mapboxMap.setStyle(Style.Builder().fromUri("asset://stylejson/style.json")) {
                 // default the map to a zoomed in view of the city
                 centerMapDefault(mapboxMap)
 
