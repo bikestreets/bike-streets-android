@@ -34,6 +34,7 @@ import com.mapbox.mapboxsdk.maps.Style
 import java.util.*
 
 import android.widget.ImageView
+import android.widget.TextView
 import com.mapbox.mapboxsdk.camera.CameraPosition
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
 import com.mapbox.mapboxsdk.geometry.LatLng
@@ -55,6 +56,9 @@ class MainActivity : AppCompatActivity() {
         // keep the device from falling asleep
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
+        // launch terms of use if unsigned
+        launchTermsOfUse()
+
         // save off recentering button reference into global so that it can be used later
         followRiderButton = findViewById<ImageView>(R.id.follow_rider)
         followRiderButton?.setVisibility(View.INVISIBLE);
@@ -73,6 +77,15 @@ class MainActivity : AppCompatActivity() {
                 showMapLayers(this, it)
             }
         }
+    }
+
+    private fun launchTermsOfUse() {
+        val mAssetManager = activity.assets
+        val termsOfUseStream = mAssetManager.open("terms_of_use/terms_of_use.txt")
+        val termsOfUseText = convertStreamToString(termsOfUseStream)
+
+        findViewById<TextView>(R.id.terms_of_use)
+            .setText(termsOfUseText)
     }
 
     private fun enableFollowRiderButton(mapboxMap: MapboxMap) {
@@ -126,8 +139,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showMapLayers(activity: MainActivity, mapStyle: Style) {
-        var mAssetManager: AssetManager = activity.getAssets()
         val root: String = "geojson"
+        val mAssetManager = activity.assets
 
         mAssetManager.list("$root/").forEach { fileName ->
             var featureCollection = featureCollectionFromStream(
@@ -150,7 +163,7 @@ class MainActivity : AppCompatActivity() {
         // A more flexible refactor involves inspecting the GeoJson file itself to get the layer
         // name, then matching the color based on that (or we can save the layer color as metadata.)
         val hexColor = when(layerName) {
-            "1-bikestreets-master-v0.3.geojson" -> "#0000FF"
+            "terms_of_use.txt" -> "#0000FF"
             "3-bikelanes-master-v0.3.geojson" -> "#000000"
             "5-walk-master-v0.3.geojson" -> "#FF0000"
             "2-trails-master-v0.3.geojson" -> "#008000"
