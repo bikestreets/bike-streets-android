@@ -19,6 +19,7 @@ import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
+import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import com.mapbox.android.core.permissions.PermissionsListener
 import com.mapbox.android.core.permissions.PermissionsManager
@@ -34,6 +35,7 @@ import com.mapbox.mapboxsdk.maps.Style
 import java.util.*
 
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import com.mapbox.mapboxsdk.camera.CameraPosition
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
@@ -86,6 +88,13 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<TextView>(R.id.terms_of_use)
             .setText(termsOfUseText)
+
+        // activate accept button
+        findViewById<Button>(R.id.terms_of_use_accept)
+            .setOnClickListener {
+                // hide terms of use window
+                findViewById<LinearLayout>(R.id.terms_of_use_window).visibility = View.INVISIBLE
+            }
     }
 
     private fun enableFollowRiderButton(mapboxMap: MapboxMap) {

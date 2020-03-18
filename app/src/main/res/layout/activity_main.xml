@@ -63,6 +63,7 @@
             <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:id="@+id/terms_of_use_accept"
                 android:text="Accept" />
         </LinearLayout>
     </ScrollView>
