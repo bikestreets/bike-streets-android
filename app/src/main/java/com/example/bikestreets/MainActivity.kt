@@ -76,7 +76,6 @@ class MainActivity : AppCompatActivity() {
 
         // save off recentering button reference into global so that it can be used later
         followRiderButton = findViewById<ImageView>(R.id.follow_rider)
-        followRiderButton?.setVisibility(View.INVISIBLE);
 
         mapView = findViewById(R.id.mapView)
         mapView?.onCreate(savedInstanceState)
