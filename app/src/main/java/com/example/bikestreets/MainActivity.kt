@@ -1,6 +1,7 @@
 package com.example.bikestreets
 
 // used to handle geojson loading
+import android.content.Context
 import java.io.InputStream
 import android.content.res.AssetManager
 
@@ -17,9 +18,15 @@ import android.graphics.Color
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 
 import android.os.Bundle
+
+// Views Components
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
+import android.widget.ScrollView
+import android.widget.ImageView
+import android.widget.TextView
+
 import androidx.appcompat.app.AppCompatActivity
 import com.mapbox.android.core.permissions.PermissionsListener
 import com.mapbox.android.core.permissions.PermissionsManager
@@ -34,9 +41,6 @@ import com.mapbox.mapboxsdk.maps.Style
 
 import java.util.*
 
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
 import com.mapbox.mapboxsdk.camera.CameraPosition
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
 import com.mapbox.mapboxsdk.geometry.LatLng
@@ -47,6 +51,15 @@ class MainActivity : AppCompatActivity() {
     private var permissionsManager: PermissionsManager ?= null
     private var followRiderButton: ImageView ?= null
     private val activity: MainActivity = this
+
+
+    // Constant value describing the most current terms of use version.
+    // *Please Note* Incrementing this value will force all active users to re-accept their terms of use, and
+    // that it should only be done in conjunction with changes to the terms of use document.
+    private val termsOfUseVersion: Int = 1
+
+    // Key that the most recently accepted Terms of Use version is stored under in SharedPreferences
+    private val termsOfUseVersionKey = "accepted_terms_of_use_version"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,7 +72,7 @@ class MainActivity : AppCompatActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         // launch terms of use if unsigned
-        launchTermsOfUse()
+        if (unsignedTermsOfUse()) launchTermsOfUse()
 
         // save off recentering button reference into global so that it can be used later
         followRiderButton = findViewById<ImageView>(R.id.follow_rider)
@@ -81,20 +94,44 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun unsignedTermsOfUse(): Boolean {
+        // get most recently accepted version from SharedPreferences
+        val mostRecentlyAcceptedVersion = activity
+            .getPreferences(Context.MODE_PRIVATE)
+            .getInt(termsOfUseVersionKey, 0) // defaulting to 0 for first-time users
+
+        // is the stored version less than the most recent version?
+        return mostRecentlyAcceptedVersion < termsOfUseVersion
+    }
+
     private fun launchTermsOfUse() {
+        // extract terms of use text
         val mAssetManager = activity.assets
         val termsOfUseStream = mAssetManager.open("terms_of_use/terms_of_use.txt")
         val termsOfUseText = convertStreamToString(termsOfUseStream)
 
-        findViewById<TextView>(R.id.terms_of_use)
-            .setText(termsOfUseText)
+        // fill terms of use window
+        val termsOfUse = findViewById<TextView>(R.id.terms_of_use)
+        termsOfUse.text = termsOfUseText
 
-        // activate accept button
-        findViewById<Button>(R.id.terms_of_use_accept)
-            .setOnClickListener {
-                // hide terms of use window
-                findViewById<LinearLayout>(R.id.terms_of_use_window).visibility = View.INVISIBLE
-            }
+        // activate the accept button
+        val termsOfUseAcceptButton = findViewById<Button>(R.id.terms_of_use_accept)
+        termsOfUseAcceptButton.setOnClickListener { acceptTermsOfUse() }
+
+        // now that it's ready, show the overlay
+        findViewById<ScrollView>(R.id.terms_of_use_window).visibility = View.VISIBLE
+    }
+
+    private fun acceptTermsOfUse() {
+        // save off most recently accepted terms of use version in shared preferences
+        val sharedPref = activity.getPreferences(Context.MODE_PRIVATE)
+        with (sharedPref.edit()) {
+            putInt(termsOfUseVersionKey, termsOfUseVersion)
+            apply()
+        }
+
+        // hide terms of use window
+        findViewById<ScrollView>(R.id.terms_of_use_window).visibility = View.GONE
     }
 
     private fun enableFollowRiderButton(mapboxMap: MapboxMap) {
