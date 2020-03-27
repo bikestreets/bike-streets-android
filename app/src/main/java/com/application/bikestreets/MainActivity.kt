@@ -1,9 +1,8 @@
-package com.example.bikestreets
+package com.application.bikestreets
 
 // used to handle geojson loading
 import android.content.Context
 import java.io.InputStream
-import android.content.res.AssetManager
 
 // used to handle geojson map layer drawing
 import com.mapbox.geojson.FeatureCollection

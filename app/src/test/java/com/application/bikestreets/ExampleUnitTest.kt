@@ -1,4 +1,4 @@
-package com.example.bikestreets
+package com.application.bikestreets
 
 import org.junit.Test
 
