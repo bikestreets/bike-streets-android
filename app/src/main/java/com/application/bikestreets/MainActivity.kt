@@ -38,8 +38,6 @@ import com.mapbox.mapboxsdk.maps.MapView
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
 
-import java.util.*
-
 import com.mapbox.mapboxsdk.camera.CameraPosition
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
 import com.mapbox.mapboxsdk.geometry.LatLng
@@ -197,7 +195,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun featureCollectionFromStream(fileStream: InputStream): FeatureCollection {
-        var geoJsonString = convertStreamToString(fileStream)
+        var geoJsonString = StringToStream.convert(fileStream)
 
         return FeatureCollection.fromJson(geoJsonString)
     }
@@ -240,11 +238,6 @@ class MainActivity : AppCompatActivity() {
             // create a line layer that reads the GeoJSON data that we just added
             mapStyle.addLayer(createLineLayer(layerName))
         }
-    }
-
-    private fun convertStreamToString(input: InputStream): String {
-        val scanner = Scanner(input).useDelimiter("\\A")
-        return if (scanner.hasNext()) scanner.next() else ""
     }
 
 
