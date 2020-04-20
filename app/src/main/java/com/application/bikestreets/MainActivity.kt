@@ -1,7 +1,7 @@
 package com.application.bikestreets
 
 // used to handle geojson loading
-import android.content.Context
+import android.content.Intent
 import java.io.InputStream
 
 // used to handle geojson map layer drawing
@@ -21,10 +21,7 @@ import android.os.Bundle
 // Views Components
 import android.view.View
 import android.view.WindowManager
-import android.widget.Button
-import android.widget.ScrollView
 import android.widget.ImageView
-import android.widget.TextView
 
 import androidx.appcompat.app.AppCompatActivity
 import com.mapbox.android.core.permissions.PermissionsListener
@@ -82,26 +79,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun launchTermsOfUse() {
-        val termsManager = TermsOfUseManager(this)
-
-        // check of unsigned Terms of Use
-        if (termsManager.hasUnsignedTermsOfUse()) {
-            // fill terms of use window
-            val termsOfUseWindow = findViewById<TextView>(R.id.terms_of_use)
-            termsOfUseWindow.text = termsManager.contractText()
-
-            // activate the accept button
-            val termsOfUseAcceptButton = findViewById<Button>(R.id.terms_of_use_accept)
-            termsOfUseAcceptButton.setOnClickListener {
-                termsManager.accept()
-
-                // hide the terms of use window
-                findViewById<ScrollView>(R.id.terms_of_use_window).visibility = View.GONE
-            }
-
-            // now that it's ready, show the overlay
-            findViewById<ScrollView>(R.id.terms_of_use_window).visibility = View.VISIBLE
-        }
+        val intent = Intent(this, TermsOfUse::class.java).apply {}
+        // start Terms Of Use activity regardless of whether or not they have any to sign. Don't
+        // worry: it will bail right away if it decides that the user is up-to-date
+        startActivity(intent)
     }
 
     private fun enableFollowRiderButton(mapboxMap: MapboxMap) {

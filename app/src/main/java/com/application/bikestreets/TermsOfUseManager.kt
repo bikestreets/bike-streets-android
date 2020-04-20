@@ -6,7 +6,7 @@ class TermsOfUseManager(activity: Activity) {
     // Constant value describing the most current terms of use version.
     // *Please Note* Incrementing this value will force all active users to re-accept their terms of use, and
     // that it should only be done in conjunction with changes to the terms of use document.
-    private val termsOfUseVersion: Int = 0
+    private val termsOfUseVersion: Int = 1
 
     // Key that the most recently accepted Terms of Use version is stored under in SharedPreferences
     private val termsOfUseVersionKey = "accepted_terms_of_use_version"
@@ -32,7 +32,7 @@ class TermsOfUseManager(activity: Activity) {
 
     fun hasUnsignedTermsOfUse(): Boolean {
         // is the stored version less than the most recent version?
-        return mostRecentlyAcceptedVersion > termsOfUseVersion
+        return mostRecentlyAcceptedVersion < termsOfUseVersion
     }
 
     fun accept() {
