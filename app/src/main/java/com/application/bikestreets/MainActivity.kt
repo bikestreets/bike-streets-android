@@ -24,6 +24,7 @@ import android.view.WindowManager
 import android.widget.ImageView
 
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.mapbox.android.core.permissions.PermissionsListener
 import com.mapbox.android.core.permissions.PermissionsManager
 import com.mapbox.mapboxsdk.Mapbox
@@ -159,16 +160,19 @@ class MainActivity : AppCompatActivity() {
         // This is lazy coupling and will break, but I want to see it work as a proof-of-concept.
         // A more flexible refactor involves inspecting the GeoJson file itself to get the layer
         // name, then matching the color based on that (or we can save the layer color as metadata.)
-        val hexColor = when(layerName) {
-            "terms_of_use.txt" -> "#0000FF"
-            "3-bikelanes-master-v0.3.geojson" -> "#000000"
-            "5-walk-master-v0.3.geojson" -> "#FF0000"
-            "2-trails-master-v0.3.geojson" -> "#008000"
-            "4-bikesidewalks-master-v0.3.geojson" -> "#FF0000"
-            else -> "#000000"
+        val lineColor = when(layerName) {
+            "terms_of_use.txt" -> R.color.mapTrails
+            "1-bikestreets-master-v0.3.geojson" -> R.color.mapBikeStreets
+            "2-trails-master-v0.3.geojson" -> R.color.mapTrails
+            "3-bikelanes-master-v0.3.geojson" -> R.color.mapBikeLane
+            "4-bikesidewalks-master-v0.3.geojson" -> R.color.mapRideSidewalk
+            "5-walk-master-v0.3.geojson" -> R.color.mapWalkSidewalk
+            else -> R.color.mapDefault
         }
 
-        return Color.parseColor(hexColor)
+        // convert line color from R.color format to a more standard color format that
+        // PropertyFactory.lineColor knows how to work with
+        return ContextCompat.getColor(this, lineColor)
     }
 
     private fun createLineLayer(layerName: String): LineLayer {
