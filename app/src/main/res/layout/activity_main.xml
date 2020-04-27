@@ -16,6 +16,20 @@
         tools:layout_editor_absoluteX="0dp"
         tools:layout_conversion_absoluteWidth="411dp" />
 
+    <ImageView
+        android:id="@+id/settings"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_gravity="bottom|right"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginBottom="16dp"
+        android:padding="10dp"
+        android:gravity="center"
+        app:srcCompat="@drawable/ic_settings_black_24dp"
+        android:background="@drawable/circle"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <ImageView
         android:id="@+id/follow_rider"
@@ -24,7 +38,7 @@
         android:layout_gravity="bottom|right"
         android:layout_marginEnd="16dp"
         android:layout_marginRight="16dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="72dp"
         android:padding="10dp"
         android:gravity="center"
         android:visibility="gone"

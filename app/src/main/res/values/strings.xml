@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">BikeStreets</string>
     <string name="location_permission_denied">User denied permission for device location.</string>
+    <string name="legend_trails_title">Trails</string>
+    <string name="legend_bikestreets_title">BikeStreets Route</string>
 </resources>

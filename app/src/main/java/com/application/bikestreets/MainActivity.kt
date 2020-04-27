@@ -44,7 +44,6 @@ import com.mapbox.mapboxsdk.location.LocationComponent
 class MainActivity : AppCompatActivity() {
     private var mapView: MapView? = null
     private var permissionsManager: PermissionsManager ?= null
-    private var followRiderButton: ImageView ?= null
     private val activity: MainActivity = this
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,8 +59,8 @@ class MainActivity : AppCompatActivity() {
         // launch terms of use if unsigned
         launchTermsOfUse()
 
-        // save off recentering button reference into global so that it can be used later
-        followRiderButton = findViewById<ImageView>(R.id.follow_rider)
+        // enable settings button
+        enableSettingsButton()
 
         mapView = findViewById(R.id.mapView)
         mapView?.onCreate(savedInstanceState)
@@ -86,15 +85,31 @@ class MainActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
-    private fun enableFollowRiderButton(mapboxMap: MapboxMap) {
+    private fun enableSettingsButton() {
+        // get the button
+        val settingsButton = findViewById<ImageView>(R.id.settings)
+
         // show the button
-        followRiderButton?.setVisibility(View.VISIBLE)
+        settingsButton.visibility = View.VISIBLE
 
         // enable the button's functionality
-        followRiderButton?.setOnClickListener {
-            setCameraMode(mapboxMap.locationComponent)
+        settingsButton.setOnClickListener {
+            val intent = Intent(this, About::class.java).apply {}
+            startActivity(intent)
         }
+    }
 
+    private fun enableFollowRiderButton(mapboxMap: MapboxMap) {
+        // get the button
+        val followRiderButton = findViewById<ImageView>(R.id.follow_rider)
+
+        // show the button
+        followRiderButton.visibility = View.VISIBLE
+
+        // enable the button's functionality
+        followRiderButton.setOnClickListener {
+            setCameraMode(mapboxMap.locationComponent, CameraMode.TRACKING_COMPASS)
+        }
     }
 
     private fun centerMapDefault(mapboxMap: MapboxMap) {
@@ -132,8 +147,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setCameraMode(locationComponent: LocationComponent ){
-        locationComponent?.setCameraMode(CameraMode.TRACKING, 10, 17.0, null, null, null)
+    // The cameraMode Int references one of the CameraMode enums, e.g. CameraMode.TRACKING
+    private fun setCameraMode(locationComponent: LocationComponent, cameraMode: Int){
+        locationComponent?.setCameraMode(
+            cameraMode,
+            10,
+            17.0, 
+            null,
+            null,
+            null
+        )
     }
 
     private fun showMapLayers(activity: MainActivity, mapStyle: Style) {
@@ -219,7 +242,7 @@ class MainActivity : AppCompatActivity() {
         locationComponent.setLocationComponentEnabled(true)
 
         // Set the component's camera mode
-        setCameraMode(mapboxMap.locationComponent)
+        setCameraMode(mapboxMap.locationComponent, CameraMode.TRACKING)
         // Set the component's render mode
         locationComponent.setRenderMode(RenderMode.COMPASS)
     }
