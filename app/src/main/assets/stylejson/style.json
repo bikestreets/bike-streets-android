@@ -2909,7 +2909,8 @@
                 "text-rotation-alignment": "map",
                 "text-pitch-alignment": "viewport",
                 "text-field": ["coalesce", ["get", "name_en"], ["get", "name"]],
-                "text-letter-spacing": 0.01
+                "text-letter-spacing": 0.01,
+                "text-offset": [0, -1]
             },
             "paint": {
                 "text-color": "hsl(185, 3%, 47%)",
