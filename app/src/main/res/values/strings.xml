@@ -3,4 +3,10 @@
     <string name="location_permission_denied">User denied permission for device location.</string>
     <string name="legend_trails_title">Trails</string>
     <string name="legend_bikestreets_title">BikeStreets Route</string>
+
+    <!-- Preference Titles -->
+    <string name="map_settings_header">Map Settings</string>
+    <string name="map_orientation_title">Map Orientation</string>
+    <string name="application_settings_header">Application Settings</string>
+    <string name="keep_screen_on_title">Keep Screen On</string>
 </resources>

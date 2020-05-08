@@ -1,0 +1,39 @@
+<!--
+  ~ Copyright 2018 The app Open Source Project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="@string/map_settings_header">
+
+        <ListPreference
+            app:defaultValue="direction_of_travel"
+            app:entries="@array/map_orientation_entries"
+            app:entryValues="@array/map_orientation_values"
+            app:key="map_orientation_type"
+            app:title="@string/map_orientation_title"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/application_settings_header">
+
+        <SwitchPreferenceCompat
+            app:key="keep_screen_on"
+            app:title="@string/keep_screen_on_title" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
