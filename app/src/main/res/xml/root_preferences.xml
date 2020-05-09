@@ -22,7 +22,7 @@
             app:defaultValue="direction_of_travel"
             app:entries="@array/map_orientation_entries"
             app:entryValues="@array/map_orientation_values"
-            app:key="map_orientation_type"
+            app:key="@string/map_orientation_preference_key"
             app:title="@string/map_orientation_title"
             app:useSimpleSummaryProvider="true" />
 

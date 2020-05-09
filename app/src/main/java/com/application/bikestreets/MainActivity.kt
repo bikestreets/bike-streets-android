@@ -17,6 +17,7 @@ import android.graphics.Color
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 
 import android.os.Bundle
+import android.preference.PreferenceManager
 
 // Views Components
 import android.view.View
@@ -64,18 +65,7 @@ class MainActivity : AppCompatActivity() {
 
         mapView = findViewById(R.id.mapView)
         mapView?.onCreate(savedInstanceState)
-        mapView?.getMapAsync { mapboxMap ->
-            mapboxMap.setStyle(Style.Builder().fromUri("asset://stylejson/style.json")) {
-                // default the map to a zoomed in view of the city
-                centerMapDefault(mapboxMap)
-
-                // Map is set up and the style has loaded. Now you can add data or make other map adjustments
-                showDeviceLocation(mapboxMap, it)
-
-                // add geojson layers
-                showMapLayers(this, it)
-            }
-        }
+        mapView?.getMapAsync { mapboxMap -> setupMapboxMap(mapboxMap) }
     }
 
     private fun launchTermsOfUse() {
@@ -108,7 +98,7 @@ class MainActivity : AppCompatActivity() {
 
         // enable the button's functionality
         followRiderButton.setOnClickListener {
-            setCameraMode(mapboxMap.locationComponent, CameraMode.TRACKING_COMPASS)
+            setCameraMode(mapboxMap.locationComponent, cameraModeFromPreferences())
         }
     }
 
@@ -222,6 +212,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun cameraModeFromPreferences(): Int {
+        // extract string from strings.xml file (as integer key) and convert to string
+        val orientataionPreferenceKey = getResources().getString(R.string.map_orientation_preference_key)
+
+        // use key to extract saved camera mode preference string. Default to tracking compass,
+        // a.k.a. "Direction of Travel"
+        val orientationPreferenceString = PreferenceManager
+            .getDefaultSharedPreferences(this)
+            .getString(orientataionPreferenceKey, "direction_of_travel")
+
+       // convert into a MapBox camera mode and return
+        return if (orientationPreferenceString == "fixed") {
+            CameraMode.TRACKING
+        } else {
+            CameraMode.TRACKING_COMPASS
+        }
+    }
 
     private fun drawLocationOnMap(mapboxMap: MapboxMap, style: Style) {
         val locationComponentOptions = LocationComponentOptions
@@ -241,8 +248,9 @@ class MainActivity : AppCompatActivity() {
         // Enable to make component visible
         locationComponent.setLocationComponentEnabled(true)
 
-        // Set the component's camera mode
-        setCameraMode(mapboxMap.locationComponent, CameraMode.TRACKING)
+        // now that we have the user's preference set the map to use that camera mode
+        setCameraMode(mapboxMap.locationComponent, cameraModeFromPreferences())
+
         // Set the component's render mode
         locationComponent.setRenderMode(RenderMode.COMPASS)
     }
@@ -255,6 +263,25 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         mapView?.onResume()
+
+        // if the user is returning from the settings page, those settings will need to be applied
+        mapView?.getMapAsync { mapboxMap -> setupMapboxMap(mapboxMap) }
+    }
+
+    private fun setupMapboxMap(mapboxMap: MapboxMap) {
+        // extract style from json file
+        val mapBoxStyle = Style.Builder().fromUri("asset://stylejson/style.json")
+
+        mapboxMap.setStyle(mapBoxStyle) {
+            // default the map to a zoomed in view of the city
+            centerMapDefault(mapboxMap)
+
+            // Map is set up and the style has loaded. Now you can add data or make other map adjustments
+            showDeviceLocation(mapboxMap, it)
+
+            // add geojson layers
+            showMapLayers(this, it)
+        }
     }
 
     override fun onPause() {
