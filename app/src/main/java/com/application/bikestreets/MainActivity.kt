@@ -54,8 +54,7 @@ class MainActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_main)
 
-        // keep the device from falling asleep
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        setScreenModeFromPreferences()
 
         // launch terms of use if unsigned
         launchTermsOfUse()
@@ -66,6 +65,25 @@ class MainActivity : AppCompatActivity() {
         mapView = findViewById(R.id.mapView)
         mapView?.onCreate(savedInstanceState)
         mapView?.getMapAsync { mapboxMap -> setupMapboxMap(mapboxMap) }
+    }
+
+    private fun setScreenModeFromPreferences() {
+        // extract string from strings.xml file (as integer key) and convert to string
+        val keepScreenOnKey = getResources().getString(R.string.keep_screen_preference_key)
+
+        // extracted stored value for user's screen mode preference
+        val keepScreenOnPreference = PreferenceManager
+            .getDefaultSharedPreferences(this)
+            .getBoolean(keepScreenOnKey, true) // default is to keep the screen on
+
+        // adding this flag will keep the screen from turning off if the app goes idle
+        val keepScreenOnFlag = WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+
+        if (keepScreenOnPreference) {
+            window.addFlags(keepScreenOnFlag)
+        } else {
+            window.clearFlags(keepScreenOnFlag)
+        }
     }
 
     private fun launchTermsOfUse() {
@@ -266,6 +284,9 @@ class MainActivity : AppCompatActivity() {
 
         // if the user is returning from the settings page, those settings will need to be applied
         mapView?.getMapAsync { mapboxMap -> setupMapboxMap(mapboxMap) }
+
+        // reload the autosleep preference in case it was changed while the activity was paused
+        setScreenModeFromPreferences()
     }
 
     private fun setupMapboxMap(mapboxMap: MapboxMap) {
