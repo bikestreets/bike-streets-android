@@ -1,5 +1,5 @@
 <resources>
-    <!-- Reply Preference -->
+    <!-- Map Orientation Preference -->
     <string-array name="map_orientation_entries">
         <item>Direction of Travel</item>
         <item>Fixed</item>
