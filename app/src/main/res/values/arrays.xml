@@ -9,4 +9,15 @@
         <item>direction_of_travel</item>
         <item>fixed</item>
     </string-array>
+
+    <!-- Map Type Preference -->
+    <string-array name="map_type_entries">
+        <item>Street Map</item>
+        <item>Satellite</item>
+    </string-array>
+
+    <string-array name="map_type_values">
+        <item>street_map</item>
+        <item>satellite_view</item>
+    </string-array>
 </resources>

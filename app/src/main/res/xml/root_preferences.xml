@@ -19,6 +19,14 @@
     <PreferenceCategory app:title="@string/map_settings_header">
 
         <ListPreference
+            app:defaultValue="street_map"
+            app:entries="@array/map_type_entries"
+            app:entryValues="@array/map_type_values"
+            app:key="@string/map_type_preference_key"
+            app:title="@string/map_type_title"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
             app:defaultValue="direction_of_travel"
             app:entries="@array/map_orientation_entries"
             app:entryValues="@array/map_orientation_values"

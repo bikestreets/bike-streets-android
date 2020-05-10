@@ -289,20 +289,38 @@ class MainActivity : AppCompatActivity() {
         setScreenModeFromPreferences()
     }
 
+    private fun mapTypeFromPreferences(): String {
+        // extract preference key string from strings.xml
+        val mapTypePreferenceKey = getResources().getString(R.string.map_type_preference_key)
+
+        // use that key to extract the stored user preference
+        return PreferenceManager
+            .getDefaultSharedPreferences(this)
+            .getString(mapTypePreferenceKey, "street_map")
+    }
+
+    private fun addRoutesAndLocation(mapboxMap: MapboxMap, style: Style) {
+        // Map is set up and the style has loaded. Now you can add data or make other map adjustments
+        showDeviceLocation(mapboxMap, style)
+
+        // add geojson layers
+        showMapLayers(this, style)
+    }
+
     private fun setupMapboxMap(mapboxMap: MapboxMap) {
-        // extract style from json file
-        val mapBoxStyle = Style.Builder().fromUri("asset://stylejson/style.json")
+        // default the map to a zoomed in view of the city. Note that this is overriden by
+        // showDeviceLocation below if location services are enabled and permitted
+        centerMapDefault(mapboxMap)
 
-        mapboxMap.setStyle(mapBoxStyle) {
-            // default the map to a zoomed in view of the city
-            centerMapDefault(mapboxMap)
-
-            // Map is set up and the style has loaded. Now you can add data or make other map adjustments
-            showDeviceLocation(mapboxMap, it)
-
-            // add geojson layers
-            showMapLayers(this, it)
+        // apply map style conditionally, based on user's preferences.
+        if (mapTypeFromPreferences() == "satellite_view") {
+            mapboxMap.setStyle(Style.SATELLITE) { addRoutesAndLocation(mapboxMap, it) }
+        } else {
+            // pull custom street map styling from json source
+            val customStyles = Style.Builder().fromUri("asset://stylejson/style.json")
+            mapboxMap.setStyle(customStyles) { addRoutesAndLocation(mapboxMap, it) }
         }
+
     }
 
     override fun onPause() {
