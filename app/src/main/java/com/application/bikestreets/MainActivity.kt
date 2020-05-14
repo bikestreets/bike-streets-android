@@ -226,7 +226,7 @@ class MainActivity : AppCompatActivity() {
             mapStyle.addSource(GeoJsonSource(layerName, featureCollection))
 
             // create a line layer that reads the GeoJSON data that we just added
-            mapStyle.addLayer(createLineLayer(layerName))
+            mapStyle.addLayerBelow(createLineLayer(layerName), "road-label")
         }
     }
 
