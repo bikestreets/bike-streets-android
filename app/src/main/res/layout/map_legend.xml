@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     android:background="@drawable/rectangular_border"
     android:padding="@dimen/map_legend_entry_padding"
