@@ -213,7 +213,7 @@ class MainActivity : AppCompatActivity() {
             .withProperties(
                 PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
                 PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
-                PropertyFactory.lineOpacity(.7f),
+                PropertyFactory.lineOpacity(1f),
                 PropertyFactory.lineWidth(interpolate(linear(), zoom(),
                     stop(8, .2f),
                     stop(16, 10f))),
