@@ -160,7 +160,7 @@ class MainActivity : AppCompatActivity() {
         locationComponent?.setCameraMode(
             cameraMode,
             10,
-            17.0, 
+            17.0,
             null,
             null,
             null
@@ -171,7 +171,7 @@ class MainActivity : AppCompatActivity() {
         val root: String = "geojson"
         val mAssetManager = activity.assets
 
-        mAssetManager.list("$root/").forEach { fileName ->
+        mAssetManager.list("$root/")?.forEach { fileName ->
             var featureCollection = featureCollectionFromStream(
                 mAssetManager.open("$root/$fileName")
             )
@@ -289,7 +289,7 @@ class MainActivity : AppCompatActivity() {
         setScreenModeFromPreferences()
     }
 
-    private fun mapTypeFromPreferences(): String {
+    private fun mapTypeFromPreferences(): String? {
         // extract preference key string from strings.xml
         val mapTypePreferenceKey = getResources().getString(R.string.map_type_preference_key)
 
