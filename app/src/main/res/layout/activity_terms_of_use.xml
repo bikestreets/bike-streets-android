@@ -33,6 +33,8 @@
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
-    <include layout="@layout/content_terms_of_use" />
+    <include
+        android:id="@+id/include_terms_of_use"
+        layout="@layout/content_terms_of_use" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
