@@ -18,9 +18,9 @@ class About : AppCompatActivity() {
         val view = binding.root
         setContentView(view)
 
-        // This layout is designed only for portriat mode, so force the user to that orientation
+        // This layout is designed only for portrait mode, so force the user to that orientation
         // regardless of device settings
-        setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         supportFragmentManager
             .beginTransaction()
