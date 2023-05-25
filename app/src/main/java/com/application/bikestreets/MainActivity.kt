@@ -26,6 +26,7 @@ import android.widget.ImageView
 
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.application.bikestreets.databinding.ActivityMainBinding
 import com.mapbox.android.core.permissions.PermissionsListener
 import com.mapbox.android.core.permissions.PermissionsManager
 import com.mapbox.mapboxsdk.Mapbox
@@ -41,18 +42,21 @@ import com.mapbox.mapboxsdk.camera.CameraPosition
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
 import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.location.LocationComponent
-
 class MainActivity : AppCompatActivity() {
     private var mapView: MapView? = null
     private var permissionsManager: PermissionsManager ?= null
     private val activity: MainActivity = this
 
+    private lateinit var binding: ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         Mapbox.getInstance(this, "pk.eyJ1Ijoianpvcm5vdyIsImEiOiJjazVsOWhkc2YwbWgwM2xuNXJvdnlhN2o3In0.tW5TbWlDY-ciFrYSv6qTOA")
 
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        val view = binding.root
+
+        setContentView(view)
 
         setScreenModeFromPreferences()
 
@@ -62,7 +66,7 @@ class MainActivity : AppCompatActivity() {
         // enable settings button
         enableSettingsButton()
 
-        mapView = findViewById(R.id.mapView)
+        mapView = binding.mapView
         mapView?.onCreate(savedInstanceState)
         mapView?.getMapAsync { mapboxMap -> setupMapboxMap(mapboxMap) }
     }
@@ -95,7 +99,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun enableSettingsButton() {
         // get the button
-        val settingsButton = findViewById<ImageView>(R.id.settings)
+        val settingsButton = binding.settings
 
         // show the button
         settingsButton.visibility = View.VISIBLE
@@ -109,7 +113,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun enableFollowRiderButton(mapboxMap: MapboxMap) {
         // get the button
-        val followRiderButton = findViewById<ImageView>(R.id.follow_rider)
+        val followRiderButton = binding.followRider
 
         // show the button
         followRiderButton.visibility = View.VISIBLE
@@ -160,7 +164,7 @@ class MainActivity : AppCompatActivity() {
         locationComponent?.setCameraMode(
             cameraMode,
             10,
-            17.0, 
+            17.0,
             null,
             null,
             null
@@ -171,7 +175,7 @@ class MainActivity : AppCompatActivity() {
         val root: String = "geojson"
         val mAssetManager = activity.assets
 
-        mAssetManager.list("$root/").forEach { fileName ->
+        mAssetManager.list("$root/")?.forEach { fileName ->
             var featureCollection = featureCollectionFromStream(
                 mAssetManager.open("$root/$fileName")
             )
@@ -289,7 +293,7 @@ class MainActivity : AppCompatActivity() {
         setScreenModeFromPreferences()
     }
 
-    private fun mapTypeFromPreferences(): String {
+    private fun mapTypeFromPreferences(): String? {
         // extract preference key string from strings.xml
         val mapTypePreferenceKey = getResources().getString(R.string.map_type_preference_key)
 
