@@ -25,7 +25,7 @@ class TermsOfUse : AppCompatActivity() {
             termsOfUseWindow.text = termsOfUseManager.contractText()
 
             // activate the accept button
-            binding.toolbar
+            binding.includeTermsOfUse.termsOfUseAccept
                 .setOnClickListener {
                     // accept terms and conditions
                     termsOfUseManager.accept()
