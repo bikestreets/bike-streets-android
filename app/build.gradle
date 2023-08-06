@@ -8,25 +8,26 @@ android {
         applicationId "com.application.bikestreets"
         minSdkVersion 19
         targetSdkVersion 33
-        versionCode 4
+        versionCode 5
         versionName "1.3"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
+        multiDexEnabled true
     }
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    // Add below lines to set compatibility with Java 8 language features for an Android app module.
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     buildFeatures {
         viewBinding true
     }
+    namespace 'com.application.bikestreets'
 }
 
 repositories {
