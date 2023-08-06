@@ -7,14 +7,13 @@
     android:layout_height="match_parent"
     android:id="@+id/frameLayout">
 
-    <com.mapbox.mapboxsdk.maps.MapView
+    <com.mapbox.maps.MapView
         android:id="@+id/mapView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        tools:layout_conversion_absoluteHeight="731dp"
-        tools:layout_editor_absoluteY="0dp"
-        tools:layout_editor_absoluteX="0dp"
-        tools:layout_conversion_absoluteWidth="411dp" />
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        mapbox:mapbox_cameraTargetLat="39.7326381"
+        mapbox:mapbox_cameraTargetLng="-104.9687837"
+        mapbox:mapbox_cameraZoom="12.0" />
 
     <ImageView
         android:id="@+id/settings"
@@ -46,6 +45,8 @@
         android:background="@drawable/circle"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
+<!--    <com.mapbox.search.ui.view.SearchResultsView />-->
 
 </FrameLayout>
 

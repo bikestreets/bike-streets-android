@@ -1,47 +1,27 @@
 package com.application.bikestreets
 
 // used to handle geojson loading
-import android.content.Intent
-import java.io.InputStream
 
 // used to handle geojson map layer drawing
-import com.mapbox.geojson.FeatureCollection
-import com.mapbox.mapboxsdk.style.layers.LineLayer
-import com.mapbox.mapboxsdk.style.layers.Property
-import com.mapbox.mapboxsdk.style.layers.PropertyFactory
-import com.mapbox.mapboxsdk.style.expressions.Expression.interpolate
-import com.mapbox.mapboxsdk.style.expressions.Expression.linear
-import com.mapbox.mapboxsdk.style.expressions.Expression.zoom
-import com.mapbox.mapboxsdk.style.expressions.Expression.stop
-import android.graphics.Color
-import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
-
-import android.os.Bundle
-import android.preference.PreferenceManager
 
 // Views Components
+
+import android.content.Intent
+import android.os.Bundle
+import android.preference.PreferenceManager
 import android.view.View
 import android.view.WindowManager
-import android.widget.ImageView
-
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.application.bikestreets.databinding.ActivityMainBinding
 import com.mapbox.android.core.permissions.PermissionsListener
 import com.mapbox.android.core.permissions.PermissionsManager
-import com.mapbox.mapboxsdk.Mapbox
-import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
-import com.mapbox.mapboxsdk.location.LocationComponentOptions
-import com.mapbox.mapboxsdk.location.modes.CameraMode
-import com.mapbox.mapboxsdk.location.modes.RenderMode
-import com.mapbox.mapboxsdk.maps.MapView
-import com.mapbox.mapboxsdk.maps.MapboxMap
-import com.mapbox.mapboxsdk.maps.Style
+import com.mapbox.geojson.FeatureCollection
+import com.mapbox.maps.MapView
+import com.mapbox.maps.MapboxMap
+import com.mapbox.maps.Style
+import java.io.InputStream
 
-import com.mapbox.mapboxsdk.camera.CameraPosition
-import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
-import com.mapbox.mapboxsdk.geometry.LatLng
-import com.mapbox.mapboxsdk.location.LocationComponent
 class MainActivity : AppCompatActivity() {
     private var mapView: MapView? = null
     private var permissionsManager: PermissionsManager ?= null
@@ -50,8 +30,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        Mapbox.getInstance(this, "pk.eyJ1Ijoianpvcm5vdyIsImEiOiJjazVsOWhkc2YwbWgwM2xuNXJvdnlhN2o3In0.tW5TbWlDY-ciFrYSv6qTOA")
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
@@ -67,8 +45,7 @@ class MainActivity : AppCompatActivity() {
         enableSettingsButton()
 
         mapView = binding.mapView
-        mapView?.onCreate(savedInstanceState)
-        mapView?.getMapAsync { mapboxMap -> setupMapboxMap(mapboxMap) }
+        setupMapboxMap()
     }
 
     private fun setScreenModeFromPreferences() {
@@ -112,42 +89,42 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun enableFollowRiderButton(mapboxMap: MapboxMap) {
-        // get the button
-        val followRiderButton = binding.followRider
-
-        // show the button
-        followRiderButton.visibility = View.VISIBLE
-
-        // enable the button's functionality
-        followRiderButton.setOnClickListener {
-            setCameraMode(mapboxMap.locationComponent, cameraModeFromPreferences())
-        }
+//        // get the button
+//        val followRiderButton = binding.followRider
+//
+//        // show the button
+//        followRiderButton.visibility = View.VISIBLE
+//
+//        // enable the button's functionality
+//        followRiderButton.setOnClickListener {
+//            setCameraMode(mapboxMap.locationComponent, cameraModeFromPreferences())
+//        }
     }
 
-    private fun centerMapDefault(mapboxMap: MapboxMap) {
-        val position = CameraPosition.Builder()
-            .target(LatLng(39.7326381,-104.9687837))
-            .zoom(12.0)
-            .tilt(0.0)
-            .build()
-
-        val cameraUpdate = CameraUpdateFactory.newCameraPosition(position)
-
-        mapboxMap.moveCamera(cameraUpdate)
-    }
+//    private fun centerMapDefault(mapboxMap: MapboxMap) {
+//        val position = CameraPosition.Builder()
+//            .target(LatLng(39.7326381,-104.9687837))
+//            .zoom(12.0)
+//            .tilt(0.0)
+//            .build()
+//
+//        val cameraUpdate = CameraUpdateFactory.newCameraPosition(position)
+//
+//        mapboxMap.moveCamera(cameraUpdate)
+//    }
 
     private fun showDeviceLocation(mapboxMap: MapboxMap, style: Style) {
         if (PermissionsManager.areLocationPermissionsGranted(activity)){
-            enableFollowRiderButton(mapboxMap)
-            drawLocationOnMap(mapboxMap, style)
+//            enableFollowRiderButton(mapboxMap)
+//            drawLocationOnMap(mapboxMap, style)
         } else {
-            var permissionsListener: PermissionsListener = object : PermissionsListener {
+            val permissionsListener: PermissionsListener = object : PermissionsListener {
                 override fun onExplanationNeeded(permissionsToExplain: List<String>) { }
 
                 override fun onPermissionResult(granted: Boolean) {
                     if (granted) {
-                        enableFollowRiderButton(mapboxMap)
-                        drawLocationOnMap(mapboxMap, style)
+//                        enableFollowRiderButton(mapboxMap)
+//                        drawLocationOnMap(mapboxMap, style)
                     } else {
                         // User denied the permission: don't put a point on the map at all
                     }
@@ -160,33 +137,33 @@ class MainActivity : AppCompatActivity() {
     }
 
     // The cameraMode Int references one of the CameraMode enums, e.g. CameraMode.TRACKING
-    private fun setCameraMode(locationComponent: LocationComponent, cameraMode: Int){
-        locationComponent?.setCameraMode(
-            cameraMode,
-            10,
-            17.0,
-            null,
-            null,
-            null
-        )
-    }
+//    private fun setCameraMode(locationComponent: LocationComponent, cameraMode: Int){
+//        locationComponent?.setCameraMode(
+//            cameraMode,
+//            10,
+//            17.0,
+//            null,
+//            null,
+//            null
+//        )
+//    }
 
-    private fun showMapLayers(activity: MainActivity, mapStyle: Style) {
-        val root: String = "geojson"
-        val mAssetManager = activity.assets
-
-        mAssetManager.list("$root/")?.forEach { fileName ->
-            var featureCollection = featureCollectionFromStream(
-                mAssetManager.open("$root/$fileName")
-            )
-
-            renderFeatureCollection(fileName, featureCollection, mapStyle)
-        }
-
-    }
+//    private fun showMapLayers(activity: MainActivity, mapStyle: Style) {
+//        val root: String = "geojson"
+//        val mAssetManager = activity.assets
+//
+//        mAssetManager.list("$root/")?.forEach { fileName ->
+//            val featureCollection = featureCollectionFromStream(
+//                mAssetManager.open("$root/$fileName")
+//            )
+//
+//            renderFeatureCollection(fileName, featureCollection, mapStyle)
+//        }
+//
+//    }
 
     private fun featureCollectionFromStream(fileStream: InputStream): FeatureCollection {
-        var geoJsonString = StringToStream.convert(fileStream)
+        val geoJsonString = StringToStream.convert(fileStream)
 
         return FeatureCollection.fromJson(geoJsonString)
     }
@@ -210,87 +187,71 @@ class MainActivity : AppCompatActivity() {
         return ContextCompat.getColor(this, lineColor)
     }
 
-    private fun createLineLayer(layerName: String): LineLayer {
-        val lineColor = colorForLayer(layerName)
+//    private fun createLineLayer(layerName: String): LineLayer {
+//        val lineColor = colorForLayer(layerName)
+//
+//        return LineLayer("$layerName-id", layerName)
+//            .withProperties(
+//                PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
+//                PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
+//                PropertyFactory.lineOpacity(1f),
+//                PropertyFactory.lineWidth(interpolate(linear(), zoom(),
+//                    stop(8, .2f),
+//                    stop(16, 10f))),
+//                PropertyFactory.lineColor(lineColor))
+//}
 
-        return LineLayer("$layerName-id", layerName)
-            .withProperties(
-                PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
-                PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
-                PropertyFactory.lineOpacity(1f),
-                PropertyFactory.lineWidth(interpolate(linear(), zoom(),
-                    stop(8, .2f),
-                    stop(16, 10f))),
-                PropertyFactory.lineColor(lineColor))
-}
+//    private fun renderFeatureCollection(layerName: String, featureCollection: FeatureCollection, mapStyle: Style) {
+//        if(featureCollection.features() != null) {
+//            // add the data itself to mapStyle
+//            mapStyle.addSource(GeoJsonSource(layerName, featureCollection))
+//
+//            // create a line layer that reads the GeoJSON data that we just added
+//            mapStyle.addLayerBelow(createLineLayer(layerName), "road-label")
+//        }
+//    }
 
-    private fun renderFeatureCollection(layerName: String, featureCollection: FeatureCollection, mapStyle: Style) {
-        if(featureCollection.features() != null) {
-            // add the data itself to mapStyle
-            mapStyle.addSource(GeoJsonSource(layerName, featureCollection))
-
-            // create a line layer that reads the GeoJSON data that we just added
-            mapStyle.addLayerBelow(createLineLayer(layerName), "road-label")
-        }
-    }
-
-    private fun cameraModeFromPreferences(): Int {
-        // extract string from strings.xml file (as integer key) and convert to string
-        val orientataionPreferenceKey = getResources().getString(R.string.map_orientation_preference_key)
-
-        // use key to extract saved camera mode preference string. Default to tracking compass,
-        // a.k.a. "Direction of Travel"
-        val orientationPreferenceString = PreferenceManager
-            .getDefaultSharedPreferences(this)
-            .getString(orientataionPreferenceKey, "direction_of_travel")
-
-       // convert into a MapBox camera mode and return
-        return if (orientationPreferenceString == "fixed") {
-            CameraMode.TRACKING
-        } else {
-            CameraMode.TRACKING_COMPASS
-        }
-    }
+//    private fun cameraModeFromPreferences(): Int {
+//        // extract string from strings.xml file (as integer key) and convert to string
+//        val orientataionPreferenceKey = getResources().getString(R.string.map_orientation_preference_key)
+//
+//        // use key to extract saved camera mode preference string. Default to tracking compass,
+//        // a.k.a. "Direction of Travel"
+//        val orientationPreferenceString = PreferenceManager
+//            .getDefaultSharedPreferences(this)
+//            .getString(orientataionPreferenceKey, "direction_of_travel")
+//
+//       // convert into a MapBox camera mode and return
+//        return if (orientationPreferenceString == "fixed") {
+//            CameraMode.TRACKING
+//        } else {
+//            CameraMode.TRACKING_COMPASS
+//        }
+//    }
 
     private fun drawLocationOnMap(mapboxMap: MapboxMap, style: Style) {
-        val locationComponentOptions = LocationComponentOptions
-            .builder(this)
-            .build()
-
-        val locationComponentActivationOptions = LocationComponentActivationOptions
-            .builder(this, style)
-            .locationComponentOptions(locationComponentOptions)
-            .build()
-
-        var locationComponent = mapboxMap.locationComponent
-
-        // Activate with options
-        locationComponent.activateLocationComponent(locationComponentActivationOptions)
-
-        // Enable to make component visible
-        locationComponent.setLocationComponentEnabled(true)
-
-        // now that we have the user's preference set the map to use that camera mode
-        setCameraMode(mapboxMap.locationComponent, cameraModeFromPreferences())
-
-        // Set the component's render mode
-        locationComponent.setRenderMode(RenderMode.COMPASS)
-    }
-
-    override fun onStart() {
-        super.onStart()
-        mapView?.onStart()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        mapView?.onResume()
-
-        // if the user is returning from the settings page, those settings will need to be applied
-        mapView?.getMapAsync { mapboxMap -> setupMapboxMap(mapboxMap) }
-
-        // reload the autosleep preference in case it was changed while the activity was paused
-        setScreenModeFromPreferences()
+//        val locationComponentOptions = LocationComponentOptions
+//            .builder(this)
+//            .build()
+//
+//        val locationComponentActivationOptions = LocationComponentActivationOptions
+//            .builder(this, style)
+//            .locationComponentOptions(locationComponentOptions)
+//            .build()
+//
+//        var locationComponent = mapboxMap.locationComponent
+//
+//        // Activate with options
+//        locationComponent.activateLocationComponent(locationComponentActivationOptions)
+//
+//        // Enable to make component visible
+//        locationComponent.setLocationComponentEnabled(true)
+//
+//        // now that we have the user's preference set the map to use that camera mode
+//        setCameraMode(mapboxMap.locationComponent, cameraModeFromPreferences())
+//
+//        // Set the component's render mode
+//        locationComponent.setRenderMode(RenderMode.COMPASS)
     }
 
     private fun mapTypeFromPreferences(): String? {
@@ -303,33 +264,44 @@ class MainActivity : AppCompatActivity() {
             .getString(mapTypePreferenceKey, "street_map")
     }
 
-    private fun addRoutesAndLocation(mapboxMap: MapboxMap, style: Style) {
-        // Map is set up and the style has loaded. Now you can add data or make other map adjustments
-        showDeviceLocation(mapboxMap, style)
+//    private fun addRoutesAndLocation(mapboxMap: MapboxMap, style: Style) {
+//        // Map is set up and the style has loaded. Now you can add data or make other map adjustments
+//        showDeviceLocation(mapboxMap, style)
+//
+//        // add geojson layers
+//        showMapLayers(this, style)
+//    }
 
-        // add geojson layers
-        showMapLayers(this, style)
-    }
-
-    private fun setupMapboxMap(mapboxMap: MapboxMap) {
+    private fun setupMapboxMap() {
         // default the map to a zoomed in view of the city. Note that this is overriden by
         // showDeviceLocation below if location services are enabled and permitted
-        centerMapDefault(mapboxMap)
+//        centerMapDefault(mapboxMap)
 
         // apply map style conditionally, based on user's preferences.
         if (mapTypeFromPreferences() == "satellite_view") {
-            mapboxMap.setStyle(Style.SATELLITE) { addRoutesAndLocation(mapboxMap, it) }
+            mapView?.getMapboxMap()?.loadStyleUri(Style.SATELLITE)
+//            mapboxMap.setStyle(Style.SATELLITE) { addRoutesAndLocation(mapboxMap, it) }
         } else {
             // pull custom street map styling from json source
-            val customStyles = Style.Builder().fromUri("asset://stylejson/style.json")
-            mapboxMap.setStyle(customStyles) { addRoutesAndLocation(mapboxMap, it) }
+            mapView?.getMapboxMap()?.loadStyleUri("asset://stylejson/style.json")
+//            mapboxMap.setStyle(customStyles) { addRoutesAndLocation(mapboxMap, it) }
         }
 
     }
 
-    override fun onPause() {
-        super.onPause()
-        mapView?.onPause()
+    override fun onStart() {
+        super.onStart()
+        mapView?.onStart()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        // if the user is returning from the settings page, those settings will need to be applied
+//        mapView?.getMapAsync { mapboxMap -> setupMapboxMap(mapboxMap) }
+
+        // reload the autosleep preference in case it was changed while the activity was paused
+        setScreenModeFromPreferences()
     }
 
     override fun onStop() {
@@ -347,9 +319,9 @@ class MainActivity : AppCompatActivity() {
         mapView?.onDestroy()
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        mapView?.onSaveInstanceState(outState)
-    }
+//    override fun onSaveInstanceState(outState: Bundle) {
+//        super.onSaveInstanceState(outState)
+//        mapView?.onSaveInstanceState(outState)
+//    }
 }
 

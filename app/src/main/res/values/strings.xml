@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="mapbox_access_token">pk.eyJ1Ijoianpvcm5vdyIsImEiOiJjazVsOWhkc2YwbWgwM2xuNXJvdnlhN2o3In0.tW5TbWlDY-ciFrYSv6qTOA</string>
+
     <string name="app_name">BikeStreets</string>
     <string name="location_permission_denied">User denied permission for device location.</string>
     <string name="legend_trails_title">Trails</string>
