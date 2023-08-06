@@ -8,3 +8,10 @@ Android app for BikeStreets bike map
 - elephant button
 - hammer button
 - triangle button
+
+
+# Publishing to Google Play
+- Update the `versionCode` in `build.gradle` 
+- using the signing key, `Build > Generate Signed Bundle / APK`
+- select `Release`
+- after completing the modal, take the `.apk` or `.abb` file you generated, upload to the play console
