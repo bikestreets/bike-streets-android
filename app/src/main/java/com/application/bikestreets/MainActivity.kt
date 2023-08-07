@@ -3,7 +3,6 @@ package com.application.bikestreets
 import android.content.Intent
 import android.os.Bundle
 import android.preference.PreferenceManager
-import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
@@ -16,6 +15,7 @@ import com.mapbox.maps.MapView
 import com.mapbox.maps.MapboxMap
 import com.mapbox.maps.Style
 import com.mapbox.maps.extension.style.expressions.dsl.generated.interpolate
+import com.mapbox.maps.extension.style.layers.addLayer
 import com.mapbox.maps.extension.style.layers.addLayerBelow
 import com.mapbox.maps.extension.style.layers.generated.LineLayer
 import com.mapbox.maps.extension.style.layers.properties.generated.LineCap
@@ -58,6 +58,7 @@ class MainActivity : AppCompatActivity() {
         val keepScreenOnKey = getResources().getString(R.string.keep_screen_preference_key)
 
         // extracted stored value for user's screen mode preference
+        // TODO: remove depreciated code
         val keepScreenOnPreference = PreferenceManager
             .getDefaultSharedPreferences(this)
             .getBoolean(keepScreenOnKey, true) // default is to keep the screen on
@@ -228,8 +229,13 @@ class MainActivity : AppCompatActivity() {
                     .build()
             )
 
-            // create a line layer that reads the GeoJSON data that we just added
-            mapStyle.addLayerBelow(createLineLayer(layerName), "road-label")
+            if (mapTypeFromPreferences() == "satellite_view") {
+                mapStyle.addLayer(createLineLayer(layerName))
+            } else {
+                // create a line layer that reads the GeoJSON data that we just added
+                mapStyle.addLayerBelow(createLineLayer(layerName), "road-label")
+            }
+
         }
     }
 
@@ -325,7 +331,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
 
         // if the user is returning from the settings page, those settings will need to be applied
-//        mapView?.getMapAsync { mapboxMap -> setupMapboxMap(mapboxMap) }
+        setupMapboxMap()
 
         // reload the autosleep preference in case it was changed while the activity was paused
         setScreenModeFromPreferences()
