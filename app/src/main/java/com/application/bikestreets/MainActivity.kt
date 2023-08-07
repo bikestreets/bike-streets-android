@@ -1,14 +1,9 @@
 package com.application.bikestreets
 
-// used to handle geojson loading
-
-// used to handle geojson map layer drawing
-
-// Views Components
-
 import android.content.Intent
 import android.os.Bundle
 import android.preference.PreferenceManager
+import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
@@ -20,11 +15,21 @@ import com.mapbox.geojson.FeatureCollection
 import com.mapbox.maps.MapView
 import com.mapbox.maps.MapboxMap
 import com.mapbox.maps.Style
+import com.mapbox.maps.extension.style.expressions.dsl.generated.interpolate
+import com.mapbox.maps.extension.style.layers.addLayerBelow
+import com.mapbox.maps.extension.style.layers.generated.LineLayer
+import com.mapbox.maps.extension.style.layers.properties.generated.LineCap
+import com.mapbox.maps.extension.style.layers.properties.generated.LineJoin
+import com.mapbox.maps.extension.style.sources.addSource
+import com.mapbox.maps.extension.style.sources.generated.GeoJsonSource
+import com.mapbox.maps.plugin.locationcomponent.createDefault2DPuck
+import com.mapbox.maps.plugin.locationcomponent.location
 import java.io.InputStream
 
 class MainActivity : AppCompatActivity() {
     private var mapView: MapView? = null
-    private var permissionsManager: PermissionsManager ?= null
+    private var mapboxMap: MapboxMap? = null
+    private var permissionsManager: PermissionsManager? = null
     private val activity: MainActivity = this
 
     private lateinit var binding: ActivityMainBinding
@@ -113,18 +118,18 @@ class MainActivity : AppCompatActivity() {
 //        mapboxMap.moveCamera(cameraUpdate)
 //    }
 
-    private fun showDeviceLocation(mapboxMap: MapboxMap, style: Style) {
-        if (PermissionsManager.areLocationPermissionsGranted(activity)){
+    private fun showDeviceLocation() {
+        if (PermissionsManager.areLocationPermissionsGranted(activity)) {
 //            enableFollowRiderButton(mapboxMap)
-//            drawLocationOnMap(mapboxMap, style)
+            drawLocationOnMap()
         } else {
             val permissionsListener: PermissionsListener = object : PermissionsListener {
-                override fun onExplanationNeeded(permissionsToExplain: List<String>) { }
+                override fun onExplanationNeeded(permissionsToExplain: List<String>) {}
 
                 override fun onPermissionResult(granted: Boolean) {
                     if (granted) {
 //                        enableFollowRiderButton(mapboxMap)
-//                        drawLocationOnMap(mapboxMap, style)
+                        drawLocationOnMap()
                     } else {
                         // User denied the permission: don't put a point on the map at all
                     }
@@ -148,19 +153,19 @@ class MainActivity : AppCompatActivity() {
 //        )
 //    }
 
-//    private fun showMapLayers(activity: MainActivity, mapStyle: Style) {
-//        val root: String = "geojson"
-//        val mAssetManager = activity.assets
-//
-//        mAssetManager.list("$root/")?.forEach { fileName ->
-//            val featureCollection = featureCollectionFromStream(
-//                mAssetManager.open("$root/$fileName")
-//            )
-//
-//            renderFeatureCollection(fileName, featureCollection, mapStyle)
-//        }
-//
-//    }
+    private fun showMapLayers(activity: MainActivity, mapStyle: Style) {
+        val root: String = "geojson"
+        val mAssetManager = activity.assets
+
+        mAssetManager.list("$root/")?.forEach { fileName ->
+            val featureCollection = featureCollectionFromStream(
+                mAssetManager.open("$root/$fileName")
+            )
+
+            renderFeatureCollection(fileName, featureCollection, mapStyle)
+        }
+
+    }
 
     private fun featureCollectionFromStream(fileStream: InputStream): FeatureCollection {
         val geoJsonString = StringToStream.convert(fileStream)
@@ -172,7 +177,7 @@ class MainActivity : AppCompatActivity() {
         // This is lazy coupling and will break, but I want to see it work as a proof-of-concept.
         // A more flexible refactor involves inspecting the GeoJson file itself to get the layer
         // name, then matching the color based on that (or we can save the layer color as metadata.)
-        val lineColor = when(layerName) {
+        val lineColor = when (layerName) {
             "terms_of_use.txt" -> R.color.mapTrails
             "1-bikestreets-master-v0.3.geojson" -> R.color.mapBikeStreets
             "2-trails-master-v0.3.geojson" -> R.color.mapTrails
@@ -187,29 +192,46 @@ class MainActivity : AppCompatActivity() {
         return ContextCompat.getColor(this, lineColor)
     }
 
-//    private fun createLineLayer(layerName: String): LineLayer {
-//        val lineColor = colorForLayer(layerName)
-//
-//        return LineLayer("$layerName-id", layerName)
-//            .withProperties(
-//                PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
-//                PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
-//                PropertyFactory.lineOpacity(1f),
-//                PropertyFactory.lineWidth(interpolate(linear(), zoom(),
-//                    stop(8, .2f),
-//                    stop(16, 10f))),
-//                PropertyFactory.lineColor(lineColor))
-//}
+    private fun createLineLayer(layerName: String): LineLayer {
+        val lineColor = colorForLayer(layerName)
 
-//    private fun renderFeatureCollection(layerName: String, featureCollection: FeatureCollection, mapStyle: Style) {
-//        if(featureCollection.features() != null) {
-//            // add the data itself to mapStyle
-//            mapStyle.addSource(GeoJsonSource(layerName, featureCollection))
-//
-//            // create a line layer that reads the GeoJSON data that we just added
-//            mapStyle.addLayerBelow(createLineLayer(layerName), "road-label")
-//        }
-//    }
+        return LineLayer("$layerName-id", layerName)
+            .lineCap(LineCap.ROUND)
+            .lineJoin(LineJoin.ROUND)
+            .lineOpacity(1f.toDouble())
+            .lineWidth(interpolate {
+                linear()
+                zoom()
+                stop {
+                    literal(8)
+                    literal(0.2f.toDouble())
+                }
+                stop {
+                    literal(16)
+                    literal(10f.toDouble())
+                }
+            }
+            )
+            .lineColor(lineColor)
+    }
+
+    private fun renderFeatureCollection(
+        layerName: String,
+        featureCollection: FeatureCollection,
+        mapStyle: Style
+    ) {
+        if (featureCollection.features() != null) {
+            // add the data itself to mapStyle
+            mapStyle.addSource(
+                GeoJsonSource.Builder(layerName)
+                    .featureCollection(featureCollection)
+                    .build()
+            )
+
+            // create a line layer that reads the GeoJSON data that we just added
+            mapStyle.addLayerBelow(createLineLayer(layerName), "road-label")
+        }
+    }
 
 //    private fun cameraModeFromPreferences(): Int {
 //        // extract string from strings.xml file (as integer key) and convert to string
@@ -229,7 +251,11 @@ class MainActivity : AppCompatActivity() {
 //        }
 //    }
 
-    private fun drawLocationOnMap(mapboxMap: MapboxMap, style: Style) {
+    private fun drawLocationOnMap() {
+
+        binding.mapView.location.apply {
+            locationPuck = createDefault2DPuck(activity, withBearing = true)
+        }
 //        val locationComponentOptions = LocationComponentOptions
 //            .builder(this)
 //            .build()
@@ -264,13 +290,13 @@ class MainActivity : AppCompatActivity() {
             .getString(mapTypePreferenceKey, "street_map")
     }
 
-//    private fun addRoutesAndLocation(mapboxMap: MapboxMap, style: Style) {
-//        // Map is set up and the style has loaded. Now you can add data or make other map adjustments
-//        showDeviceLocation(mapboxMap, style)
-//
-//        // add geojson layers
-//        showMapLayers(this, style)
-//    }
+    private fun addRoutesAndLocation(style: Style) {
+        // Map is set up and the style has loaded. Now you can add data or make other map adjustments
+//        showDeviceLocation()
+
+        // add geojson layers
+        showMapLayers(this, style)
+    }
 
     private fun setupMapboxMap() {
         // default the map to a zoomed in view of the city. Note that this is overriden by
@@ -279,14 +305,15 @@ class MainActivity : AppCompatActivity() {
 
         // apply map style conditionally, based on user's preferences.
         if (mapTypeFromPreferences() == "satellite_view") {
-            mapView?.getMapboxMap()?.loadStyleUri(Style.SATELLITE)
+            mapView?.getMapboxMap()
+                ?.loadStyleUri(Style.SATELLITE) { it -> addRoutesAndLocation(it) }
 //            mapboxMap.setStyle(Style.SATELLITE) { addRoutesAndLocation(mapboxMap, it) }
         } else {
             // pull custom street map styling from json source
-            mapView?.getMapboxMap()?.loadStyleUri("asset://stylejson/style.json")
+            mapView?.getMapboxMap()
+                ?.loadStyleUri("asset://stylejson/style.json") { it -> addRoutesAndLocation(it) }
 //            mapboxMap.setStyle(customStyles) { addRoutesAndLocation(mapboxMap, it) }
         }
-
     }
 
     override fun onStart() {
