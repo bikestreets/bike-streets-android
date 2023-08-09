@@ -27,13 +27,14 @@
             app:title="@string/map_type_title"
             app:useSimpleSummaryProvider="true" />
 
-        <ListPreference
-            app:defaultValue="direction_of_travel"
-            app:entries="@array/map_orientation_entries"
-            app:entryValues="@array/map_orientation_values"
-            app:key="@string/map_orientation_preference_key"
-            app:title="@string/map_orientation_title"
-            app:useSimpleSummaryProvider="true" />
+<!--TODO: add back in once map has been fixed-->
+<!--        <ListPreference-->
+<!--            app:defaultValue="direction_of_travel"-->
+<!--            app:entries="@array/map_orientation_entries"-->
+<!--            app:entryValues="@array/map_orientation_values"-->
+<!--            app:key="@string/map_orientation_preference_key"-->
+<!--            app:title="@string/map_orientation_title"-->
+<!--            app:useSimpleSummaryProvider="true" />-->
 
     </PreferenceCategory>
 
