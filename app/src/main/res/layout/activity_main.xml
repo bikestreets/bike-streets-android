@@ -46,7 +46,5 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-<!--    <com.mapbox.search.ui.view.SearchResultsView />-->
-
 </FrameLayout>
 
