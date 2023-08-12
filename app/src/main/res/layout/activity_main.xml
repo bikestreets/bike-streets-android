@@ -15,6 +15,41 @@
         mapbox:mapbox_cameraTargetLng="-104.9687837"
         mapbox:mapbox_cameraZoom="12.0" />
 
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:elevation="4dp"
+        android:background="#FFF"
+        android:colorControlNormal="#007AFF"
+        />
+
+    <com.mapbox.search.ui.view.SearchResultsView
+        android:id="@+id/search_results_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="?actionBarSize"
+        android:clipToPadding="false"
+        android:paddingTop="22dp"
+        android:paddingBottom="22dp"
+        />
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:id="@+id/search_container_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="?actionBarSize"
+        >
+
+        <com.mapbox.search.ui.view.place.SearchPlaceBottomSheetView
+            android:id="@+id/search_place_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:elevation="8dp"
+            />
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
     <ImageView
         android:id="@+id/settings"
         android:layout_width="50dp"

@@ -40,8 +40,15 @@ repositories {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    // MapBox
     implementation 'com.mapbox.maps:android:10.15.0'
     implementation "com.mapbox.search:mapbox-search-android-ui:1.0.0-rc.6"
+
+    // Routing
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    implementation 'com.squareup.okhttp3:okhttp:4.9.2'
 
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.core:core-ktx:1.10.0'
