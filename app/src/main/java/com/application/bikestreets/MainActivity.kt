@@ -20,6 +20,7 @@ import androidx.core.view.isVisible
 import com.application.bikestreets.api.RoutingService
 import com.application.bikestreets.api.modals.DirectionResponse
 import com.application.bikestreets.databinding.ActivityMainBinding
+import com.application.bikestreets.utils.lastKnownLocation
 import com.application.bikestreets.utils.userDistanceTo
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineProvider
@@ -75,7 +76,6 @@ import java.io.InputStream
 
 class MainActivity : AppCompatActivity() {
     private lateinit var mapView: MapView
-    private var permissionsManager: PermissionsManager? = null
     private val activity: MainActivity = this
 
     private lateinit var locationEngine: LocationEngine
@@ -110,6 +110,9 @@ class MainActivity : AppCompatActivity() {
         // enable settings button
         enableSettingsButton()
 
+        // Show "center location" button if available
+        enableFollowRiderButton()
+
         mapView = binding.mapView
         setupMapboxMap()
         setupPolyLines()
@@ -117,7 +120,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setScreenModeFromPreferences() {
         // extract string from strings.xml file (as integer key) and convert to string
-        val keepScreenOnKey = getResources().getString(R.string.keep_screen_preference_key)
+        val keepScreenOnKey = resources.getString(R.string.keep_screen_preference_key)
 
         // extracted stored value for user's screen mode preference
         // TODO: remove depreciated code
@@ -156,39 +159,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun enableFollowRiderButton() {
-        //TODO: fix this
-//        // get the button
-//        val followRiderButton = binding.followRider
-//
-//        // show the button
-//        followRiderButton.visibility = View.VISIBLE
-//
-//        // enable the button's functionality
-//        followRiderButton.setOnClickListener {
-//            val locationComponent = mapView?.location
-//            mapView?.getMapboxMap()?.setCamera(locationComponent)
-//        }
-    }
-
-    private fun checkLocationPermission(onMapReady: () -> Unit) {
         if (PermissionsManager.areLocationPermissionsGranted(activity)) {
-            onMapReady()
-        } else {
-            val permissionsListener: PermissionsListener = object : PermissionsListener {
-                override fun onExplanationNeeded(permissionsToExplain: List<String>) {}
+            binding.followRider.visibility = View.VISIBLE
 
-                override fun onPermissionResult(granted: Boolean) {
-                    if (granted) {
-                        onMapReady()
-                    } else {
-                        // User denied the permission: don't put a point on the map at all
-                        activity.finish()
+            // enable the button's functionality
+            binding.followRider.setOnClickListener {
+                locationEngine.lastKnownLocation(activity) {
+                    if (it != null) {
+                        moveCamera(it)
                     }
                 }
             }
-
-            permissionsManager = PermissionsManager(permissionsListener)
-            permissionsManager?.requestLocationPermissions(activity)
         }
     }
 
@@ -286,58 +267,13 @@ class MainActivity : AppCompatActivity() {
 //        }
 //    }
 
-    private fun drawLocationOnMap() {
-
-//        binding.mapView.location.apply {
-//            locationPuck = createDefault2DPuck(activity, withBearing = true)
-
-        val locationComponentPlugin = mapView.location
-        locationComponentPlugin.updateSettings {
-            this.enabled = true
-            this.locationPuck = LocationPuck2D(
-                topImage = AppCompatResources.getDrawable(
-                    activity, com.mapbox.maps.plugin.locationcomponent.R.drawable.mapbox_user_icon
-                ), bearingImage = AppCompatResources.getDrawable(
-                    activity,
-                    com.mapbox.maps.plugin.locationcomponent.R.drawable.mapbox_user_bearing_icon,
-                ), shadowImage = AppCompatResources.getDrawable(
-                    activity,
-                    com.mapbox.maps.plugin.locationcomponent.R.drawable.mapbox_user_stroke_icon,
-                ), scaleExpression = interpolate {
-                    linear()
-                    zoom()
-                    stop {
-                        literal(0.0)
-                        literal(0.6)
-                    }
-                    stop {
-                        literal(20.0)
-                        literal(1.0)
-                    }
-                }.toJson()
-            )
-        }
-    }
-
     private fun mapTypeFromPreferences(): String? {
         // extract preference key string from strings.xml
-        val mapTypePreferenceKey = getResources().getString(R.string.map_type_preference_key)
+        val mapTypePreferenceKey = resources.getString(R.string.map_type_preference_key)
 
         // use that key to extract the stored user preference
         return PreferenceManager.getDefaultSharedPreferences(this)
             .getString(mapTypePreferenceKey, "street_map")
-    }
-
-    private fun addRoutesAndLocation(style: Style) {
-        // add geojson layers
-        showMapLayers(this, style)
-
-        // Map is set up and the style has loaded. Now you can add data or make other map adjustments
-        checkLocationPermission {
-            enableFollowRiderButton()
-            drawLocationOnMap()
-        }
-
     }
 
     private fun setupPolyLines() {
@@ -368,12 +304,7 @@ class MainActivity : AppCompatActivity() {
             mapView.location.addOnIndicatorPositionChangedListener(object :
                 OnIndicatorPositionChangedListener {
                 override fun onIndicatorPositionChanged(point: Point) {
-                    mapView.getMapboxMap().setCamera(
-                        CameraOptions.Builder()
-                            .center(point)
-                            .zoom(14.0)
-                            .build()
-                    )
+                    moveCamera(point)
 
                     mapView.location.removeOnIndicatorPositionChangedListener(this)
                 }
@@ -556,8 +487,8 @@ class MainActivity : AppCompatActivity() {
     private fun displayRouteOnMap(routingDirections: DirectionResponse?) {
         val selectedRoute = routingDirections?.routes?.first()
         val legs = selectedRoute?.legs
-        val steps = legs?.flatMap { it -> it.steps }
-        val coordinateList = steps?.flatMap { it -> it.geometry.coordinates }
+        val steps = legs?.flatMap { it.steps }
+        val coordinateList = steps?.flatMap { it.geometry.coordinates }
         Log.d("Apples", "coordinateList: $coordinateList")
 
         // Convert from List<List<Double>> to List<Point> for use with mapbox functions
@@ -728,6 +659,15 @@ class MainActivity : AppCompatActivity() {
             }
         })
         return true
+    }
+
+    fun moveCamera(location: Point) {
+        mapView.getMapboxMap().setCamera(
+            CameraOptions.Builder()
+                .center(location)
+                .zoom(14.0)
+                .build()
+        )
     }
 }
 

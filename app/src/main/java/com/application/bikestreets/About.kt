@@ -3,8 +3,8 @@ package com.application.bikestreets
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceFragmentCompat
 import com.application.bikestreets.databinding.ActivityAboutBinding
 
@@ -28,7 +28,13 @@ class About : AppCompatActivity() {
             .commit()
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
+        showVersionNumber()
+
         activateFeedbackButton()
+    }
+
+    private fun showVersionNumber() {
+        binding.versionNumber.text = "v${BuildConfig.VERSION_NAME} - ${BuildConfig.VERSION_CODE}"
     }
 
     class SettingsFragment : PreferenceFragmentCompat() {
