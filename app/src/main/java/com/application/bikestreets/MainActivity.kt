@@ -18,6 +18,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import com.application.bikestreets.api.RoutingService
+import com.application.bikestreets.api.modals.DirectionResponse
 import com.application.bikestreets.databinding.ActivityMainBinding
 import com.application.bikestreets.utils.userDistanceTo
 import com.mapbox.android.core.location.LocationEngine
@@ -43,7 +44,10 @@ import com.mapbox.maps.extension.style.sources.generated.GeoJsonSource
 import com.mapbox.maps.plugin.LocationPuck2D
 import com.mapbox.maps.plugin.annotation.annotations
 import com.mapbox.maps.plugin.annotation.generated.CircleAnnotationOptions
+import com.mapbox.maps.plugin.annotation.generated.PolylineAnnotationManager
+import com.mapbox.maps.plugin.annotation.generated.PolylineAnnotationOptions
 import com.mapbox.maps.plugin.annotation.generated.createCircleAnnotationManager
+import com.mapbox.maps.plugin.annotation.generated.createPolylineAnnotationManager
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.search.ApiType
@@ -84,6 +88,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var searchPlaceView: SearchPlaceBottomSheetView
 
     private lateinit var mapMarkersManager: MapMarkersManager
+    private lateinit var polylineAnnotationManager: PolylineAnnotationManager
 
     private lateinit var binding: ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -107,6 +112,7 @@ class MainActivity : AppCompatActivity() {
 
         mapView = binding.mapView
         setupMapboxMap()
+        setupPolyLines()
     }
 
     private fun setScreenModeFromPreferences() {
@@ -334,7 +340,14 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    private fun setupPolyLines() {
+        // Create an instance of the Annotation API and get the polygon manager.
+        val annotationApi = mapView.annotations
+        polylineAnnotationManager = annotationApi.createPolylineAnnotationManager()
+    }
+
     private fun setupMapboxMap() {
+        //TODO: Clean this up bigtime - split out markers and nav into different function (hopefully new file)
 
         mapView.getMapboxMap().also { mapboxMap ->
 
@@ -504,14 +517,14 @@ class MainActivity : AppCompatActivity() {
         searchPlaceView.addOnNavigateClickListener { searchPlace ->
             MainScope().launch(Dispatchers.IO) {
                 try {
-                    Log.i(javaClass.simpleName, "Begin navigation:  ${searchPlace.coordinate}")
                     val startCoordinates: Point = fromLngLat(-104.990251, 39.7392358)
                     val routingDirections = RoutingService.getRoutingDirections(
                         startCoordinates = startCoordinates,
                         endCoordinates = searchPlace.coordinate
                     )
+                    displayRouteOnMap(routingDirections)
                 } catch (e: Exception) {
-                    Log.e(javaClass.simpleName, "searchPlaceView error: $e")
+                    Log.e(javaClass.simpleName, "Navigation error: $e")
                     // Handle errors
                 }
             }
@@ -537,6 +550,35 @@ class MainActivity : AppCompatActivity() {
             ),
             PERMISSIONS_REQUEST_LOCATION
         )
+    }
+
+    // Once a search has kicked off, given the response API, we use that route to draw a polyline
+    private fun displayRouteOnMap(routingDirections: DirectionResponse?) {
+        val selectedRoute = routingDirections?.routes?.first()
+        val legs = selectedRoute?.legs
+        val steps = legs?.flatMap { it -> it.steps }
+        val coordinateList = steps?.flatMap { it -> it.geometry.coordinates }
+        Log.d("Apples", "coordinateList: $coordinateList")
+
+        // Convert from List<List<Double>> to List<Point> for use with mapbox functions
+        val pointsList: List<Point>? = coordinateList?.map { coordinate ->
+            fromLngLat(coordinate[0], coordinate[1])
+        }
+
+        // Remove previous polylines shown on map
+        polylineAnnotationManager.deleteAll()
+
+        pointsList?.let {
+            val polylineAnnotationOptions: PolylineAnnotationOptions = PolylineAnnotationOptions()
+                .withPoints(it)
+                // Style the polyline that will be added to the map.
+                .withLineColor("#47F0F5")
+                .withLineJoin(LineJoin.ROUND)
+                .withLineWidth(6.0)
+
+            // Add the resulting polygon to the map.
+            polylineAnnotationManager.create(polylineAnnotationOptions)
+        }
     }
 
     private fun updateOnBackPressedCallbackEnabled() {

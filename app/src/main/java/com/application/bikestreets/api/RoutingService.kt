@@ -31,6 +31,10 @@ class RoutingService {
                 )
 
                 if (response.isSuccessful) {
+                    Log.i(
+                        javaClass.simpleName,
+                        "getRoutingDirections request url(${response.code()}): ${response.raw().request.url}"
+                    )
                     return response.body()
                     // Handle the response
                 } else {
