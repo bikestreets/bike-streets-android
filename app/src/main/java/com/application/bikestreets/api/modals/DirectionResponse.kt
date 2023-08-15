@@ -30,7 +30,6 @@ data class Legs(
     val distance: Number,
 )
 
-//abstract class Steps(
 data class Steps(
     val geometry: Geometry,
 //    val manuver: Manuver

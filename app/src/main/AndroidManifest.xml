@@ -18,7 +18,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
-        <activity android:name=".About" />
         <activity
             android:name=".TermsOfUse"
             android:label="Terms of Use"

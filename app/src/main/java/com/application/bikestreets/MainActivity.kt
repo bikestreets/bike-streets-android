@@ -78,7 +78,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var locationEngine: LocationEngine
     private lateinit var location: Point
 
-    private lateinit var toolbar: Toolbar
+    private lateinit var actionSearch: Toolbar
     private lateinit var searchView: SearchView
 
     private lateinit var searchResultsView: SearchResultsView
@@ -151,8 +151,9 @@ class MainActivity : AppCompatActivity() {
 
         // enable the button's functionality
         settingsButton.setOnClickListener {
-            val intent = Intent(this, About::class.java).apply {}
-            startActivity(intent)
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, AboutFragment()).addToBackStack("null")
+                .commit()
         }
     }
 
@@ -290,7 +291,7 @@ class MainActivity : AppCompatActivity() {
             updateOnBackPressedCallbackEnabled()
         }
 
-        toolbar = binding.toolbar.apply {
+        actionSearch = binding.searchCard.searchView.apply {
             title = "Search"
             setSupportActionBar(this)
         }
@@ -411,6 +412,7 @@ class MainActivity : AppCompatActivity() {
         })
 
         searchPlaceView = binding.searchPlaceView
+        // Hidden by default
         searchPlaceView.initialize(CommonSearchViewConfiguration(DistanceUnitType.IMPERIAL))
 
         searchPlaceView.addOnCloseClickListener {
@@ -521,7 +523,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun closeSearchView() {
-        toolbar.collapseActionView()
+        actionSearch.collapseActionView()
         searchView.setQuery("", false)
     }
 
