@@ -11,7 +11,6 @@ import android.view.View
 import android.view.WindowManager
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
@@ -20,11 +19,9 @@ import androidx.core.view.isVisible
 import com.application.bikestreets.api.RoutingService
 import com.application.bikestreets.api.modals.DirectionResponse
 import com.application.bikestreets.databinding.ActivityMainBinding
-import com.application.bikestreets.utils.lastKnownLocation
 import com.application.bikestreets.utils.userDistanceTo
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineProvider
-import com.mapbox.android.core.permissions.PermissionsListener
 import com.mapbox.android.core.permissions.PermissionsManager
 import com.mapbox.android.gestures.Utils
 import com.mapbox.geojson.FeatureCollection
@@ -33,6 +30,7 @@ import com.mapbox.geojson.Point.fromLngLat
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.EdgeInsets
 import com.mapbox.maps.MapView
+import com.mapbox.maps.MapboxMap
 import com.mapbox.maps.Style
 import com.mapbox.maps.extension.style.expressions.dsl.generated.interpolate
 import com.mapbox.maps.extension.style.layers.addLayer
@@ -42,7 +40,6 @@ import com.mapbox.maps.extension.style.layers.properties.generated.LineCap
 import com.mapbox.maps.extension.style.layers.properties.generated.LineJoin
 import com.mapbox.maps.extension.style.sources.addSource
 import com.mapbox.maps.extension.style.sources.generated.GeoJsonSource
-import com.mapbox.maps.plugin.LocationPuck2D
 import com.mapbox.maps.plugin.annotation.annotations
 import com.mapbox.maps.plugin.annotation.generated.CircleAnnotationOptions
 import com.mapbox.maps.plugin.annotation.generated.PolylineAnnotationManager
@@ -79,6 +76,7 @@ class MainActivity : AppCompatActivity() {
     private val activity: MainActivity = this
 
     private lateinit var locationEngine: LocationEngine
+    private lateinit var location: Point
 
     private lateinit var toolbar: Toolbar
     private lateinit var searchView: SearchView
@@ -164,11 +162,7 @@ class MainActivity : AppCompatActivity() {
 
             // enable the button's functionality
             binding.followRider.setOnClickListener {
-                locationEngine.lastKnownLocation(activity) {
-                    if (it != null) {
-                        moveCamera(it)
-                    }
-                }
+                moveCamera(location)
             }
         }
     }
@@ -283,34 +277,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupMapboxMap() {
-        //TODO: Clean this up bigtime - split out markers and nav into different function (hopefully new file)
 
         mapView.getMapboxMap().also { mapboxMap ->
 
-            var mapStyle = "asset://stylejson/style.json"
-
-            // apply map style conditionally, based on user's preferences.
-            if (mapTypeFromPreferences() == "satellite_view") {
-                mapStyle = Style.SATELLITE
-            }
-
-            // Load style, on compete show layers
-            mapboxMap.loadStyleUri(mapStyle) { showMapLayers(this, it) }
-
-            mapView.location.updateSettings {
-                enabled = true
-            }
-
-            mapView.location.addOnIndicatorPositionChangedListener(object :
-                OnIndicatorPositionChangedListener {
-                override fun onIndicatorPositionChanged(point: Point) {
-                    moveCamera(point)
-
-                    mapView.location.removeOnIndicatorPositionChangedListener(this)
-                }
-            })
+            loadMapboxStyle(mapboxMap)
+            loadLocation()
         }
 
+        // Load Map Markers
         mapMarkersManager = MapMarkersManager(mapView)
         mapMarkersManager.onMarkersChangeListener = {
             updateOnBackPressedCallbackEnabled()
@@ -321,8 +295,11 @@ class MainActivity : AppCompatActivity() {
             setSupportActionBar(this)
         }
 
-        val apiType = ApiType.GEOCODING
+        loadSearch()
+    }
 
+    private fun loadSearch() {
+        val apiType = ApiType.GEOCODING
 
         searchResultsView = binding.searchResultsView.apply {
             initialize(
@@ -431,7 +408,6 @@ class MainActivity : AppCompatActivity() {
                     searchView.setQuery(suggestion.name, true)
                 }
             }
-
         })
 
         searchPlaceView = binding.searchPlaceView
@@ -446,11 +422,10 @@ class MainActivity : AppCompatActivity() {
         searchPlaceView.isShareButtonVisible = false
 
         searchPlaceView.addOnNavigateClickListener { searchPlace ->
-            MainScope().launch(Dispatchers.IO) {
+            MainScope().launch(Dispatchers.Main) {
                 try {
-                    val startCoordinates: Point = fromLngLat(-104.990251, 39.7392358)
                     val routingDirections = RoutingService.getRoutingDirections(
-                        startCoordinates = startCoordinates,
+                        startCoordinates = location,
                         endCoordinates = searchPlace.coordinate
                     )
                     displayRouteOnMap(routingDirections)
@@ -481,6 +456,34 @@ class MainActivity : AppCompatActivity() {
             ),
             PERMISSIONS_REQUEST_LOCATION
         )
+    }
+
+    private fun loadLocation() {
+        mapView.location.updateSettings {
+            enabled = true
+        }
+
+        mapView.location.addOnIndicatorPositionChangedListener(object :
+            OnIndicatorPositionChangedListener {
+            override fun onIndicatorPositionChanged(point: Point) {
+                location = point
+                moveCamera(location)
+
+                mapView.location.removeOnIndicatorPositionChangedListener(this)
+            }
+        })
+    }
+
+    private fun loadMapboxStyle(mapboxMap: MapboxMap) {
+        var mapStyle = "asset://stylejson/style.json"
+
+        // apply map style conditionally, based on user's preferences.
+        if (mapTypeFromPreferences() == "satellite_view") {
+            mapStyle = Style.SATELLITE
+        }
+
+        // Load style, on compete show layers
+        mapboxMap.loadStyleUri(mapStyle) { showMapLayers(this, it) }
     }
 
     // Once a search has kicked off, given the response API, we use that route to draw a polyline
@@ -670,4 +673,3 @@ class MainActivity : AppCompatActivity() {
         )
     }
 }
-

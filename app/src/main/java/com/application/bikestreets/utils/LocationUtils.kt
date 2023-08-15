@@ -2,6 +2,8 @@ package com.application.bikestreets.utils
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.widget.Toast
+import android.widget.Toast.LENGTH_SHORT
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineCallback
 import com.mapbox.android.core.location.LocationEngineResult
@@ -25,7 +27,7 @@ fun LocationEngine.lastKnownLocation(context: Context, callback: (Point?) -> Uni
         }
 
         override fun onFailure(exception: Exception) {
-            callback(null)
+            Toast.makeText(context, "Failed to get location", LENGTH_SHORT).show()
         }
     })
 }
