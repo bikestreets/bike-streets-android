@@ -33,7 +33,7 @@
         android:autoLink="web"
         android:clickable="true"
         android:focusable="true"
-        android:text="Send Feedback"
+        android:text="@string/send_feedback"
         app:layout_constraintTop_toBottomOf="@+id/settings"
         tools:layout_editor_absoluteX="32dp" />
 

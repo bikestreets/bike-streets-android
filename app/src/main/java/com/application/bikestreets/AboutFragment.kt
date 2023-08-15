@@ -1,7 +1,6 @@
 package com.application.bikestreets
 
 import android.content.Intent
-import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -37,32 +36,12 @@ class AboutFragment : Fragment() {
         return view
     }
 
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//        binding = ActivityAboutBinding.inflate(layoutInflater)
-//        val view = binding.root
-//        setContentView(view)
-//
-//        // This layout is designed only for portrait mode, so force the user to that orientation
-//        // regardless of device settings
-//        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-//
-//        supportFragmentManager
-//            .beginTransaction()
-//            .replace(R.id.settings, SettingsFragment())
-//            .commit()
-//        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-//
-//        showVersionNumber()
-//
-//        activateFeedbackButton()
-//    }
-
     private fun showVersionNumber() {
         binding.versionNumber.text = "v${BuildConfig.VERSION_NAME} - ${BuildConfig.VERSION_CODE}"
     }
 
     class SettingsFragment : PreferenceFragmentCompat() {
+        // TODO: Broken
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
         }
