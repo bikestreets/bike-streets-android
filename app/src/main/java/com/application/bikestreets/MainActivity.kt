@@ -1,9 +1,9 @@
 package com.application.bikestreets
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -117,15 +117,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setScreenModeFromPreferences() {
-        // extract string from strings.xml file (as integer key) and convert to string
-        val keepScreenOnKey = resources.getString(R.string.keep_screen_preference_key)
+        val sharedPreferences = getSharedPreferences(packageName, Context.MODE_PRIVATE)
 
-        // extracted stored value for user's screen mode preference
-        // TODO: remove depreciated code
-        val keepScreenOnPreference = PreferenceManager.getDefaultSharedPreferences(this)
-            .getBoolean(keepScreenOnKey, true) // default is to keep the screen on
+        val keepScreenOnPreference =
+            sharedPreferences.getBoolean(KEEP_SCREEN_ON_PREFERENCE_KEY, true)
 
-        // adding this flag will keep the screen from turning off if the app goes idle
         val keepScreenOnFlag = WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
 
         if (keepScreenOnPreference) {
@@ -263,12 +259,8 @@ class MainActivity : AppCompatActivity() {
 //    }
 
     private fun mapTypeFromPreferences(): String? {
-        // extract preference key string from strings.xml
-        val mapTypePreferenceKey = resources.getString(R.string.map_type_preference_key)
-
-        // use that key to extract the stored user preference
-        return PreferenceManager.getDefaultSharedPreferences(this)
-            .getString(mapTypePreferenceKey, "street_map")
+        val sharedPreferences = getSharedPreferences(packageName, Context.MODE_PRIVATE)
+        return sharedPreferences.getString(MAP_TYPE_PREFERENCE_KEY, "street_map")
     }
 
     private fun setupPolyLines() {
@@ -469,6 +461,7 @@ class MainActivity : AppCompatActivity() {
             OnIndicatorPositionChangedListener {
             override fun onIndicatorPositionChanged(point: Point) {
                 location = point
+                //TODO if follow setting is enabled
                 moveCamera(location)
 
                 mapView.location.removeOnIndicatorPositionChangedListener(this)
@@ -494,7 +487,6 @@ class MainActivity : AppCompatActivity() {
         val legs = selectedRoute?.legs
         val steps = legs?.flatMap { it.steps }
         val coordinateList = steps?.flatMap { it.geometry.coordinates }
-        Log.d("Apples", "coordinateList: $coordinateList")
 
         // Convert from List<List<Double>> to List<Point> for use with mapbox functions
         val pointsList: List<Point>? = coordinateList?.map { coordinate ->
@@ -610,6 +602,8 @@ class MainActivity : AppCompatActivity() {
         )
 
         const val PERMISSIONS_REQUEST_LOCATION = 0
+        private const val KEEP_SCREEN_ON_PREFERENCE_KEY = "keep_screen_on"
+        private const val MAP_TYPE_PREFERENCE_KEY = "map_view_type"
     }
 
 
@@ -667,10 +661,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun moveCamera(location: Point) {
+        // TODO: ease animation to smooth out movement
         mapView.getMapboxMap().setCamera(
             CameraOptions.Builder()
                 .center(location)
-                .zoom(14.0)
                 .build()
         )
     }
