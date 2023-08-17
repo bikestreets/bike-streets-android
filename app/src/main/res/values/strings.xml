@@ -22,5 +22,9 @@
     <string name="search_content_desc">search icon</string>
 
     <!-- Settings/About -->
+    <string name="enable_location_permission">Enable Location Marker</string>
     <string name="send_feedback">Send Feedback</string>
+
+
+    <string name="no_location_access">No location - some features are limited</string>
 </resources>

@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -23,6 +24,7 @@ import com.application.bikestreets.api.modals.DirectionResponse
 import com.application.bikestreets.constants.PreferenceConstants.KEEP_SCREEN_ON_PREFERENCE_KEY
 import com.application.bikestreets.constants.PreferenceConstants.MAP_TYPE_PREFERENCE_KEY
 import com.application.bikestreets.databinding.ActivityMainBinding
+import com.application.bikestreets.utils.ToastUtils.showToast
 import com.application.bikestreets.utils.userDistanceTo
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineProvider
@@ -75,7 +77,9 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import java.io.InputStream
 
-class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener {
+class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener,
+    ActivityCompat.OnRequestPermissionsResultCallback,
+    AboutFragment.OnPermissionButtonClickListener {
     private lateinit var mapView: MapView
     private val activity: MainActivity = this
 
@@ -156,13 +160,17 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         // get the button
         val settingsButton = binding.settings
 
+        // Set the callback in the fragment
+        val aboutFragment = AboutFragment()
+        aboutFragment.setOnPermissionRequested(this)
+
         // show the button
         settingsButton.visibility = View.VISIBLE
 
         // enable the button's functionality
         settingsButton.setOnClickListener {
             supportFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, AboutFragment()).addToBackStack("null")
+                .replace(R.id.fragment_container, aboutFragment).addToBackStack("null")
                 .commit()
         }
     }
@@ -459,7 +467,10 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             updateOnBackPressedCallbackEnabled()
         }
 
-        //TODO: Accepting permission happens too late. User is not shown their location until next visit
+        requestLocationPermission()
+    }
+
+    private fun requestLocationPermission() {
         ActivityCompat.requestPermissions(
             this,
             arrayOf(
@@ -471,20 +482,22 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
     private fun loadLocation() {
-        mapView.location.updateSettings {
-            enabled = true
-        }
-
-        mapView.location.addOnIndicatorPositionChangedListener(object :
-            OnIndicatorPositionChangedListener {
-            override fun onIndicatorPositionChanged(point: Point) {
-                location = point
-                //TODO if follow setting is enabled
-                moveCamera(location)
-
-                mapView.location.removeOnIndicatorPositionChangedListener(this)
+        if (PermissionsManager.areLocationPermissionsGranted(activity)) {
+            mapView.location.updateSettings {
+                enabled = true
             }
-        })
+
+            mapView.location.addOnIndicatorPositionChangedListener(object :
+                OnIndicatorPositionChangedListener {
+                override fun onIndicatorPositionChanged(point: Point) {
+                    location = point
+                    //TODO if follow setting is enabled
+                    moveCamera(location)
+
+                    mapView.location.removeOnIndicatorPositionChangedListener(this)
+                }
+            })
+        }
     }
 
     private fun loadMapboxStyle(mapboxMap: MapboxMap) {
@@ -692,8 +705,32 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         }
     }
 
+    // Handle permission results
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == PERMISSIONS_REQUEST_LOCATION) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted, handle location access
+                loadLocation()
+                enableFollowRiderButton()
+            } else {
+                showToast(activity, getString(R.string.no_location_access))
+            }
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
+    }
+
+    // Triggered when button clicked in settings fragment
+    override fun onPermissionButtonClicked() {
+        Log.d(javaClass.simpleName, "fragment click!!")
+        requestLocationPermission()
     }
 }

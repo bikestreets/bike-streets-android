@@ -3,18 +3,24 @@ package com.application.bikestreets
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceFragmentCompat
 import com.application.bikestreets.databinding.ActivityAboutBinding
+import com.mapbox.android.core.permissions.PermissionsManager
 
 class AboutFragment : Fragment() {
     private val feedbackUrl = Uri.parse("https://www.bikestreets.com/mobile-app-feedback")
 
     private var _binding: ActivityAboutBinding? = null
     private val binding get() = _binding!!
+
+    private var buttonClickListener: OnPermissionButtonClickListener? = null
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -32,6 +38,8 @@ class AboutFragment : Fragment() {
         showVersionNumber()
 
         activateFeedbackButton()
+
+        setUpEnableLocationButton()
 
         return view
     }
@@ -53,9 +61,27 @@ class AboutFragment : Fragment() {
         }
     }
 
+    // If the user has not accepted location permission, give them another chance to enable
+    private fun setUpEnableLocationButton() {
+        if (!PermissionsManager.areLocationPermissionsGranted(activity)) {
+            binding.enableLocationButton.setOnClickListener {
+                buttonClickListener?.onPermissionButtonClicked()
+            }
+
+            binding.enableLocationButton.isVisible = true
+        }
+    }
+
+    fun setOnPermissionRequested(listener: OnPermissionButtonClickListener) {
+        buttonClickListener = listener
+    }
+
+    interface OnPermissionButtonClickListener {
+        fun onPermissionButtonClicked()
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
-
 }
