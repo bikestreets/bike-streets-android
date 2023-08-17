@@ -3,6 +3,7 @@ package com.application.bikestreets
 import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -16,8 +17,11 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+import androidx.preference.PreferenceManager
 import com.application.bikestreets.api.RoutingService
 import com.application.bikestreets.api.modals.DirectionResponse
+import com.application.bikestreets.constants.PreferenceConstants.KEEP_SCREEN_ON_PREFERENCE_KEY
+import com.application.bikestreets.constants.PreferenceConstants.MAP_TYPE_PREFERENCE_KEY
 import com.application.bikestreets.databinding.ActivityMainBinding
 import com.application.bikestreets.utils.userDistanceTo
 import com.mapbox.android.core.location.LocationEngine
@@ -71,7 +75,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import java.io.InputStream
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener {
     private lateinit var mapView: MapView
     private val activity: MainActivity = this
 
@@ -88,6 +92,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var mapMarkersManager: MapMarkersManager
     private lateinit var polylineAnnotationManager: PolylineAnnotationManager
 
+    private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var defaultPackage: String
+
     private lateinit var binding: ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,6 +107,8 @@ class MainActivity : AppCompatActivity() {
 
         setContentView(view)
 
+        // Carry over from getDefaultSharedPreferences()
+        defaultPackage = "${packageName}_preferences"
         setScreenModeFromPreferences()
 
         // launch terms of use if unsigned
@@ -114,10 +123,15 @@ class MainActivity : AppCompatActivity() {
         mapView = binding.mapView
         setupMapboxMap()
         setupPolyLines()
+
+        // Shared Preferences
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+        sharedPreferences.registerOnSharedPreferenceChangeListener(this)
+
     }
 
     private fun setScreenModeFromPreferences() {
-        val sharedPreferences = getSharedPreferences(packageName, Context.MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences(defaultPackage, Context.MODE_PRIVATE)
 
         val keepScreenOnPreference =
             sharedPreferences.getBoolean(KEEP_SCREEN_ON_PREFERENCE_KEY, true)
@@ -230,7 +244,7 @@ class MainActivity : AppCompatActivity() {
                 GeoJsonSource.Builder(layerName).featureCollection(featureCollection).build()
             )
 
-            if (mapTypeFromPreferences() == "satellite_view") {
+            if (mapTypeFromPreferences().equals(getString(R.string.preference_satellite))) {
                 mapStyle.addLayer(createLineLayer(layerName))
             } else {
                 // create a line layer that reads the GeoJSON data that we just added
@@ -259,8 +273,11 @@ class MainActivity : AppCompatActivity() {
 //    }
 
     private fun mapTypeFromPreferences(): String? {
-        val sharedPreferences = getSharedPreferences(packageName, Context.MODE_PRIVATE)
-        return sharedPreferences.getString(MAP_TYPE_PREFERENCE_KEY, "street_map")
+        val sharedPreferences = getSharedPreferences(defaultPackage, Context.MODE_PRIVATE)
+        return sharedPreferences.getString(
+            MAP_TYPE_PREFERENCE_KEY,
+            getString(R.string.preference_street)
+        )
     }
 
     private fun setupPolyLines() {
@@ -442,6 +459,7 @@ class MainActivity : AppCompatActivity() {
             updateOnBackPressedCallbackEnabled()
         }
 
+        //TODO: Accepting permission happens too late. User is not shown their location until next visit
         ActivityCompat.requestPermissions(
             this,
             arrayOf(
@@ -473,7 +491,7 @@ class MainActivity : AppCompatActivity() {
         var mapStyle = "asset://stylejson/style.json"
 
         // apply map style conditionally, based on user's preferences.
-        if (mapTypeFromPreferences() == "satellite_view") {
+        if (mapTypeFromPreferences().equals(getString(R.string.preference_satellite))) {
             mapStyle = Style.SATELLITE
         }
 
@@ -602,8 +620,6 @@ class MainActivity : AppCompatActivity() {
         )
 
         const val PERMISSIONS_REQUEST_LOCATION = 0
-        private const val KEEP_SCREEN_ON_PREFERENCE_KEY = "keep_screen_on"
-        private const val MAP_TYPE_PREFERENCE_KEY = "map_view_type"
     }
 
 
@@ -667,5 +683,26 @@ class MainActivity : AppCompatActivity() {
                 .center(location)
                 .build()
         )
+    }
+
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
+        when (key) {
+            KEEP_SCREEN_ON_PREFERENCE_KEY -> {
+                setScreenModeFromPreferences()
+            }
+            MAP_TYPE_PREFERENCE_KEY -> {
+                Log.d(javaClass.simpleName, "Updating style")
+                // call this function, only to update the map style
+                loadMapboxStyle(mapView.getMapboxMap())
+            }
+            else -> {
+                Log.e(javaClass.simpleName, "No preference action for key: $key")
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
     }
 }

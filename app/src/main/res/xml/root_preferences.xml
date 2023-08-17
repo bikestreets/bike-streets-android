@@ -20,7 +20,7 @@
     <PreferenceCategory app:title="@string/map_settings_header">
 
         <ListPreference
-            app:defaultValue="street_map"
+            app:defaultValue="@string/preference_street"
             app:entries="@array/map_type_entries"
             app:entryValues="@array/map_type_values"
             app:key="@string/map_type_preference_key"

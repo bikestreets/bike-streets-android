@@ -14,6 +14,10 @@
     <string name="map_type_title">Map View</string>
     <string name="map_type_preference_key">map_view_type</string>
 
+    <!-- Preference Values -->
+    <string name="preference_street">street_map</string>
+    <string name="preference_satellite">satellite_view</string>
+
     <!-- Search -->
     <string name="search_bar_instruction">Search</string>
     <string name="search_content_desc">search icon</string>
