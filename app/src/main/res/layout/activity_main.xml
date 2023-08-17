@@ -84,6 +84,7 @@
         android:elevation="12dp"
         android:id="@+id/fragment_container"
         android:layout_width="match_parent"
+        tools:visibility="gone"
         android:layout_height="match_parent" />
 
 
