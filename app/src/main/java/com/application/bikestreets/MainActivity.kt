@@ -256,13 +256,13 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
 //    private fun cameraModeFromPreferences(): Int {
 //        // extract string from strings.xml file (as integer key) and convert to string
-//        val orientataionPreferenceKey = getResources().getString(R.string.map_orientation_preference_key)
+//        val orientationPreferenceKey = getResources().getString(R.string.map_orientation_preference_key)
 //
 //        // use key to extract saved camera mode preference string. Default to tracking compass,
 //        // a.k.a. "Direction of Travel"
 //        val orientationPreferenceString = PreferenceManager
 //            .getDefaultSharedPreferences(this)
-//            .getString(orientataionPreferenceKey, "direction_of_travel")
+//            .getString(orientationPreferenceKey, "direction_of_travel")
 //
 //       // convert into a MapBox camera mode and return
 //        return if (orientationPreferenceString == "fixed") {
@@ -537,18 +537,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         searchView.setQuery("", false)
     }
 
-    override fun onResume() {
-        super.onResume()
-
-//        Log.w("Apples", "On Resume Called")
-//        // if the user is returning from the settings page, those settings will need to be applied
-//        // TODO: solve onResume getting called in a loop
-//        setupMapboxMap(updateStyleOnly = true)
-//
-//        // reload the autosleep preference in case it was changed while the activity was paused
-//        setScreenModeFromPreferences()
-    }
-
     private class MapMarkersManager(mapView: MapView) {
 
         private val mapboxMap = mapView.getMapboxMap()
@@ -611,6 +599,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         val MARKERS_EDGE_OFFSET = Utils.dpToPx(64F).toDouble()
         val PLACE_CARD_HEIGHT = Utils.dpToPx(300F).toDouble()
 
+        //TODO Adjust camera so both start and end are visible
         val MARKERS_INSETS = EdgeInsets(
             MARKERS_EDGE_OFFSET, MARKERS_EDGE_OFFSET, MARKERS_EDGE_OFFSET, MARKERS_EDGE_OFFSET
         )
@@ -690,11 +679,13 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             KEEP_SCREEN_ON_PREFERENCE_KEY -> {
                 setScreenModeFromPreferences()
             }
+
             MAP_TYPE_PREFERENCE_KEY -> {
                 Log.d(javaClass.simpleName, "Updating style")
                 // call this function, only to update the map style
                 loadMapboxStyle(mapView.getMapboxMap())
             }
+
             else -> {
                 Log.e(javaClass.simpleName, "No preference action for key: $key")
             }
