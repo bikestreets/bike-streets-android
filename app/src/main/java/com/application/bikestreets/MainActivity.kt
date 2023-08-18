@@ -253,6 +253,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             )
 
             if (mapTypeFromPreferences().equals(getString(R.string.preference_satellite))) {
+                //TODO: In satellite view, routes appear above the navigation line
                 mapStyle.addLayer(createLineLayer(layerName))
             } else {
                 // create a line layer that reads the GeoJSON data that we just added
@@ -348,7 +349,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 suggestions: List<SearchSuggestion>,
                 responseInfo: ResponseInfo
             ) {
-// Nothing to do
+                // Nothing to do
             }
 
             override fun onSearchResultsShown(
@@ -364,7 +365,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 results: List<OfflineSearchResult>,
                 responseInfo: OfflineResponseInfo
             ) {
-// Nothing to do
+                // Nothing to do
             }
 
             override fun onSuggestionSelected(searchSuggestion: SearchSuggestion): Boolean {

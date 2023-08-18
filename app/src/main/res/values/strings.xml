@@ -24,6 +24,7 @@
     <!-- Settings/About -->
     <string name="enable_location_permission">Enable Location Marker</string>
     <string name="send_feedback">Send Feedback</string>
+    <string name="version_info">v%s - %d%s</string>
 
 
     <string name="no_location_access">No location - some features are limited</string>

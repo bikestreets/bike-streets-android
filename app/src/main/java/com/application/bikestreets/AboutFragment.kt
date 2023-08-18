@@ -3,7 +3,6 @@ package com.application.bikestreets
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -45,7 +44,9 @@ class AboutFragment : Fragment() {
     }
 
     private fun showVersionNumber() {
-        binding.versionNumber.text = "v${BuildConfig.VERSION_NAME} - ${BuildConfig.VERSION_CODE}"
+        // Show a d if is a debug build
+        val buildType = if(BuildConfig.DEBUG)  "d" else ""
+        binding.versionNumber.text = getString(R.string.version_info, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE, buildType)
     }
 
     class SettingsFragment : PreferenceFragmentCompat() {
