@@ -358,7 +358,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 responseInfo: ResponseInfo
             ) {
                 closeSearchView()
-                mapMarkersManager.showMarkers(results.map { it.coordinate })
+                mapMarkersManager.showMarkers(results.map { it.coordinate }, activity)
             }
 
             override fun onOfflineSearchResultsShown(
@@ -378,7 +378,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             ) {
                 closeSearchView()
                 searchPlaceView.open(SearchPlace.createFromSearchResult(searchResult, responseInfo))
-                mapMarkersManager.showMarker(searchResult.coordinate)
+                mapMarkersManager.showMarker(searchResult.coordinate, activity)
             }
 
             override fun onOfflineSearchResultSelected(
@@ -387,7 +387,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             ) {
                 closeSearchView()
                 searchPlaceView.open(SearchPlace.createFromOfflineSearchResult(searchResult))
-                mapMarkersManager.showMarker(searchResult.coordinate)
+                mapMarkersManager.showMarker(searchResult.coordinate, activity)
             }
 
             override fun onError(e: Exception) {
@@ -416,7 +416,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                     }
                 }
 
-                mapMarkersManager.showMarker(historyRecord.coordinate)
+                mapMarkersManager.showMarker(historyRecord.coordinate, activity)
             }
 
             override fun onPopulateQueryClick(
@@ -434,7 +434,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         searchPlaceView.initialize(CommonSearchViewConfiguration(DistanceUnitType.IMPERIAL))
 
         searchPlaceView.addOnCloseClickListener {
-            mapMarkersManager.clearMarkers()
             searchPlaceView.hide()
         }
 
@@ -568,11 +567,11 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             circleAnnotationManager.deleteAll()
         }
 
-        fun showMarker(coordinate: Point) {
-            showMarkers(listOf(coordinate))
+        fun showMarker(coordinate: Point, context: Context) {
+            showMarkers(listOf(coordinate), context)
         }
 
-        fun showMarkers(coordinates: List<Point>) {
+        fun showMarkers(coordinates: List<Point>, context: Context) {
             clearMarkers()
             if (coordinates.isEmpty()) {
                 onMarkersChangeListener?.invoke()
@@ -583,8 +582,8 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 val circleAnnotationOptions: CircleAnnotationOptions = CircleAnnotationOptions()
                     .withPoint(coordinate)
                     .withCircleRadius(8.0)
-                    .withCircleColor("#ee4e8b")
-                    .withCircleStrokeWidth(2.0)
+                    .withCircleColor(ContextCompat.getColor(context, R.color.destination_pin))
+                    .withCircleStrokeWidth(3.0)
                     .withCircleStrokeColor("#ffffff")
 
                 val annotation = circleAnnotationManager.create(circleAnnotationOptions)
@@ -688,7 +687,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         )
     }
 
-    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         when (key) {
             KEEP_SCREEN_ON_PREFERENCE_KEY -> {
                 setScreenModeFromPreferences()

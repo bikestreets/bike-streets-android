@@ -12,4 +12,9 @@
     <color name="mapBikeStreets">#345aa8</color>
     <color name="mapRideSidewalk">#e82e8b</color>
     <color name="mapWalkSidewalk">#d8282c</color>
+    
+    <!-- v2 Color Scheme -->
+    <color name="destination_pin">#FBCC20</color>
+    <color name="primary_route_segment">#355AA8</color>
+    <color name="sidewalk_segment">#971B8A</color>
 </resources>
