@@ -127,15 +127,10 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         mapView = binding.mapView
         setupMapboxMap()
         setupPolyLines()
-
-        // Shared Preferences
-        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
-        sharedPreferences.registerOnSharedPreferenceChangeListener(this)
-
     }
 
     private fun setScreenModeFromPreferences() {
-        val sharedPreferences = getSharedPreferences(defaultPackage, Context.MODE_PRIVATE)
+        sharedPreferences = getSharedPreferences(defaultPackage, Context.MODE_PRIVATE)
 
         val keepScreenOnPreference =
             sharedPreferences.getBoolean(KEEP_SCREEN_ON_PREFERENCE_KEY, true)
@@ -147,6 +142,8 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         } else {
             window.clearFlags(keepScreenOnFlag)
         }
+
+        sharedPreferences.registerOnSharedPreferenceChangeListener(this)
     }
 
     private fun launchTermsOfUse() {
