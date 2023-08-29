@@ -24,7 +24,7 @@
         android:background="@drawable/circle"
         android:elevation="2dp"
         android:padding="10dp"
-        app:layout_constraintBottom_toTopOf="@id/search_card"
+        app:layout_constraintBottom_toTopOf="@id/bottom_sheet"
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/ic_settings_black_24dp" />
 
@@ -43,22 +43,11 @@
         app:srcCompat="@drawable/ic_nearme"
         tools:visibility="visible" />
 
-    <com.mapbox.search.ui.view.SearchResultsView
-        android:id="@+id/search_results_view"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:clipToPadding="false"
-        android:elevation="4dp"
-        android:paddingTop="22dp"
-        android:paddingBottom="22dp"
-        app:layout_constraintBottom_toTopOf="@id/search_card"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:elevation="8dp"
-        app:layout_constraintBottom_toTopOf="@id/search_card"
+        app:layout_constraintBottom_toTopOf="@id/bottom_sheet"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
@@ -72,8 +61,8 @@
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
     <include
-        android:id="@+id/search_card"
-        layout="@layout/search_card"
+        android:id="@+id/bottom_sheet"
+        layout="@layout/bottom_draggable_sheet"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -81,11 +70,11 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <androidx.fragment.app.FragmentContainerView
-        android:elevation="12dp"
         android:id="@+id/fragment_container"
         android:layout_width="match_parent"
-        tools:visibility="gone"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:elevation="12dp"
+        tools:visibility="gone" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

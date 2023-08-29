@@ -11,6 +11,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
+import android.widget.LinearLayout
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
@@ -26,6 +27,8 @@ import com.application.bikestreets.constants.PreferenceConstants.MAP_TYPE_PREFER
 import com.application.bikestreets.databinding.ActivityMainBinding
 import com.application.bikestreets.utils.ToastUtils.showToast
 import com.application.bikestreets.utils.userDistanceTo
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineProvider
 import com.mapbox.android.core.permissions.PermissionsManager
@@ -77,6 +80,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import java.io.InputStream
 
+
 class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener,
     ActivityCompat.OnRequestPermissionsResultCallback,
     AboutFragment.OnPermissionButtonClickListener {
@@ -88,6 +92,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     private lateinit var actionSearch: Toolbar
     private lateinit var searchView: SearchView
+    private lateinit var bottomSheetBehavior: BottomSheetBehavior<LinearLayout>
 
     private lateinit var searchResultsView: SearchResultsView
     private lateinit var searchEngineUiAdapter: SearchEngineUiAdapter
@@ -108,6 +113,11 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
+
+        bottomSheetBehavior =
+            BottomSheetBehavior.from(binding.bottomSheet.bottomNavigationContainer)
+//        bottomSheetBehavior.peekHeight = binding.bottomSheet.appBar.height
+        setupBottomSheet()
 
         setContentView(view)
 
@@ -135,7 +145,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
     private fun setScreenModeFromPreferences() {
-        val sharedPreferences = getSharedPreferences(defaultPackage, Context.MODE_PRIVATE)
+        sharedPreferences = getSharedPreferences(defaultPackage, Context.MODE_PRIVATE)
 
         val keepScreenOnPreference =
             sharedPreferences.getBoolean(KEEP_SCREEN_ON_PREFERENCE_KEY, true)
@@ -263,24 +273,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         }
     }
 
-//    private fun cameraModeFromPreferences(): Int {
-//        // extract string from strings.xml file (as integer key) and convert to string
-//        val orientationPreferenceKey = getResources().getString(R.string.map_orientation_preference_key)
-//
-//        // use key to extract saved camera mode preference string. Default to tracking compass,
-//        // a.k.a. "Direction of Travel"
-//        val orientationPreferenceString = PreferenceManager
-//            .getDefaultSharedPreferences(this)
-//            .getString(orientationPreferenceKey, "direction_of_travel")
-//
-//       // convert into a MapBox camera mode and return
-//        return if (orientationPreferenceString == "fixed") {
-//            CameraMode.TRACKING
-//        } else {
-//            CameraMode.TRACKING_COMPASS
-//        }
-//    }
-
     private fun mapTypeFromPreferences(): String? {
         val sharedPreferences = getSharedPreferences(defaultPackage, Context.MODE_PRIVATE)
         return sharedPreferences.getString(
@@ -309,7 +301,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             updateOnBackPressedCallbackEnabled()
         }
 
-        actionSearch = binding.searchCard.searchView.apply {
+        actionSearch = binding.bottomSheet.searchView.apply {
             title = "Search"
             setSupportActionBar(this)
         }
@@ -317,10 +309,43 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         loadSearch()
     }
 
+    private fun setupBottomSheet() {
+        bottomSheetBehavior.addBottomSheetCallback(object : BottomSheetCallback() {
+            override fun onStateChanged(bottomSheet: View, newState: Int) {
+                if (newState == BottomSheetBehavior.STATE_EXPANDED) {
+                    Log.d(javaClass.simpleName, "expanded")
+                    // do stuff when the drawer is expanded
+                }
+                if (newState == BottomSheetBehavior.STATE_COLLAPSED) {
+                    // do stuff when the drawer is collapsed
+                    Log.d(javaClass.simpleName, "collapsed")
+                }
+            }
+
+            override fun onSlide(bottomSheet: View, slideOffset: Float) {
+                // do stuff during the actual drag event for example
+                // animating a background color change based on the offset
+
+                // or for example hidding or showing a fab
+                if (slideOffset > 0.2) {
+//                    if (fab.isShown()) {
+//                        fab.hide()
+//                    }
+                    Log.d(javaClass.simpleName, "0.2")
+                } else if (slideOffset < 0.15) {
+//                    if (!fab.isShown()) {
+//                        fab.show()
+                    Log.d(javaClass.simpleName, "0.15")
+//                    }
+                }
+            }
+        })
+    }
+
     private fun loadSearch() {
         val apiType = ApiType.GEOCODING
 
-        searchResultsView = binding.searchResultsView.apply {
+        searchResultsView = binding.bottomSheet.searchResultsView.apply {
             initialize(
                 SearchResultsView.Configuration(CommonSearchViewConfiguration(DistanceUnitType.IMPERIAL))
             )
