@@ -137,11 +137,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         mapView = binding.mapView
         setupMapboxMap()
         setupPolyLines()
-
-        // Shared Preferences
-        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
-        sharedPreferences.registerOnSharedPreferenceChangeListener(this)
-
     }
 
     private fun setScreenModeFromPreferences() {
@@ -157,6 +152,8 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         } else {
             window.clearFlags(keepScreenOnFlag)
         }
+
+        sharedPreferences.registerOnSharedPreferenceChangeListener(this)
     }
 
     private fun launchTermsOfUse() {
