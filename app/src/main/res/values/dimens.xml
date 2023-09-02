@@ -7,5 +7,10 @@
     <dimen name="map_legend_entry_margin_top">8dp</dimen>
     <dimen name="map_legend_text_size">16sp</dimen>
 
+    <!-- Bottom Drawer -->
+    <dimen name="drawer_collapsed_height">20dp</dimen>
+    <dimen name="drawer_expanded_height">120dp</dimen>
+    <dimen name="drawer_corner_radius">28dp</dimen>
+
     <dimen name="rounding">8dp</dimen>
 </resources>

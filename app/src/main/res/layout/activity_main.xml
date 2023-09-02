@@ -52,7 +52,7 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <com.mapbox.search.ui.view.place.SearchPlaceBottomSheetView
-            android:id="@+id/search_place_view"
+            android:id="@+id/search_place_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"

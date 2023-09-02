@@ -8,33 +8,54 @@
         android:id="@+id/bottom_navigation_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/white"
         android:fitsSystemWindows="true"
-        android:orientation="vertical"
         app:behavior_hideable="false"
-        app:cardCornerRadius="8dp"
-        app:cardElevation="4dp"
         app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
 
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/app_bar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:outlineProvider="none"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/drawer_shape">
 
-            <androidx.appcompat.widget.Toolbar
-                android:id="@+id/search_view"
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="?actionBarSize"
-                android:layout_margin="@dimen/default_margin"
-                android:colorControlNormal="#007AFF" />
+                android:layout_height="match_parent">
 
-            <com.mapbox.search.ui.view.SearchResultsView
-                android:id="@+id/search_results_view"
-                android:layout_width="match_parent"
-                android:layout_height="140dp"
-                android:clipToPadding="false"
-                android:paddingTop="22dp"
-                android:paddingBottom="22dp"/>
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/drag_handle"
+                    android:layout_width="32dp"
+                    android:layout_height="4dp"
+                    android:layout_marginTop="40dp"
+                    app:cardBackgroundColor="@color/drag_handle"
+                    app:cardElevation="0dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <androidx.appcompat.widget.Toolbar
+                    android:id="@+id/search_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="?actionBarSize"
+                    android:layout_margin="@dimen/default_margin"
+                    android:colorControlNormal="#007AFF"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/drag_handle" />
+
+                <com.mapbox.search.ui.view.SearchResultsView
+                    android:id="@+id/search_results_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="140dp"
+                    android:clipToPadding="false"
+                    android:paddingTop="22dp"
+                    android:paddingBottom="22dp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/search_view" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
 
         </com.google.android.material.appbar.AppBarLayout>
 
