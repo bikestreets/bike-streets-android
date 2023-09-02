@@ -26,7 +26,8 @@
         android:padding="10dp"
         app:layout_constraintBottom_toTopOf="@id/bottom_sheet"
         app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@drawable/ic_settings_black_24dp" />
+        app:srcCompat="@drawable/ic_settings_black_24dp"
+        android:contentDescription="@string/settings_button" />
 
     <ImageView
         android:id="@+id/follow_rider"
@@ -41,7 +42,8 @@
         app:layout_constraintBottom_toTopOf="@id/settings"
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/ic_nearme"
-        tools:visibility="visible" />
+        tools:visibility="visible"
+        android:contentDescription="@string/update_camera_location_button" />
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
