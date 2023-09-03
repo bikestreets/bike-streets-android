@@ -11,7 +11,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
-import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
@@ -25,7 +24,6 @@ import com.application.bikestreets.constants.PreferenceConstants.KEEP_SCREEN_ON_
 import com.application.bikestreets.constants.PreferenceConstants.MAP_TYPE_PREFERENCE_KEY
 import com.application.bikestreets.databinding.ActivityMainBinding
 import com.application.bikestreets.utils.ToastUtils.showToast
-import com.application.bikestreets.utils.userDistanceTo
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback
 import com.mapbox.android.core.location.LocationEngine
@@ -72,8 +70,6 @@ import com.mapbox.search.ui.view.CommonSearchViewConfiguration
 import com.mapbox.search.ui.view.DistanceUnitType
 import com.mapbox.search.ui.view.SearchMode
 import com.mapbox.search.ui.view.SearchResultsView
-import com.mapbox.search.ui.view.place.SearchPlace
-import com.mapbox.search.ui.view.place.SearchPlaceBottomSheetView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -96,7 +92,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     private lateinit var searchResultsView: SearchResultsView
     private lateinit var searchEngineUiAdapter: SearchEngineUiAdapter
-    private lateinit var searchPlaceView: SearchPlaceBottomSheetView
 
     private lateinit var mapMarkersManager: MapMarkersManager
     private lateinit var polylineAnnotationManager: PolylineAnnotationManager
@@ -108,7 +103,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        onBackPressedDispatcher.addCallback(onBackPressedCallback)
         locationEngine = LocationEngineProvider.getBestLocationEngine(applicationContext)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -310,9 +304,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
         // Load Map Markers
         mapMarkersManager = MapMarkersManager(mapView)
-        mapMarkersManager.onMarkersChangeListener = {
-            updateOnBackPressedCallbackEnabled()
-        }
 
         actionSearch = binding.bottomSheet.searchView.apply {
             title = "Search"
@@ -353,6 +344,24 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 }
             }
         })
+    }
+
+    private fun startSearchRouting(coordinate: Point) {
+        closeSearchView()
+        mapMarkersManager.showMarker(coordinate, activity)
+
+        MainScope().launch(Dispatchers.Main) {
+            try {
+                val routingDirections = RoutingService.getRoutingDirections(
+                    startCoordinates = location,
+                    endCoordinates = coordinate
+                )
+                displayRouteOnMap(routingDirections)
+            } catch (e: Exception) {
+                Log.e(javaClass.simpleName, "Navigation error: $e")
+                // Handle errors
+            }
+        }
     }
 
     private fun loadSearch() {
@@ -415,18 +424,14 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 searchResult: SearchResult,
                 responseInfo: ResponseInfo
             ) {
-                closeSearchView()
-                searchPlaceView.open(SearchPlace.createFromSearchResult(searchResult, responseInfo))
-                mapMarkersManager.showMarker(searchResult.coordinate, activity)
+                startSearchRouting(searchResult.coordinate)
             }
 
             override fun onOfflineSearchResultSelected(
                 searchResult: OfflineSearchResult,
                 responseInfo: OfflineResponseInfo
             ) {
-                closeSearchView()
-                searchPlaceView.open(SearchPlace.createFromOfflineSearchResult(searchResult))
-                mapMarkersManager.showMarker(searchResult.coordinate, activity)
+                startSearchRouting(searchResult.coordinate)
             }
 
             override fun onError(e: Exception) {
@@ -438,24 +443,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             }
 
             override fun onHistoryItemClick(historyRecord: HistoryRecord) {
-                closeSearchView()
-                searchPlaceView.open(
-                    SearchPlace.createFromIndexableRecord(
-                        historyRecord,
-                        distanceMeters = null
-                    )
-                )
-
-                locationEngine.userDistanceTo(
-                    activity,
-                    historyRecord.coordinate
-                ) { distance ->
-                    distance?.let {
-                        searchPlaceView.updateDistance(distance)
-                    }
-                }
-
-                mapMarkersManager.showMarker(historyRecord.coordinate, activity)
+                startSearchRouting(historyRecord.coordinate)
             }
 
             override fun onPopulateQueryClick(
@@ -467,45 +455,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 }
             }
         })
-
-        searchPlaceView = binding.searchPlaceCard
-        // Hidden by default
-        searchPlaceView.initialize(CommonSearchViewConfiguration(DistanceUnitType.IMPERIAL))
-
-        searchPlaceView.addOnCloseClickListener {
-            searchPlaceView.hide()
-        }
-
-        searchPlaceView.isFavoriteButtonVisible = false
-        searchPlaceView.isShareButtonVisible = false
-
-        //TODO; Remove this entirely, app should go right from search to naviagte
-        searchPlaceView.addOnNavigateClickListener { searchPlace ->
-            MainScope().launch(Dispatchers.Main) {
-                try {
-                    val routingDirections = RoutingService.getRoutingDirections(
-                        startCoordinates = location,
-                        endCoordinates = searchPlace.coordinate
-                    )
-                    displayRouteOnMap(routingDirections)
-                } catch (e: Exception) {
-                    Log.e(javaClass.simpleName, "Navigation error: $e")
-                    // Handle errors
-                }
-            }
-        }
-
-        searchPlaceView.addOnShareClickListener {
-            // Not implemented
-        }
-
-        searchPlaceView.addOnFeedbackClickListener { _, _ ->
-            // Not implemented
-        }
-
-        searchPlaceView.addOnBottomSheetStateChangedListener { _, _ ->
-            updateOnBackPressedCallbackEnabled()
-        }
 
         requestLocationPermission()
     }
@@ -531,7 +480,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 OnIndicatorPositionChangedListener {
                 override fun onIndicatorPositionChanged(point: Point) {
                     location = point
-                    //TODO if follow setting is enabled
                     moveCamera(location)
 
                     mapView.location.removeOnIndicatorPositionChangedListener(this)
@@ -578,11 +526,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             // Add the resulting polygon to the map.
             polylineAnnotationManager.create(polylineAnnotationOptions)
         }
-    }
-
-    private fun updateOnBackPressedCallbackEnabled() {
-        onBackPressedCallback.isEnabled =
-            !searchPlaceView.isHidden() || mapMarkersManager.hasMarkers
     }
 
     private fun closeSearchView() {
@@ -665,23 +608,19 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
 
-    private val onBackPressedCallback = object : OnBackPressedCallback(false) {
-        override fun handleOnBackPressed() {
-            when {
-                !searchPlaceView.isHidden() -> {
-                    mapMarkersManager.clearMarkers()
-                    searchPlaceView.hide()
-                }
-
-                mapMarkersManager.hasMarkers -> {
-                    mapMarkersManager.clearMarkers()
-                }
-
-                else -> {
-                    isEnabled = false
-                    onBackPressedDispatcher.onBackPressed()
-                }
-            }
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED && mapMarkersManager.hasMarkers) {
+            collapseBottomSheet()
+            polylineAnnotationManager.deleteAll()
+            mapMarkersManager.clearMarkers()
+        } else if (mapMarkersManager.hasMarkers) {
+            polylineAnnotationManager.deleteAll()
+            mapMarkersManager.clearMarkers()
+        } else if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
+            collapseBottomSheet()
+        } else {
+            super.onBackPressed()
         }
     }
 
@@ -693,17 +632,12 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         val searchActionView = menu.findItem(R.id.action_search)
         searchActionView.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
             override fun onMenuItemActionExpand(item: MenuItem): Boolean {
-                searchPlaceView.hide()
-                if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) {
-                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
-                }
+                expandBottomSheet()
                 return true
             }
 
             override fun onMenuItemActionCollapse(item: MenuItem): Boolean {
-                if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
-                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
-                }
+                collapseBottomSheet()
                 return true
             }
         })
@@ -721,6 +655,18 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             }
         })
         return true
+    }
+
+    private fun expandBottomSheet() {
+        if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) {
+            bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+        }
+    }
+
+    private fun collapseBottomSheet() {
+        if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
+            bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        }
     }
 
     fun moveCamera(location: Point) {
@@ -775,7 +721,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     // Triggered when button clicked in settings fragment
     override fun onPermissionButtonClicked() {
-        Log.d(javaClass.simpleName, "fragment click!!")
         requestLocationPermission()
     }
 }
