@@ -19,4 +19,8 @@
     <!-- End Values used to calculate peek bar height -->
 
     <dimen name="rounding">8dp</dimen>
+
+    <!-- Elevations -->
+    <dimen name="tappable_icon_elevation">2dp</dimen>
+    <dimen name="bottom_drawer_elevation">8dp</dimen>
 </resources>
