@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:tools="http://schemas.android.com/tools">
+    android:layout_height="match_parent">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/bottom_navigation_container"
@@ -20,14 +20,14 @@
             android:layout_marginStart="@dimen/default_margin"
             android:layout_marginBottom="@dimen/tappable_icons_vertical_padding"
             android:background="@drawable/circle"
-            android:elevation="2dp"
+            android:contentDescription="@string/update_camera_location_button"
+            android:elevation="@dimen/tappable_icon_elevation"
             android:padding="10dp"
             android:visibility="gone"
             app:layout_constraintBottom_toTopOf="@id/settings"
             app:layout_constraintStart_toStartOf="parent"
             app:srcCompat="@drawable/ic_nearme"
-            tools:visibility="visible"
-            android:contentDescription="@string/update_camera_location_button" />
+            tools:visibility="visible" />
 
         <ImageView
             android:id="@+id/settings"
@@ -35,23 +35,25 @@
             android:layout_height="@dimen/tappable_icons_height"
             android:layout_marginStart="@dimen/default_margin"
             android:background="@drawable/circle"
-            android:elevation="2dp"
+            android:contentDescription="@string/settings_button"
+            android:elevation="@dimen/tappable_icon_elevation"
             android:padding="10dp"
             app:layout_constraintBottom_toTopOf="@id/app_bar"
             app:layout_constraintStart_toStartOf="parent"
-            app:srcCompat="@drawable/ic_settings_black_24dp"
-            android:contentDescription="@string/settings_button" />
+            app:srcCompat="@drawable/ic_settings_black_24dp" />
 
+        <!-- TODO: Elevation is broken, having issues with the material card not taking the background shape -->
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/app_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:outlineProvider="none"
             android:layout_marginTop="@dimen/tappable_icons_vertical_padding"
-            app:layout_constraintTop_toBottomOf="@id/settings"
-            app:layout_constraintStart_toStartOf="parent"
+            android:background="@drawable/drawer_shape"
+            android:elevation="@dimen/bottom_drawer_elevation"
+            android:outlineProvider="none"
             app:layout_constraintEnd_toEndOf="parent"
-            android:background="@drawable/drawer_shape">
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/settings">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
