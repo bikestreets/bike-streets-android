@@ -374,6 +374,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             OfflineSearchEngineSettings(getString(R.string.mapbox_access_token))
         )
 
+        //TODO: add offline bounds: https://stackoverflow.com/a/37181657/8890753
         searchEngineUiAdapter = SearchEngineUiAdapter(
             view = searchResultsView,
             searchEngine = searchEngine,
@@ -478,6 +479,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         searchPlaceView.isFavoriteButtonVisible = false
         searchPlaceView.isShareButtonVisible = false
 
+        //TODO; Remove this entirely, app should go right from search to naviagte
         searchPlaceView.addOnNavigateClickListener { searchPlace ->
             MainScope().launch(Dispatchers.Main) {
                 try {
@@ -676,7 +678,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 }
 
                 else -> {
-                    Log.i("SearchApiExample", "This OnBackPressedCallback should not be enabled")
                     isEnabled = false
                     onBackPressedDispatcher.onBackPressed()
                 }
@@ -693,12 +694,16 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         searchActionView.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
             override fun onMenuItemActionExpand(item: MenuItem): Boolean {
                 searchPlaceView.hide()
-//                searchResultsView.isVisible = true
+                if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) {
+                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+                }
                 return true
             }
 
             override fun onMenuItemActionCollapse(item: MenuItem): Boolean {
-//                searchResultsView.isVisible = false
+                if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
+                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+                }
                 return true
             }
         })
