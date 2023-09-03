@@ -11,11 +11,11 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
-import android.widget.LinearLayout
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
@@ -78,6 +78,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import java.io.InputStream
+import kotlin.math.roundToInt
 
 
 class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener,
@@ -91,7 +92,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     private lateinit var actionSearch: Toolbar
     private lateinit var searchView: SearchView
-    private lateinit var bottomSheetBehavior: BottomSheetBehavior<LinearLayout>
+    private lateinit var bottomSheetBehavior: BottomSheetBehavior<ConstraintLayout>
 
     private lateinit var searchResultsView: SearchResultsView
     private lateinit var searchEngineUiAdapter: SearchEngineUiAdapter
@@ -113,12 +114,9 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
 
-        bottomSheetBehavior =
-            BottomSheetBehavior.from(binding.bottomSheet.bottomNavigationContainer)
-//        bottomSheetBehavior.peekHeight = binding.bottomSheet.appBar.height
-        setupBottomSheet()
-
         setContentView(view)
+
+        initBottomNavigationSheet()
 
         // Carry over from getDefaultSharedPreferences()
         defaultPackage = "${packageName}_preferences"
@@ -136,6 +134,25 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         mapView = binding.mapView
         setupMapboxMap()
         setupPolyLines()
+    }
+
+    private fun initBottomNavigationSheet() {
+
+        // Set the peek height to only show search bar
+        val dimenOffsetTappable =
+            resources.getDimension(R.dimen.tappable_icons_height) * 2 + resources.getDimension(R.dimen.tappable_icons_vertical_padding) * 2
+        val dimenPeekIndicator =
+            resources.getDimension(R.dimen.draggable_indicator_height) + resources.getDimension(R.dimen.draggable_indicator_vertical_margin)
+        val dimenSearchTool =
+            resources.getDimension(R.dimen.search_view_height) + resources.getDimension(R.dimen.toolbar_vertical_margin) * 2
+
+        val totalOffset = dimenOffsetTappable + dimenPeekIndicator + dimenSearchTool
+
+        bottomSheetBehavior =
+            BottomSheetBehavior.from(binding.bottomSheet.bottomNavigationContainer)
+
+        bottomSheetBehavior.peekHeight = totalOffset.roundToInt()
+        setupBottomSheet()
     }
 
     private fun setScreenModeFromPreferences() {
@@ -164,7 +181,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     private fun enableSettingsButton() {
         // get the button
-        val settingsButton = binding.settings
+        val settingsButton = binding.bottomSheet.settings
 
         // Set the callback in the fragment
         val aboutFragment = AboutFragment()
@@ -183,10 +200,10 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     private fun enableFollowRiderButton() {
         if (PermissionsManager.areLocationPermissionsGranted(activity)) {
-            binding.followRider.visibility = View.VISIBLE
+            binding.bottomSheet.followRider.visibility = View.VISIBLE
 
             // enable the button's functionality
-            binding.followRider.setOnClickListener {
+            binding.bottomSheet.followRider.setOnClickListener {
                 moveCamera(location)
             }
         }
@@ -670,16 +687,18 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main_activity_options_menu, menu)
 
+        searchResultsView.isVisible = true
+
         val searchActionView = menu.findItem(R.id.action_search)
         searchActionView.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
             override fun onMenuItemActionExpand(item: MenuItem): Boolean {
                 searchPlaceView.hide()
-                searchResultsView.isVisible = true
+//                searchResultsView.isVisible = true
                 return true
             }
 
             override fun onMenuItemActionCollapse(item: MenuItem): Boolean {
-                searchResultsView.isVisible = false
+//                searchResultsView.isVisible = false
                 return true
             }
         })
