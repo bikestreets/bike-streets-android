@@ -575,15 +575,11 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED && mapMarkersManager.hasMarkers) {
+        if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
             collapseBottomSheet()
-            polylineAnnotationManager.deleteAll()
-            mapMarkersManager.clearMarkers()
         } else if (mapMarkersManager.hasMarkers) {
             polylineAnnotationManager.deleteAll()
             mapMarkersManager.clearMarkers()
-        } else if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
-            collapseBottomSheet()
         } else {
             super.onBackPressed()
         }
