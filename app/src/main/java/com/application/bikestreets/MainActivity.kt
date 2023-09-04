@@ -25,7 +25,6 @@ import com.application.bikestreets.constants.PreferenceConstants.MAP_TYPE_PREFER
 import com.application.bikestreets.databinding.ActivityMainBinding
 import com.application.bikestreets.utils.ToastUtils.showToast
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineProvider
 import com.mapbox.android.core.permissions.PermissionsManager
@@ -146,7 +145,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             BottomSheetBehavior.from(binding.bottomSheet.bottomNavigationContainer)
 
         bottomSheetBehavior.peekHeight = totalOffset.roundToInt()
-        setupBottomSheet()
     }
 
     private fun setScreenModeFromPreferences() {
@@ -311,39 +309,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         }
 
         loadSearch()
-    }
-
-    private fun setupBottomSheet() {
-        bottomSheetBehavior.addBottomSheetCallback(object : BottomSheetCallback() {
-            override fun onStateChanged(bottomSheet: View, newState: Int) {
-                if (newState == BottomSheetBehavior.STATE_EXPANDED) {
-                    Log.d(javaClass.simpleName, "expanded")
-                    // do stuff when the drawer is expanded
-                }
-                if (newState == BottomSheetBehavior.STATE_COLLAPSED) {
-                    // do stuff when the drawer is collapsed
-                    Log.d(javaClass.simpleName, "collapsed")
-                }
-            }
-
-            override fun onSlide(bottomSheet: View, slideOffset: Float) {
-                // do stuff during the actual drag event for example
-                // animating a background color change based on the offset
-
-                // or for example hidding or showing a fab
-                if (slideOffset > 0.2) {
-//                    if (fab.isShown()) {
-//                        fab.hide()
-//                    }
-                    Log.d(javaClass.simpleName, "0.2")
-                } else if (slideOffset < 0.15) {
-//                    if (!fab.isShown()) {
-//                        fab.show()
-                    Log.d(javaClass.simpleName, "0.15")
-//                    }
-                }
-            }
-        })
     }
 
     private fun startSearchRouting(coordinate: Point) {

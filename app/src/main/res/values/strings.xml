@@ -24,7 +24,7 @@
     <!-- Settings/About -->
     <string name="enable_location_permission">Enable Location Marker</string>
     <string name="send_feedback">Send Feedback</string>
-    <string name="version_info">v%s - %d%s</string>
+    <string name="version_info">v%s.%d%s</string>
     <string name="settings_button">settings</string>
     <string name="update_camera_location_button">update camera location</string>
 
