@@ -118,15 +118,15 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         // launch terms of use if unsigned
         launchTermsOfUse()
 
+        mapView = binding.mapView
+        setupMapboxMap()
+        setupPolyLines()
+
         // enable settings button
         enableSettingsButton()
 
         // Show "center location" button if available
         enableFollowRiderButton()
-
-        mapView = binding.mapView
-        setupMapboxMap()
-        setupPolyLines()
     }
 
     private fun initBottomNavigationSheet() {
