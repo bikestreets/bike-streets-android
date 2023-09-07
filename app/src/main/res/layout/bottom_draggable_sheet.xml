@@ -83,10 +83,9 @@
                     android:id="@+id/search_results_view"
                     android:layout_width="match_parent"
                     android:layout_height="250dp"
+                    android:theme="@style/AppTheme"
                     android:clipToPadding="false"
-                    android:background="@android:color/white"
-                    android:paddingTop="22dp"
-                    android:paddingBottom="22dp"
+                    android:layout_marginTop="@dimen/toolbar_vertical_margin"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/search_view" />
 

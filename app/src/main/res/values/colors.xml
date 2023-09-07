@@ -21,4 +21,8 @@
     <color name="destination_pin">#FBCC20</color>
     <color name="primary_route_segment">#355AA8</color>
     <color name="sidewalk_segment">#971B8A</color>
+
+    <color name="link">#007AFF</color>
+    <color name="black_50">#808080</color>
+    <color name="black_40">#999999</color>
 </resources>
