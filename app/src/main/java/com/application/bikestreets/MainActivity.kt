@@ -348,6 +348,8 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
     private fun loadSearch() {
+        //TODO: limit search to be bound to the region (https://docs.mapbox.com/android/search/api/core/1.0.0-rc.6/sdk/com.mapbox.search/-search-options/)
+
         val apiType = ApiType.GEOCODING
 
         searchResultsView = binding.bottomSheet.searchResultsView.apply {
@@ -366,7 +368,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             OfflineSearchEngineSettings(getString(R.string.mapbox_access_token))
         )
 
-        //TODO: add offline bounds: https://stackoverflow.com/a/37181657/8890753
         searchEngineUiAdapter = SearchEngineUiAdapter(
             view = searchResultsView,
             searchEngine = searchEngine,
@@ -418,7 +419,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             }
 
             override fun onError(e: Exception) {
-                Log.e(javaClass.simpleName, "Error happened: $e")
+                Log.e(javaClass.simpleName, "Mapbox Search Error: $e")
             }
 
             override fun onFeedbackItemClick(responseInfo: ResponseInfo) {
