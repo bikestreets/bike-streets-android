@@ -7,25 +7,26 @@ import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
-import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
-import androidx.preference.PreferenceManager
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.application.bikestreets.api.RoutingService
 import com.application.bikestreets.api.modals.DirectionResponse
 import com.application.bikestreets.constants.PreferenceConstants.KEEP_SCREEN_ON_PREFERENCE_KEY
 import com.application.bikestreets.constants.PreferenceConstants.MAP_TYPE_PREFERENCE_KEY
 import com.application.bikestreets.databinding.ActivityMainBinding
 import com.application.bikestreets.utils.ToastUtils.showToast
-import com.application.bikestreets.utils.userDistanceTo
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineProvider
 import com.mapbox.android.core.permissions.PermissionsManager
@@ -46,14 +47,19 @@ import com.mapbox.maps.extension.style.layers.properties.generated.LineCap
 import com.mapbox.maps.extension.style.layers.properties.generated.LineJoin
 import com.mapbox.maps.extension.style.sources.addSource
 import com.mapbox.maps.extension.style.sources.generated.GeoJsonSource
+import com.mapbox.maps.plugin.animation.MapAnimationOptions.Companion.mapAnimationOptions
+import com.mapbox.maps.plugin.animation.easeTo
 import com.mapbox.maps.plugin.annotation.annotations
 import com.mapbox.maps.plugin.annotation.generated.CircleAnnotationOptions
 import com.mapbox.maps.plugin.annotation.generated.PolylineAnnotationManager
 import com.mapbox.maps.plugin.annotation.generated.PolylineAnnotationOptions
 import com.mapbox.maps.plugin.annotation.generated.createCircleAnnotationManager
 import com.mapbox.maps.plugin.annotation.generated.createPolylineAnnotationManager
+import com.mapbox.maps.plugin.attribution.attribution
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.locationcomponent.location
+import com.mapbox.maps.plugin.logo.logo
+import com.mapbox.maps.plugin.scalebar.scalebar
 import com.mapbox.search.ApiType
 import com.mapbox.search.ResponseInfo
 import com.mapbox.search.SearchEngine
@@ -70,12 +76,12 @@ import com.mapbox.search.ui.view.CommonSearchViewConfiguration
 import com.mapbox.search.ui.view.DistanceUnitType
 import com.mapbox.search.ui.view.SearchMode
 import com.mapbox.search.ui.view.SearchResultsView
-import com.mapbox.search.ui.view.place.SearchPlace
-import com.mapbox.search.ui.view.place.SearchPlaceBottomSheetView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import java.io.InputStream
+import kotlin.math.roundToInt
+
 
 class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener,
     ActivityCompat.OnRequestPermissionsResultCallback,
@@ -88,10 +94,10 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     private lateinit var actionSearch: Toolbar
     private lateinit var searchView: SearchView
+    private lateinit var bottomSheetBehavior: BottomSheetBehavior<ConstraintLayout>
 
     private lateinit var searchResultsView: SearchResultsView
     private lateinit var searchEngineUiAdapter: SearchEngineUiAdapter
-    private lateinit var searchPlaceView: SearchPlaceBottomSheetView
 
     private lateinit var mapMarkersManager: MapMarkersManager
     private lateinit var polylineAnnotationManager: PolylineAnnotationManager
@@ -103,13 +109,14 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        onBackPressedDispatcher.addCallback(onBackPressedCallback)
         locationEngine = LocationEngineProvider.getBestLocationEngine(applicationContext)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
 
         setContentView(view)
+
+        initBottomNavigationSheet()
 
         // Carry over from getDefaultSharedPreferences()
         defaultPackage = "${packageName}_preferences"
@@ -118,15 +125,33 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         // launch terms of use if unsigned
         launchTermsOfUse()
 
+        mapView = binding.mapView
+        setupMapboxMap()
+        setupPolyLines()
+
         // enable settings button
         enableSettingsButton()
 
         // Show "center location" button if available
         enableFollowRiderButton()
+    }
 
-        mapView = binding.mapView
-        setupMapboxMap()
-        setupPolyLines()
+    private fun initBottomNavigationSheet() {
+
+        // Set the peek height to only show search bar
+        val dimenOffsetTappable =
+            resources.getDimension(R.dimen.tappable_icons_height) * 2 + resources.getDimension(R.dimen.tappable_icons_vertical_padding) * 2
+        val dimenPeekIndicator =
+            resources.getDimension(R.dimen.draggable_indicator_height) + resources.getDimension(R.dimen.draggable_indicator_vertical_margin)
+        val dimenSearchTool =
+            resources.getDimension(R.dimen.search_view_height) + resources.getDimension(R.dimen.toolbar_vertical_margin) * 2
+
+        val totalOffset = dimenOffsetTappable + dimenPeekIndicator + dimenSearchTool
+
+        bottomSheetBehavior =
+            BottomSheetBehavior.from(binding.bottomSheet.bottomNavigationContainer)
+
+        bottomSheetBehavior.peekHeight = totalOffset.roundToInt()
     }
 
     private fun setScreenModeFromPreferences() {
@@ -155,7 +180,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     private fun enableSettingsButton() {
         // get the button
-        val settingsButton = binding.settings
+        val settingsButton = binding.bottomSheet.settings
 
         // Set the callback in the fragment
         val aboutFragment = AboutFragment()
@@ -174,10 +199,10 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     private fun enableFollowRiderButton() {
         if (PermissionsManager.areLocationPermissionsGranted(activity)) {
-            binding.followRider.visibility = View.VISIBLE
+            binding.bottomSheet.followRider.visibility = View.VISIBLE
 
             // enable the button's functionality
-            binding.followRider.setOnClickListener {
+            binding.bottomSheet.followRider.setOnClickListener {
                 moveCamera(location)
             }
         }
@@ -260,24 +285,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         }
     }
 
-//    private fun cameraModeFromPreferences(): Int {
-//        // extract string from strings.xml file (as integer key) and convert to string
-//        val orientationPreferenceKey = getResources().getString(R.string.map_orientation_preference_key)
-//
-//        // use key to extract saved camera mode preference string. Default to tracking compass,
-//        // a.k.a. "Direction of Travel"
-//        val orientationPreferenceString = PreferenceManager
-//            .getDefaultSharedPreferences(this)
-//            .getString(orientationPreferenceKey, "direction_of_travel")
-//
-//       // convert into a MapBox camera mode and return
-//        return if (orientationPreferenceString == "fixed") {
-//            CameraMode.TRACKING
-//        } else {
-//            CameraMode.TRACKING_COMPASS
-//        }
-//    }
-
     private fun mapTypeFromPreferences(): String? {
         val sharedPreferences = getSharedPreferences(defaultPackage, Context.MODE_PRIVATE)
         return sharedPreferences.getString(
@@ -293,20 +300,28 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
     private fun setupMapboxMap() {
+        // Attribution
+        mapView.logo.updateSettings {
+            position = Gravity.TOP
+        }
+        mapView.attribution.updateSettings {
+            position = Gravity.TOP
+        }
 
+        // Hide Scalebar
+        mapView.scalebar.updateSettings { enabled = false }
+
+
+        // Load Style
         mapView.getMapboxMap().also { mapboxMap ->
-
             loadMapboxStyle(mapboxMap)
             loadLocation()
         }
 
         // Load Map Markers
         mapMarkersManager = MapMarkersManager(mapView)
-        mapMarkersManager.onMarkersChangeListener = {
-            updateOnBackPressedCallbackEnabled()
-        }
 
-        actionSearch = binding.searchCard.searchView.apply {
+        actionSearch = binding.bottomSheet.searchView.apply {
             title = "Search"
             setSupportActionBar(this)
         }
@@ -314,10 +329,30 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         loadSearch()
     }
 
+    private fun startSearchRouting(coordinate: Point) {
+        closeSearchView()
+        mapMarkersManager.showMarker(coordinate, activity)
+
+        MainScope().launch(Dispatchers.Main) {
+            try {
+                val routingDirections = RoutingService.getRoutingDirections(
+                    startCoordinates = location,
+                    endCoordinates = coordinate
+                )
+                displayRouteOnMap(routingDirections)
+            } catch (e: Exception) {
+                Log.e(javaClass.simpleName, "Navigation error: $e")
+                // Handle errors
+            }
+        }
+    }
+
     private fun loadSearch() {
+        //TODO: limit search to be bound to the region (https://docs.mapbox.com/android/search/api/core/1.0.0-rc.6/sdk/com.mapbox.search/-search-options/)
+
         val apiType = ApiType.GEOCODING
 
-        searchResultsView = binding.searchResultsView.apply {
+        searchResultsView = binding.bottomSheet.searchResultsView.apply {
             initialize(
                 SearchResultsView.Configuration(CommonSearchViewConfiguration(DistanceUnitType.IMPERIAL))
             )
@@ -373,22 +408,18 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 searchResult: SearchResult,
                 responseInfo: ResponseInfo
             ) {
-                closeSearchView()
-                searchPlaceView.open(SearchPlace.createFromSearchResult(searchResult, responseInfo))
-                mapMarkersManager.showMarker(searchResult.coordinate, activity)
+                startSearchRouting(searchResult.coordinate)
             }
 
             override fun onOfflineSearchResultSelected(
                 searchResult: OfflineSearchResult,
                 responseInfo: OfflineResponseInfo
             ) {
-                closeSearchView()
-                searchPlaceView.open(SearchPlace.createFromOfflineSearchResult(searchResult))
-                mapMarkersManager.showMarker(searchResult.coordinate, activity)
+                startSearchRouting(searchResult.coordinate)
             }
 
             override fun onError(e: Exception) {
-                Log.e(javaClass.simpleName, "Error happened: $e")
+                Log.e(javaClass.simpleName, "Mapbox Search Error: $e")
             }
 
             override fun onFeedbackItemClick(responseInfo: ResponseInfo) {
@@ -396,24 +427,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             }
 
             override fun onHistoryItemClick(historyRecord: HistoryRecord) {
-                closeSearchView()
-                searchPlaceView.open(
-                    SearchPlace.createFromIndexableRecord(
-                        historyRecord,
-                        distanceMeters = null
-                    )
-                )
-
-                locationEngine.userDistanceTo(
-                    activity,
-                    historyRecord.coordinate
-                ) { distance ->
-                    distance?.let {
-                        searchPlaceView.updateDistance(distance)
-                    }
-                }
-
-                mapMarkersManager.showMarker(historyRecord.coordinate, activity)
+                startSearchRouting(historyRecord.coordinate)
             }
 
             override fun onPopulateQueryClick(
@@ -425,44 +439,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 }
             }
         })
-
-        searchPlaceView = binding.searchPlaceView
-        // Hidden by default
-        searchPlaceView.initialize(CommonSearchViewConfiguration(DistanceUnitType.IMPERIAL))
-
-        searchPlaceView.addOnCloseClickListener {
-            searchPlaceView.hide()
-        }
-
-        searchPlaceView.isFavoriteButtonVisible = false
-        searchPlaceView.isShareButtonVisible = false
-
-        searchPlaceView.addOnNavigateClickListener { searchPlace ->
-            MainScope().launch(Dispatchers.Main) {
-                try {
-                    val routingDirections = RoutingService.getRoutingDirections(
-                        startCoordinates = location,
-                        endCoordinates = searchPlace.coordinate
-                    )
-                    displayRouteOnMap(routingDirections)
-                } catch (e: Exception) {
-                    Log.e(javaClass.simpleName, "Navigation error: $e")
-                    // Handle errors
-                }
-            }
-        }
-
-        searchPlaceView.addOnShareClickListener {
-            // Not implemented
-        }
-
-        searchPlaceView.addOnFeedbackClickListener { _, _ ->
-            // Not implemented
-        }
-
-        searchPlaceView.addOnBottomSheetStateChangedListener { _, _ ->
-            updateOnBackPressedCallbackEnabled()
-        }
 
         requestLocationPermission()
     }
@@ -488,7 +464,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 OnIndicatorPositionChangedListener {
                 override fun onIndicatorPositionChanged(point: Point) {
                     location = point
-                    //TODO if follow setting is enabled
                     moveCamera(location)
 
                     mapView.location.removeOnIndicatorPositionChangedListener(this)
@@ -535,11 +510,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             // Add the resulting polygon to the map.
             polylineAnnotationManager.create(polylineAnnotationOptions)
         }
-    }
-
-    private fun updateOnBackPressedCallbackEnabled() {
-        onBackPressedCallback.isEnabled =
-            !searchPlaceView.isHidden() || mapMarkersManager.hasMarkers
     }
 
     private fun closeSearchView() {
@@ -622,40 +592,32 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
 
-    private val onBackPressedCallback = object : OnBackPressedCallback(false) {
-        override fun handleOnBackPressed() {
-            when {
-                !searchPlaceView.isHidden() -> {
-                    mapMarkersManager.clearMarkers()
-                    searchPlaceView.hide()
-                }
-
-                mapMarkersManager.hasMarkers -> {
-                    mapMarkersManager.clearMarkers()
-                }
-
-                else -> {
-                    Log.i("SearchApiExample", "This OnBackPressedCallback should not be enabled")
-                    isEnabled = false
-                    onBackPressedDispatcher.onBackPressed()
-                }
-            }
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
+            collapseBottomSheet()
+        } else if (mapMarkersManager.hasMarkers) {
+            polylineAnnotationManager.deleteAll()
+            mapMarkersManager.clearMarkers()
+        } else {
+            super.onBackPressed()
         }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main_activity_options_menu, menu)
 
+        searchResultsView.isVisible = true
+
         val searchActionView = menu.findItem(R.id.action_search)
         searchActionView.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
             override fun onMenuItemActionExpand(item: MenuItem): Boolean {
-                searchPlaceView.hide()
-                searchResultsView.isVisible = true
+                expandBottomSheet()
                 return true
             }
 
             override fun onMenuItemActionCollapse(item: MenuItem): Boolean {
-                searchResultsView.isVisible = false
+                collapseBottomSheet()
                 return true
             }
         })
@@ -675,12 +637,27 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         return true
     }
 
+    private fun expandBottomSheet() {
+        if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) {
+            bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+        }
+    }
+
+    private fun collapseBottomSheet() {
+        if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
+            bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        }
+    }
+
     fun moveCamera(location: Point) {
-        // TODO: ease animation to smooth out movement
-        mapView.getMapboxMap().setCamera(
-            CameraOptions.Builder()
+        mapView.getMapboxMap().easeTo(
+            cameraOptions = CameraOptions.Builder()
                 .center(location)
-                .build()
+                .build(),
+            animationOptions = mapAnimationOptions {
+                duration(500)
+                interpolator(FastOutSlowInInterpolator())
+            }
         )
     }
 
@@ -727,7 +704,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     // Triggered when button clicked in settings fragment
     override fun onPermissionButtonClicked() {
-        Log.d(javaClass.simpleName, "fragment click!!")
         requestLocationPermission()
     }
 }

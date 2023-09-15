@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="mapbox_access_token">pk.eyJ1Ijoianpvcm5vdyIsImEiOiJjazVsOWhkc2YwbWgwM2xuNXJvdnlhN2o3In0.tW5TbWlDY-ciFrYSv6qTOA</string>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="mapbox_access_token" tools:ignore="Typos">pk.eyJ1Ijoianpvcm5vdyIsImEiOiJjazVsOWhkc2YwbWgwM2xuNXJvdnlhN2o3In0.tW5TbWlDY-ciFrYSv6qTOA</string>
 
     <string name="app_name">BikeStreets</string>
 
@@ -24,7 +24,9 @@
     <!-- Settings/About -->
     <string name="enable_location_permission">Enable Location Marker</string>
     <string name="send_feedback">Send Feedback</string>
-    <string name="version_info">v%s - %d%s</string>
+    <string name="version_info">v%s.%d%s</string>
+    <string name="settings_button">settings</string>
+    <string name="update_camera_location_button">update camera location</string>
 
 
     <string name="no_location_access">No location - some features are limited</string>

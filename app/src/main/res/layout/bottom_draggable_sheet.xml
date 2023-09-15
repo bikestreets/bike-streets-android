@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/bottom_navigation_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fitsSystemWindows="true"
+        app:behavior_hideable="false"
+        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+
+        <ImageView
+            android:id="@+id/follow_rider"
+            android:layout_width="@dimen/tappable_icons_height"
+            android:layout_height="@dimen/tappable_icons_height"
+            android:layout_marginStart="@dimen/default_margin"
+            android:layout_marginBottom="@dimen/tappable_icons_vertical_padding"
+            android:background="@drawable/circle"
+            android:contentDescription="@string/update_camera_location_button"
+            android:elevation="@dimen/tappable_icon_elevation"
+            android:padding="10dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@id/settings"
+            app:layout_constraintStart_toStartOf="parent"
+            app:srcCompat="@drawable/ic_nearme"
+            tools:visibility="visible" />
+
+        <ImageView
+            android:id="@+id/settings"
+            android:layout_width="@dimen/tappable_icons_height"
+            android:layout_height="@dimen/tappable_icons_height"
+            android:layout_marginStart="@dimen/default_margin"
+            android:background="@drawable/circle"
+            android:contentDescription="@string/settings_button"
+            android:elevation="@dimen/tappable_icon_elevation"
+            android:padding="10dp"
+            app:layout_constraintBottom_toTopOf="@id/app_bar"
+            app:layout_constraintStart_toStartOf="parent"
+            app:srcCompat="@drawable/ic_settings_black_24dp" />
+
+        <!-- TODO: Elevation is broken, having issues with the material card not taking the background shape -->
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/app_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/tappable_icons_vertical_padding"
+            android:background="@drawable/drawer_shape"
+            android:elevation="@dimen/bottom_drawer_elevation"
+            android:outlineProvider="none"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/settings">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/drag_handle"
+                    android:layout_width="32dp"
+                    android:layout_height="@dimen/draggable_indicator_height"
+                    android:layout_marginTop="@dimen/draggable_indicator_vertical_margin"
+                    app:cardBackgroundColor="@color/drag_handle"
+                    app:cardElevation="0dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <androidx.appcompat.widget.Toolbar
+                    android:id="@+id/search_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/search_view_height"
+                    android:layout_margin="@dimen/toolbar_vertical_margin"
+                    android:colorControlNormal="#007AFF"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/drag_handle" />
+
+                <com.mapbox.search.ui.view.SearchResultsView
+                    android:id="@+id/search_results_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="250dp"
+                    android:theme="@style/AppTheme"
+                    android:clipToPadding="false"
+                    android:layout_marginTop="@dimen/toolbar_vertical_margin"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/search_view" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+        </com.google.android.material.appbar.AppBarLayout>
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

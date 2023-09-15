@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Basics -->
+    <color name="transparent">#00000000</color>
+    <color name="drag_handle">#4D3C3C43</color>
+
     <color name="mapPrimaryDark">#808080</color>
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
@@ -17,4 +21,8 @@
     <color name="destination_pin">#FBCC20</color>
     <color name="primary_route_segment">#355AA8</color>
     <color name="sidewalk_segment">#971B8A</color>
+
+    <color name="link">#007AFF</color>
+    <color name="black_50">#808080</color>
+    <color name="black_40">#999999</color>
 </resources>
