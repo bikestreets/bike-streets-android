@@ -1,6 +1,5 @@
 package com.application.bikestreets
 
-import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -22,10 +21,15 @@ import androidx.core.view.isVisible
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.application.bikestreets.api.RoutingService
 import com.application.bikestreets.api.modals.DirectionResponse
+import com.application.bikestreets.api.modals.Mode
+import com.application.bikestreets.api.modals.Mode.Companion.getMode
 import com.application.bikestreets.constants.PreferenceConstants.KEEP_SCREEN_ON_PREFERENCE_KEY
 import com.application.bikestreets.constants.PreferenceConstants.MAP_TYPE_PREFERENCE_KEY
 import com.application.bikestreets.databinding.ActivityMainBinding
+import com.application.bikestreets.utils.PERMISSIONS_REQUEST_LOCATION
 import com.application.bikestreets.utils.ToastUtils.showToast
+import com.application.bikestreets.utils.drawPolylineSegment
+import com.application.bikestreets.utils.requestLocationPermission
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineProvider
@@ -33,7 +37,6 @@ import com.mapbox.android.core.permissions.PermissionsManager
 import com.mapbox.android.gestures.Utils
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
-import com.mapbox.geojson.Point.fromLngLat
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.EdgeInsets
 import com.mapbox.maps.MapView
@@ -52,7 +55,6 @@ import com.mapbox.maps.plugin.animation.easeTo
 import com.mapbox.maps.plugin.annotation.annotations
 import com.mapbox.maps.plugin.annotation.generated.CircleAnnotationOptions
 import com.mapbox.maps.plugin.annotation.generated.PolylineAnnotationManager
-import com.mapbox.maps.plugin.annotation.generated.PolylineAnnotationOptions
 import com.mapbox.maps.plugin.annotation.generated.createCircleAnnotationManager
 import com.mapbox.maps.plugin.annotation.generated.createPolylineAnnotationManager
 import com.mapbox.maps.plugin.attribution.attribution
@@ -155,7 +157,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
     private fun setScreenModeFromPreferences() {
-        sharedPreferences = getSharedPreferences(defaultPackage, Context.MODE_PRIVATE)
+        sharedPreferences = getSharedPreferences(defaultPackage, MODE_PRIVATE)
 
         val keepScreenOnPreference =
             sharedPreferences.getBoolean(KEEP_SCREEN_ON_PREFERENCE_KEY, true)
@@ -286,7 +288,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
     private fun mapTypeFromPreferences(): String? {
-        val sharedPreferences = getSharedPreferences(defaultPackage, Context.MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences(defaultPackage, MODE_PRIVATE)
         return sharedPreferences.getString(
             MAP_TYPE_PREFERENCE_KEY,
             getString(R.string.preference_street)
@@ -440,18 +442,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             }
         })
 
-        requestLocationPermission()
-    }
-
-    private fun requestLocationPermission() {
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ),
-            PERMISSIONS_REQUEST_LOCATION
-        )
+        requestLocationPermission(this)
     }
 
     private fun loadLocation() {
@@ -486,29 +477,33 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     // Once a search has kicked off, given the response API, we use that route to draw a polyline
     private fun displayRouteOnMap(routingDirections: DirectionResponse?) {
-        val selectedRoute = routingDirections?.routes?.first()
-        val legs = selectedRoute?.legs
-        val steps = legs?.flatMap { it.steps }
-        val coordinateList = steps?.flatMap { it.geometry.coordinates }
-
-        // Convert from List<List<Double>> to List<Point> for use with mapbox functions
-        val pointsList: List<Point>? = coordinateList?.map { coordinate ->
-            fromLngLat(coordinate[0], coordinate[1])
-        }
 
         // Remove previous polylines shown on map
         polylineAnnotationManager.deleteAll()
 
-        pointsList?.let {
-            val polylineAnnotationOptions: PolylineAnnotationOptions = PolylineAnnotationOptions()
-                .withPoints(it)
-                // Style the polyline that will be added to the map.
-                .withLineColor("#47F0F5")
-                .withLineJoin(LineJoin.ROUND)
-                .withLineWidth(6.0)
+        //TODO: add route selection step
+        val selectedRoute = routingDirections?.routes?.first()
 
-            // Add the resulting polygon to the map.
-            polylineAnnotationManager.create(polylineAnnotationOptions)
+        val legs = selectedRoute?.legs
+        val steps = legs?.flatMap { it.steps }
+        steps?.forEach {
+            if (getMode(it.mode) == Mode.PUSHING_BIKE) {
+                val pushingPointList = it.geometry.coordinates
+                drawPolylineSegment(
+                    coordinateList = pushingPointList,
+                    lineColor = R.color.sidewalk_segment,
+                    polylineAnnotationManager = polylineAnnotationManager,
+                    context = this
+                )
+            } else {
+                val cyclingPointList = it.geometry.coordinates
+                drawPolylineSegment(
+                    coordinateList = cyclingPointList,
+                    lineColor = R.color.primary_route_segment,
+                    polylineAnnotationManager = polylineAnnotationManager,
+                    context = this
+                )
+            }
         }
     }
 
@@ -587,8 +582,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         val MARKERS_INSETS_OPEN_CARD = EdgeInsets(
             MARKERS_EDGE_OFFSET, MARKERS_EDGE_OFFSET, PLACE_CARD_HEIGHT, MARKERS_EDGE_OFFSET
         )
-
-        const val PERMISSIONS_REQUEST_LOCATION = 0
     }
 
 
@@ -704,6 +697,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     // Triggered when button clicked in settings fragment
     override fun onPermissionButtonClicked() {
-        requestLocationPermission()
+        requestLocationPermission(this)
     }
 }
