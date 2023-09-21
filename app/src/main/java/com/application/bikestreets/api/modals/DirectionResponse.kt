@@ -31,7 +31,7 @@ data class Legs(
 )
 
 data class Steps(
-    val geometry: Geometry,
+    val geometry: PrimitiveGeometry,
 //    val manuver: Manuver
     val mode: String,
     val driving_side: String,
@@ -39,7 +39,7 @@ data class Steps(
 //    val intersections
 )
 
-data class Geometry(
+data class PrimitiveGeometry(
     val coordinates: List<List<Double>>,
     val type: String,
 )
