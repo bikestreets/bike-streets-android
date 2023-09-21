@@ -23,18 +23,25 @@ import com.application.bikestreets.api.RoutingService
 import com.application.bikestreets.api.modals.DirectionResponse
 import com.application.bikestreets.api.modals.Mode
 import com.application.bikestreets.api.modals.Mode.Companion.getMode
+import com.application.bikestreets.constants.MapLayerConstants.SELECTED_ROUTE_MAP_LAYER
 import com.application.bikestreets.constants.PreferenceConstants.KEEP_SCREEN_ON_PREFERENCE_KEY
 import com.application.bikestreets.constants.PreferenceConstants.MAP_TYPE_PREFERENCE_KEY
 import com.application.bikestreets.databinding.ActivityMainBinding
 import com.application.bikestreets.utils.PERMISSIONS_REQUEST_LOCATION
-import com.application.bikestreets.utils.ToastUtils.showToast
-import com.application.bikestreets.utils.drawPolylineSegment
+import com.application.bikestreets.utils.convertToMapboxGeometry
+import com.application.bikestreets.utils.createLineLayer
+import com.application.bikestreets.utils.getColorHexString
+import com.application.bikestreets.utils.hideCurrentRouteLayer
 import com.application.bikestreets.utils.requestLocationPermission
+import com.application.bikestreets.utils.showMapLayers
+import com.application.bikestreets.utils.showToast
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.gson.JsonObject
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineProvider
 import com.mapbox.android.core.permissions.PermissionsManager
 import com.mapbox.android.gestures.Utils
+import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
@@ -42,21 +49,15 @@ import com.mapbox.maps.EdgeInsets
 import com.mapbox.maps.MapView
 import com.mapbox.maps.MapboxMap
 import com.mapbox.maps.Style
-import com.mapbox.maps.extension.style.expressions.dsl.generated.interpolate
 import com.mapbox.maps.extension.style.layers.addLayer
-import com.mapbox.maps.extension.style.layers.addLayerBelow
-import com.mapbox.maps.extension.style.layers.generated.LineLayer
-import com.mapbox.maps.extension.style.layers.properties.generated.LineCap
-import com.mapbox.maps.extension.style.layers.properties.generated.LineJoin
 import com.mapbox.maps.extension.style.sources.addSource
 import com.mapbox.maps.extension.style.sources.generated.GeoJsonSource
+import com.mapbox.maps.extension.style.sources.getSourceAs
 import com.mapbox.maps.plugin.animation.MapAnimationOptions.Companion.mapAnimationOptions
 import com.mapbox.maps.plugin.animation.easeTo
 import com.mapbox.maps.plugin.annotation.annotations
 import com.mapbox.maps.plugin.annotation.generated.CircleAnnotationOptions
-import com.mapbox.maps.plugin.annotation.generated.PolylineAnnotationManager
 import com.mapbox.maps.plugin.annotation.generated.createCircleAnnotationManager
-import com.mapbox.maps.plugin.annotation.generated.createPolylineAnnotationManager
 import com.mapbox.maps.plugin.attribution.attribution
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.locationcomponent.location
@@ -81,7 +82,6 @@ import com.mapbox.search.ui.view.SearchResultsView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import java.io.InputStream
 import kotlin.math.roundToInt
 
 
@@ -102,7 +102,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     private lateinit var searchEngineUiAdapter: SearchEngineUiAdapter
 
     private lateinit var mapMarkersManager: MapMarkersManager
-    private lateinit var polylineAnnotationManager: PolylineAnnotationManager
 
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var defaultPackage: String
@@ -129,7 +128,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
         mapView = binding.mapView
         setupMapboxMap()
-        setupPolyLines()
 
         // enable settings button
         enableSettingsButton()
@@ -210,83 +208,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         }
     }
 
-    private fun showMapLayers(activity: MainActivity, mapStyle: Style) {
-        val root = "geojson"
-        val mAssetManager = activity.assets
-
-        mAssetManager.list("$root/")?.forEach { fileName ->
-            val featureCollection = featureCollectionFromStream(
-                mAssetManager.open("$root/$fileName")
-            )
-
-            renderFeatureCollection(fileName, featureCollection, mapStyle)
-        }
-
-    }
-
-    private fun featureCollectionFromStream(fileStream: InputStream): FeatureCollection {
-        val geoJsonString = StringToStream.convert(fileStream)
-
-        return FeatureCollection.fromJson(geoJsonString)
-    }
-
-    private fun colorForLayer(layerName: String): Int {
-        // This is lazy coupling and will break, but I want to see it work as a proof-of-concept.
-        // A more flexible refactor involves inspecting the GeoJson file itself to get the layer
-        // name, then matching the color based on that (or we can save the layer color as metadata.)
-        val lineColor = when (layerName) {
-            "terms_of_use.txt" -> R.color.mapTrails
-            "1-bikestreets-master-v0.3.geojson" -> R.color.mapBikeStreets
-            "2-trails-master-v0.3.geojson" -> R.color.mapTrails
-            "3-bikelanes-master-v0.3.geojson" -> R.color.mapBikeLane
-            "4-bikesidewalks-master-v0.3.geojson" -> R.color.mapRideSidewalk
-            "5-walk-master-v0.3.geojson" -> R.color.mapWalkSidewalk
-            else -> R.color.mapDefault
-        }
-
-        // convert line color from R.color format to a more standard color format that
-        // PropertyFactory.lineColor knows how to work with
-        return ContextCompat.getColor(this, lineColor)
-    }
-
-    private fun createLineLayer(layerName: String): LineLayer {
-        val lineColor = colorForLayer(layerName)
-
-        return LineLayer("$layerName-id", layerName).lineCap(LineCap.ROUND).lineJoin(LineJoin.ROUND)
-            .lineOpacity(1f.toDouble()).lineWidth(interpolate {
-                linear()
-                zoom()
-                stop {
-                    literal(8)
-                    literal(0.2f.toDouble())
-                }
-                stop {
-                    literal(16)
-                    literal(10f.toDouble())
-                }
-            }).lineColor(lineColor)
-    }
-
-    private fun renderFeatureCollection(
-        layerName: String, featureCollection: FeatureCollection, mapStyle: Style
-    ) {
-        if (featureCollection.features() != null) {
-            // add the data itself to mapStyle
-            mapStyle.addSource(
-                GeoJsonSource.Builder(layerName).featureCollection(featureCollection).build()
-            )
-
-            if (mapTypeFromPreferences().equals(getString(R.string.preference_satellite))) {
-                //TODO: In satellite view, routes appear above the navigation line
-                mapStyle.addLayer(createLineLayer(layerName))
-            } else {
-                // create a line layer that reads the GeoJSON data that we just added
-                mapStyle.addLayerBelow(createLineLayer(layerName), "road-label")
-            }
-
-        }
-    }
-
     private fun mapTypeFromPreferences(): String? {
         val sharedPreferences = getSharedPreferences(defaultPackage, MODE_PRIVATE)
         return sharedPreferences.getString(
@@ -295,11 +216,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         )
     }
 
-    private fun setupPolyLines() {
-        // Create an instance of the Annotation API and get the polygon manager.
-        val annotationApi = mapView.annotations
-        polylineAnnotationManager = annotationApi.createPolylineAnnotationManager()
-    }
 
     private fun setupMapboxMap() {
         // Attribution
@@ -312,7 +228,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
         // Hide Scalebar
         mapView.scalebar.updateSettings { enabled = false }
-
 
         // Load Style
         mapView.getMapboxMap().also { mapboxMap ->
@@ -478,32 +393,58 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     // Once a search has kicked off, given the response API, we use that route to draw a polyline
     private fun displayRouteOnMap(routingDirections: DirectionResponse?) {
 
-        // Remove previous polylines shown on map
-        polylineAnnotationManager.deleteAll()
+        val mapStyle = mapView.getMapboxMap().getStyle()
 
         //TODO: add route selection step
         val selectedRoute = routingDirections?.routes?.first()
+
+        val selectedRouteGeometry: MutableList<Feature> = mutableListOf()
 
         val legs = selectedRoute?.legs
         val steps = legs?.flatMap { it.steps }
         steps?.forEach {
             if (getMode(it.mode) == Mode.PUSHING_BIKE) {
-                val pushingPointList = it.geometry.coordinates
-                drawPolylineSegment(
-                    coordinateList = pushingPointList,
-                    lineColor = R.color.sidewalk_segment,
-                    polylineAnnotationManager = polylineAnnotationManager,
-                    context = this
-                )
+
+                val mapBoxGeometry = convertToMapboxGeometry(it.geometry)
+                val properties = JsonObject()
+                properties.addProperty("stroke", getColorHexString(this, R.color.sidewalk_segment))
+
+                selectedRouteGeometry.add(Feature.fromGeometry(mapBoxGeometry, properties))
             } else {
-                val cyclingPointList = it.geometry.coordinates
-                drawPolylineSegment(
-                    coordinateList = cyclingPointList,
-                    lineColor = R.color.primary_route_segment,
-                    polylineAnnotationManager = polylineAnnotationManager,
-                    context = this
+                val mapBoxGeometry = convertToMapboxGeometry(it.geometry)
+                val properties = JsonObject()
+                properties.addProperty(
+                    "stroke",
+                    getColorHexString(this, R.color.primary_route_segment)
                 )
+
+                selectedRouteGeometry.add(Feature.fromGeometry(mapBoxGeometry, properties))
             }
+        }
+
+        val pushingFeatureCollection: FeatureCollection =
+            FeatureCollection.fromFeatures(selectedRouteGeometry)
+
+
+        /** Once a layer is added, we cannot delete and re-render it,
+         *  instead we keep it hidden or override the route segment as needed
+         *
+         *  This should be done with a Polyline Annotation, but there currently isn't multicolored
+         *  line support unless using a gradient
+         */
+        val layerSource = mapView.getMapboxMap().getStyle()?.getSourceAs<GeoJsonSource>(SELECTED_ROUTE_MAP_LAYER)
+
+        if (layerSource == null) {
+            mapStyle?.addSource(
+                GeoJsonSource.Builder(SELECTED_ROUTE_MAP_LAYER)
+                    .featureCollection(pushingFeatureCollection).build()
+            )
+
+            // Add layer above rendered routes
+            mapStyle?.addLayer(createLineLayer(SELECTED_ROUTE_MAP_LAYER))
+
+        } else {
+            layerSource.featureCollection(pushingFeatureCollection)
         }
     }
 
@@ -590,7 +531,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
             collapseBottomSheet()
         } else if (mapMarkersManager.hasMarkers) {
-            polylineAnnotationManager.deleteAll()
+            hideCurrentRouteLayer(mapView.getMapboxMap())
             mapMarkersManager.clearMarkers()
         } else {
             super.onBackPressed()
