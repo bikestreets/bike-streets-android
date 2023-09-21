@@ -28,10 +28,12 @@ import com.application.bikestreets.constants.PreferenceConstants.KEEP_SCREEN_ON_
 import com.application.bikestreets.constants.PreferenceConstants.MAP_TYPE_PREFERENCE_KEY
 import com.application.bikestreets.databinding.ActivityMainBinding
 import com.application.bikestreets.utils.PERMISSIONS_REQUEST_LOCATION
+import com.application.bikestreets.utils.addLayerBasedOnMapType
 import com.application.bikestreets.utils.convertToMapboxGeometry
-import com.application.bikestreets.utils.createLineLayer
 import com.application.bikestreets.utils.getColorHexString
+import com.application.bikestreets.utils.getDefaultPackageName
 import com.application.bikestreets.utils.hideCurrentRouteLayer
+import com.application.bikestreets.utils.mapTypeFromPreferences
 import com.application.bikestreets.utils.requestLocationPermission
 import com.application.bikestreets.utils.showMapLayers
 import com.application.bikestreets.utils.showToast
@@ -49,7 +51,6 @@ import com.mapbox.maps.EdgeInsets
 import com.mapbox.maps.MapView
 import com.mapbox.maps.MapboxMap
 import com.mapbox.maps.Style
-import com.mapbox.maps.extension.style.layers.addLayer
 import com.mapbox.maps.extension.style.sources.addSource
 import com.mapbox.maps.extension.style.sources.generated.GeoJsonSource
 import com.mapbox.maps.extension.style.sources.getSourceAs
@@ -104,7 +105,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     private lateinit var mapMarkersManager: MapMarkersManager
 
     private lateinit var sharedPreferences: SharedPreferences
-    private lateinit var defaultPackage: String
 
     private lateinit var binding: ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -119,8 +119,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
         initBottomNavigationSheet()
 
-        // Carry over from getDefaultSharedPreferences()
-        defaultPackage = "${packageName}_preferences"
         setScreenModeFromPreferences()
 
         // launch terms of use if unsigned
@@ -155,7 +153,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
     private fun setScreenModeFromPreferences() {
-        sharedPreferences = getSharedPreferences(defaultPackage, MODE_PRIVATE)
+        sharedPreferences = getSharedPreferences(getDefaultPackageName(this), MODE_PRIVATE)
 
         val keepScreenOnPreference =
             sharedPreferences.getBoolean(KEEP_SCREEN_ON_PREFERENCE_KEY, true)
@@ -206,14 +204,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 moveCamera(location)
             }
         }
-    }
-
-    private fun mapTypeFromPreferences(): String? {
-        val sharedPreferences = getSharedPreferences(defaultPackage, MODE_PRIVATE)
-        return sharedPreferences.getString(
-            MAP_TYPE_PREFERENCE_KEY,
-            getString(R.string.preference_street)
-        )
     }
 
 
@@ -382,7 +372,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         var mapStyle = "asset://stylejson/style.json"
 
         // apply map style conditionally, based on user's preferences.
-        if (mapTypeFromPreferences().equals(getString(R.string.preference_satellite))) {
+        if (mapTypeFromPreferences(this).equals(getString(R.string.preference_satellite))) {
             mapStyle = Style.SATELLITE
         }
 
@@ -432,7 +422,8 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
          *  This should be done with a Polyline Annotation, but there currently isn't multicolored
          *  line support unless using a gradient
          */
-        val layerSource = mapView.getMapboxMap().getStyle()?.getSourceAs<GeoJsonSource>(SELECTED_ROUTE_MAP_LAYER)
+        val layerSource =
+            mapView.getMapboxMap().getStyle()?.getSourceAs<GeoJsonSource>(SELECTED_ROUTE_MAP_LAYER)
 
         if (layerSource == null) {
             mapStyle?.addSource(
@@ -441,7 +432,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             )
 
             // Add layer above rendered routes
-            mapStyle?.addLayer(createLineLayer(SELECTED_ROUTE_MAP_LAYER))
+            mapStyle?.let { addLayerBasedOnMapType(this, it, SELECTED_ROUTE_MAP_LAYER) }
 
         } else {
             layerSource.featureCollection(pushingFeatureCollection)

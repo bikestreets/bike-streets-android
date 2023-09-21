@@ -1,6 +1,7 @@
 package com.application.bikestreets.utils
 
-import com.application.bikestreets.MainActivity
+import android.content.Context
+import com.application.bikestreets.R
 import com.application.bikestreets.StringToStream
 import com.application.bikestreets.api.modals.PrimitiveGeometry
 import com.application.bikestreets.constants.MapLayerConstants.SELECTED_ROUTE_MAP_LAYER
@@ -13,6 +14,7 @@ import com.mapbox.maps.Style
 import com.mapbox.maps.extension.style.expressions.dsl.generated.interpolate
 import com.mapbox.maps.extension.style.expressions.generated.Expression
 import com.mapbox.maps.extension.style.layers.addLayer
+import com.mapbox.maps.extension.style.layers.addLayerBelow
 import com.mapbox.maps.extension.style.layers.generated.LineLayer
 import com.mapbox.maps.extension.style.layers.properties.generated.LineCap
 import com.mapbox.maps.extension.style.layers.properties.generated.LineJoin
@@ -54,7 +56,7 @@ fun createLineLayer(layerName: String): LineLayer {
         }).lineColor(Expression.get("stroke"))
 }
 
-//TODO: Do something with this layer names, clean up to use more shared logic
+// TODO: Do something with these layer names, clean up to use more shared logic
 //private fun colorForLayer(layerName: String): Int {
 //    // This is lazy coupling and will break, but I want to see it work as a proof-of-concept.
 //    // A more flexible refactor involves inspecting the GeoJson file itself to get the layer
@@ -76,16 +78,16 @@ fun createLineLayer(layerName: String): LineLayer {
 //}
 
 
-fun showMapLayers(activity: MainActivity, mapStyle: Style) {
+fun showMapLayers(context: Context, mapStyle: Style) {
     val root = "geojson"
-    val mAssetManager = activity.assets
+    val mAssetManager = context.assets
 
     mAssetManager.list("$root/")?.forEach { fileName ->
         val featureCollection = featureCollectionFromStream(
             mAssetManager.open("$root/$fileName")
         )
 
-        renderFeatureCollection(fileName, featureCollection, mapStyle)
+        renderFeatureCollection(fileName, featureCollection, mapStyle, context)
     }
 
 }
@@ -97,7 +99,7 @@ private fun featureCollectionFromStream(fileStream: InputStream): FeatureCollect
 }
 
 private fun renderFeatureCollection(
-    layerName: String, featureCollection: FeatureCollection, mapStyle: Style
+    layerName: String, featureCollection: FeatureCollection, mapStyle: Style, context: Context
 ) {
     if (featureCollection.features() != null) {
         // add the data itself to mapStyle
@@ -105,16 +107,18 @@ private fun renderFeatureCollection(
             GeoJsonSource.Builder(layerName).featureCollection(featureCollection).build()
         )
 
-//        if (mapTypeFromPreferences().equals(getString(R.string.preference_satellite))) {
-//            //TODO: In satellite view, routes appear above the navigation line
-//            mapStyle.addLayer(createLineLayer(layerName))
-//        } else {
-        // create a line layer that reads the GeoJSON data that we just added
-//            mapStyle.addLayerBelow(createLineLayer(layerName), "road-label")
-        mapStyle.addLayer(createLineLayer(layerName))
-//        }
-
+        addLayerBasedOnMapType(context = context, mapStyle = mapStyle, layerName = layerName)
     }
+}
+
+// Satellite layer does not have road labels
+fun addLayerBasedOnMapType(context: Context, mapStyle: Style, layerName: String){
+    if (mapTypeFromPreferences(context) == context.getString(R.string.preference_satellite)) {
+        mapStyle.addLayer(createLineLayer(layerName))
+    } else {
+        mapStyle.addLayerBelow(createLineLayer(layerName), "road-label")
+    }
+
 }
 
 // The best way I have found to hide a layer is just to pass in an empty route
