@@ -1,6 +1,5 @@
 package com.application.bikestreets
 
-import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
@@ -16,7 +15,6 @@ import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.application.bikestreets.api.RoutingService
@@ -42,12 +40,10 @@ import com.google.gson.JsonObject
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineProvider
 import com.mapbox.android.core.permissions.PermissionsManager
-import com.mapbox.android.gestures.Utils
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
-import com.mapbox.maps.EdgeInsets
 import com.mapbox.maps.MapView
 import com.mapbox.maps.MapboxMap
 import com.mapbox.maps.Style
@@ -56,9 +52,6 @@ import com.mapbox.maps.extension.style.sources.generated.GeoJsonSource
 import com.mapbox.maps.extension.style.sources.getSourceAs
 import com.mapbox.maps.plugin.animation.MapAnimationOptions.Companion.mapAnimationOptions
 import com.mapbox.maps.plugin.animation.easeTo
-import com.mapbox.maps.plugin.annotation.annotations
-import com.mapbox.maps.plugin.annotation.generated.CircleAnnotationOptions
-import com.mapbox.maps.plugin.annotation.generated.createCircleAnnotationManager
 import com.mapbox.maps.plugin.attribution.attribution
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.locationcomponent.location
@@ -442,78 +435,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     private fun closeSearchView() {
         actionSearch.collapseActionView()
         searchView.setQuery("", false)
-    }
-
-    private class MapMarkersManager(mapView: MapView) {
-
-        private val mapboxMap = mapView.getMapboxMap()
-        private val circleAnnotationManager =
-            mapView.annotations.createCircleAnnotationManager(null)
-        private val markers = mutableMapOf<Long, Point>()
-
-        var onMarkersChangeListener: (() -> Unit)? = null
-
-        val hasMarkers: Boolean
-            get() = markers.isNotEmpty()
-
-        fun clearMarkers() {
-            markers.clear()
-            circleAnnotationManager.deleteAll()
-        }
-
-        fun showMarker(coordinate: Point, context: Context) {
-            showMarkers(listOf(coordinate), context)
-        }
-
-        fun showMarkers(coordinates: List<Point>, context: Context) {
-            clearMarkers()
-            if (coordinates.isEmpty()) {
-                onMarkersChangeListener?.invoke()
-                return
-            }
-
-            coordinates.forEach { coordinate ->
-                val circleAnnotationOptions: CircleAnnotationOptions = CircleAnnotationOptions()
-                    .withPoint(coordinate)
-                    .withCircleRadius(8.0)
-                    .withCircleColor(ContextCompat.getColor(context, R.color.destination_pin))
-                    .withCircleStrokeWidth(3.0)
-                    .withCircleStrokeColor("#ffffff")
-
-                val annotation = circleAnnotationManager.create(circleAnnotationOptions)
-                markers[annotation.id] = coordinate
-            }
-
-            if (coordinates.size == 1) {
-                CameraOptions.Builder()
-                    .center(coordinates.first())
-                    .padding(MARKERS_INSETS_OPEN_CARD)
-                    .zoom(14.0)
-                    .build()
-            } else {
-                mapboxMap.cameraForCoordinates(
-                    coordinates, MARKERS_INSETS, bearing = null, pitch = null
-                )
-            }.also {
-                mapboxMap.setCamera(it)
-            }
-            onMarkersChangeListener?.invoke()
-        }
-    }
-
-    private companion object {
-
-        val MARKERS_EDGE_OFFSET = Utils.dpToPx(64F).toDouble()
-        val PLACE_CARD_HEIGHT = Utils.dpToPx(300F).toDouble()
-
-        //TODO Adjust camera so both start and end are visible
-        val MARKERS_INSETS = EdgeInsets(
-            MARKERS_EDGE_OFFSET, MARKERS_EDGE_OFFSET, MARKERS_EDGE_OFFSET, MARKERS_EDGE_OFFSET
-        )
-
-        val MARKERS_INSETS_OPEN_CARD = EdgeInsets(
-            MARKERS_EDGE_OFFSET, MARKERS_EDGE_OFFSET, PLACE_CARD_HEIGHT, MARKERS_EDGE_OFFSET
-        )
     }
 
 
