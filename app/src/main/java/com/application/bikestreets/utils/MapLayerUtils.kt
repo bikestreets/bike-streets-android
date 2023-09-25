@@ -27,13 +27,12 @@ import java.io.InputStream
 fun convertToMapboxGeometry(geometry: PrimitiveGeometry): Geometry? {
     return when (geometry.type) {
         "LineString" -> {
-            // Assuming your coordinates list has the structure [longitude, latitude]
+            // Coordinates list has the structure [longitude, latitude]
             val coordinates = geometry.coordinates.map {
                 Point.fromLngLat(it[0], it[1])
             }
             LineString.fromLngLats(coordinates)
         }
-        // Handle other geometry types similarly
         else -> null
     }
 }

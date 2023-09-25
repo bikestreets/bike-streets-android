@@ -379,7 +379,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
         val mapStyle = mapView.getMapboxMap().getStyle()
 
-        //TODO: add route selection step
+        // TODO: add route selection step
         val selectedRoute = routingDirections?.routes?.first()
 
         val selectedRouteGeometry: MutableList<Feature> = mutableListOf()
@@ -399,7 +399,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 val properties = JsonObject()
                 properties.addProperty(
                     "stroke",
-                    getColorHexString(this, R.color.primary_route_segment)
+                    getColorHexString(this, R.color.vamos_light_blue)
                 )
 
                 selectedRouteGeometry.add(Feature.fromGeometry(mapBoxGeometry, properties))
