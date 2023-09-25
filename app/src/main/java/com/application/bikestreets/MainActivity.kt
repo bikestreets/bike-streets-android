@@ -16,7 +16,6 @@ import androidx.appcompat.widget.Toolbar
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.view.isVisible
-import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.application.bikestreets.api.RoutingService
 import com.application.bikestreets.api.modals.DirectionResponse
 import com.application.bikestreets.api.modals.Mode
@@ -32,6 +31,7 @@ import com.application.bikestreets.utils.getColorHexString
 import com.application.bikestreets.utils.getDefaultPackageName
 import com.application.bikestreets.utils.hideCurrentRouteLayer
 import com.application.bikestreets.utils.mapTypeFromPreferences
+import com.application.bikestreets.utils.moveCamera
 import com.application.bikestreets.utils.requestLocationPermission
 import com.application.bikestreets.utils.showMapLayers
 import com.application.bikestreets.utils.showToast
@@ -43,15 +43,12 @@ import com.mapbox.android.core.permissions.PermissionsManager
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
-import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.MapView
 import com.mapbox.maps.MapboxMap
 import com.mapbox.maps.Style
 import com.mapbox.maps.extension.style.sources.addSource
 import com.mapbox.maps.extension.style.sources.generated.GeoJsonSource
 import com.mapbox.maps.extension.style.sources.getSourceAs
-import com.mapbox.maps.plugin.animation.MapAnimationOptions.Companion.mapAnimationOptions
-import com.mapbox.maps.plugin.animation.easeTo
 import com.mapbox.maps.plugin.attribution.attribution
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.locationcomponent.location
@@ -194,7 +191,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
             // enable the button's functionality
             binding.bottomSheet.followRider.setOnClickListener {
-                moveCamera(location)
+                moveCamera(map = mapView.getMapboxMap(), location = location)
             }
         }
     }
@@ -231,7 +228,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     private fun startSearchRouting(coordinate: Point) {
         closeSearchView()
-        mapMarkersManager.showMarker(coordinate, activity)
+        mapMarkersManager.showMarker(destination = coordinate, start = location, activity)
 
         MainScope().launch(Dispatchers.Main) {
             try {
@@ -290,7 +287,11 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 responseInfo: ResponseInfo
             ) {
                 closeSearchView()
-                mapMarkersManager.showMarkers(results.map { it.coordinate }, activity)
+                // Don't currently support multi-location search results.map { it.coordinate }
+                mapMarkersManager.showMarker(
+                    destination = results.first().coordinate, start = location,
+                    context = activity
+                )
             }
 
             override fun onOfflineSearchResultsShown(
@@ -353,7 +354,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 OnIndicatorPositionChangedListener {
                 override fun onIndicatorPositionChanged(point: Point) {
                     location = point
-                    moveCamera(location)
+                    moveCamera(map = mapView.getMapboxMap(), location = location)
 
                     mapView.location.removeOnIndicatorPositionChangedListener(this)
                 }
@@ -493,18 +494,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
             bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
         }
-    }
-
-    fun moveCamera(location: Point) {
-        mapView.getMapboxMap().easeTo(
-            cameraOptions = CameraOptions.Builder()
-                .center(location)
-                .build(),
-            animationOptions = mapAnimationOptions {
-                duration(500)
-                interpolator(FastOutSlowInInterpolator())
-            }
-        )
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {

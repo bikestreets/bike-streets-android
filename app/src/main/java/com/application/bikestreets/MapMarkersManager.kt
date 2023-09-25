@@ -2,9 +2,9 @@ package com.application.bikestreets
 
 import android.content.Context
 import androidx.core.content.ContextCompat
+import com.application.bikestreets.utils.moveCamera
 import com.mapbox.android.gestures.Utils
 import com.mapbox.geojson.Point
-import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.EdgeInsets
 import com.mapbox.maps.MapView
 import com.mapbox.maps.plugin.annotation.annotations
@@ -29,57 +29,36 @@ class MapMarkersManager(mapView: MapView) {
         circleAnnotationManager.deleteAll()
     }
 
-    fun showMarker(coordinate: Point, context: Context) {
-        showMarkers(listOf(coordinate), context)
-    }
-
-    fun showMarkers(coordinates: List<Point>, context: Context) {
+    fun showMarker(destination: Point, start: Point, context: Context) {
         clearMarkers()
-        if (coordinates.isEmpty()) {
-            onMarkersChangeListener?.invoke()
-            return
-        }
 
-        coordinates.forEach { coordinate ->
-            val circleAnnotationOptions: CircleAnnotationOptions = CircleAnnotationOptions()
-                .withPoint(coordinate)
-                .withCircleRadius(8.0)
-                .withCircleColor(ContextCompat.getColor(context, R.color.destination_pin))
-                .withCircleStrokeWidth(3.0)
-                .withCircleStrokeColor("#ffffff")
+        val circleAnnotationOptions: CircleAnnotationOptions = CircleAnnotationOptions()
+            .withPoint(destination)
+            .withCircleRadius(8.0)
+            .withCircleColor(ContextCompat.getColor(context, R.color.destination_pin))
+            .withCircleStrokeWidth(3.0)
+            .withCircleStrokeColor("#ffffff")
 
-            val annotation = circleAnnotationManager.create(circleAnnotationOptions)
-            markers[annotation.id] = coordinate
-        }
+        val annotation = circleAnnotationManager.create(circleAnnotationOptions)
+        markers[annotation.id] = destination
 
-        if (coordinates.size == 1) {
-            CameraOptions.Builder()
-                .center(coordinates.first())
-                .padding(MARKERS_INSETS_OPEN_CARD)
-                .zoom(14.0)
-                .build()
-        } else {
-            mapboxMap.cameraForCoordinates(
-                coordinates, MARKERS_INSETS, bearing = null, pitch = null
-            )
-        }.also {
-            mapboxMap.setCamera(it)
-        }
+
+        val coordinates = listOf(start, destination)
+        val cameraOptions = mapboxMap.cameraForCoordinates(
+            coordinates, MARKERS_INSETS, bearing = null, pitch = null
+        )
+
+        moveCamera(map = mapboxMap, cameraOptions = cameraOptions)
+
         onMarkersChangeListener?.invoke()
     }
 
     private companion object {
 
         val MARKERS_EDGE_OFFSET = Utils.dpToPx(64F).toDouble()
-        val PLACE_CARD_HEIGHT = Utils.dpToPx(300F).toDouble()
 
-        //TODO Adjust camera so both start and end are visible
         val MARKERS_INSETS = EdgeInsets(
             MARKERS_EDGE_OFFSET, MARKERS_EDGE_OFFSET, MARKERS_EDGE_OFFSET, MARKERS_EDGE_OFFSET
-        )
-
-        val MARKERS_INSETS_OPEN_CARD = EdgeInsets(
-            MARKERS_EDGE_OFFSET, MARKERS_EDGE_OFFSET, PLACE_CARD_HEIGHT, MARKERS_EDGE_OFFSET
         )
     }
 }

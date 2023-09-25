@@ -30,7 +30,7 @@
         <item name="mapboxSearchSdkPrimaryTextColor">#000</item>
         <item name="mapboxSearchSdkPrimaryTextInactiveColor">@color/black_50</item>
         <item name="mapboxSearchSdkPrimaryAccentColor">@color/link</item>
-        <item name="mapboxSearchSdkOnPrimaryAccentColor">@color/link</item>
+        <item name="mapboxSearchSdkOnPrimaryAccentColor">@android:color/white</item>
         <item name="mapboxSearchSdkDistanceColor">@color/black_50</item>
         <item name="mapboxSearchSdkIconTintColor">@color/black_40</item>
         <item name="mapboxSearchSdkBackgroundColor">#FFF</item>
