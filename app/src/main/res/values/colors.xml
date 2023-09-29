@@ -19,7 +19,7 @@
     
     <!-- v2 Color Scheme -->
     <color name="destination_pin">#FBCC20</color>
-    <color name="primary_route_segment">#355AA8</color>
+    <color name="vamos_blue">#355AA8</color>
     <color name="sidewalk_segment">#971B8A</color>
     <color name="vamos_light_blue">#85C7F2</color>
     <color name="vamos_trail">#389244</color>

@@ -2,6 +2,7 @@
 <resources>
     <dimen name="app_bar_height">180dp</dimen>
     <dimen name="default_margin">16dp</dimen>
+    <dimen name="action_icon_start_margin">12dp</dimen>
 
     <!-- Legend -->
     <dimen name="map_legend_entry_margin_top">8dp</dimen>
@@ -10,7 +11,7 @@
     <!-- Bottom Drawer -->
     <dimen name="drawer_corner_radius">28dp</dimen>
     <!-- Start Values used to calculate peek bar height -->
-    <dimen name="tappable_icons_height">40dp</dimen>
+    <dimen name="tappable_icons_height">35dp</dimen>
     <dimen name="tappable_icons_vertical_padding">8dp</dimen>
     <dimen name="draggable_indicator_vertical_margin">9dp</dimen>
     <dimen name="draggable_indicator_height">4dp</dimen>
@@ -19,8 +20,4 @@
     <!-- End Values used to calculate peek bar height -->
 
     <dimen name="rounding">8dp</dimen>
-
-    <!-- Elevations -->
-    <dimen name="tappable_icon_elevation">2dp</dimen>
-    <dimen name="bottom_drawer_elevation">8dp</dimen>
 </resources>

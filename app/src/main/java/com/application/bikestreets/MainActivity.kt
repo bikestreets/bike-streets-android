@@ -232,7 +232,8 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
         MainScope().launch(Dispatchers.Main) {
             try {
-                val routingDirections = RoutingService.getRoutingDirections(
+                val routingService = RoutingService()
+                val routingDirections = routingService.getRoutingDirections(
                     startCoordinates = location,
                     endCoordinates = coordinate
                 )
