@@ -1,6 +1,7 @@
 package com.application.bikestreets.api
 
 import android.util.Log
+import com.application.bikestreets.BuildConfig
 import com.application.bikestreets.api.modals.DirectionResponse
 import com.mapbox.geojson.Point
 import okhttp3.OkHttpClient
@@ -15,9 +16,15 @@ class RoutingService {
         endCoordinates: Point
     ): DirectionResponse? {
 
-        val interceptor = HttpLoggingInterceptor()
-        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
-        val client: OkHttpClient = OkHttpClient.Builder().addInterceptor(interceptor).build()
+        val clientBuilder = OkHttpClient.Builder()
+
+        if (BuildConfig.DEBUG) {
+            val interceptor = HttpLoggingInterceptor()
+            interceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
+            clientBuilder.addInterceptor(interceptor)
+        }
+
+        val client = clientBuilder.build()
 
         val retrofit = Retrofit.Builder()
             .baseUrl("http://206.189.205.9")
