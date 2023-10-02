@@ -10,12 +10,13 @@
 
     <!-- Bottom Drawer -->
     <dimen name="drawer_corner_radius">28dp</dimen>
+    <dimen name="close_padding">12dp</dimen>
     <!-- Start Values used to calculate peek bar height -->
     <dimen name="tappable_icons_height">35dp</dimen>
     <dimen name="tappable_icons_vertical_padding">8dp</dimen>
-    <dimen name="draggable_indicator_vertical_margin">9dp</dimen>
+    <dimen name="draggable_indicator_vertical_margin">8dp</dimen>
     <dimen name="draggable_indicator_height">4dp</dimen>
-    <dimen name="toolbar_vertical_margin">16dp</dimen>
+    <dimen name="toolbar_vertical_margin">8dp</dimen>
     <dimen name="search_view_height">48dp</dimen>
     <!-- End Values used to calculate peek bar height -->
 

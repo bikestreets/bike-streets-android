@@ -51,9 +51,11 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/settings">
 
+            <!-- TODO: This content can be it's own file/ fragment -->
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:animateLayoutChanges="true">
 
                 <androidx.cardview.widget.CardView
                     android:id="@+id/drag_handle"
@@ -66,24 +68,54 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <androidx.appcompat.widget.Toolbar
-                    android:id="@+id/search_view"
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/search_view_height"
-                    android:layout_margin="@dimen/toolbar_vertical_margin"
-                    android:colorControlNormal="#007AFF"
+                <TextView
+                    android:id="@+id/vamos_text"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/default_margin"
+                    android:text="@string/search_instructions"
+                    android:textSize="18sp"
+                    app:layout_constraintBottom_toBottomOf="@+id/close"
+                    app:layout_constraintEnd_toStartOf="@id/close"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/drag_handle" />
+
+                <ImageView
+                    android:id="@+id/close"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/close_bottom_drawer_description"
+                    android:padding="@dimen/close_padding"
+                    android:src="@drawable/close"
+                    android:visibility="invisible"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/drag_handle"
+                    tools:visibility="visible" />
+
+                <EditText
+                    android:id="@+id/search_edit_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/toolbar_vertical_margin"
+                    android:background="@drawable/edit_text_shape"
+                    android:drawableEnd="@drawable/ic_search"
+                    android:drawablePadding="@dimen/default_margin"
+                    android:hint="@string/search_set_destination"
+                    android:importantForAutofill="no"
+                    android:inputType="textAutoCorrect"
+                    android:padding="@dimen/default_margin"
+                    android:singleLine="true"
+                    app:layout_constraintTop_toBottomOf="@id/close" />
 
                 <com.mapbox.search.ui.view.SearchResultsView
                     android:id="@+id/search_results_view"
                     android:layout_width="match_parent"
-                    android:layout_height="250dp"
-                    android:theme="@style/AppTheme"
-                    android:clipToPadding="false"
+                    android:layout_height="0dp"
                     android:layout_marginTop="@dimen/toolbar_vertical_margin"
+                    android:clipToPadding="false"
+                    android:theme="@style/AppTheme"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/search_view" />
+                    app:layout_constraintTop_toBottomOf="@id/search_edit_text" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 

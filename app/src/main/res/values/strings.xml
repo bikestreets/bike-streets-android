@@ -18,8 +18,12 @@
     <string name="preference_satellite">satellite_view</string>
 
     <!-- Search -->
+    <string name="search_instructions">Find a Route with VAMOS</string>
     <string name="search_bar_instruction">Search</string>
     <string name="search_content_desc">search icon</string>
+
+    <string name="search_set_destination">Set Destination</string>
+    <string name="close_bottom_drawer_description">Close bottom sheet button</string>
 
     <!-- Settings/About -->
     <string name="enable_location_permission">Enable Location Marker</string>

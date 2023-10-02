@@ -4,15 +4,14 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.Gravity
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
+import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.SearchView
-import androidx.appcompat.widget.Toolbar
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.view.isVisible
@@ -29,6 +28,7 @@ import com.application.bikestreets.utils.addLayerBasedOnMapType
 import com.application.bikestreets.utils.convertToMapboxGeometry
 import com.application.bikestreets.utils.getColorHexString
 import com.application.bikestreets.utils.getDefaultPackageName
+import com.application.bikestreets.utils.getSearchOptions
 import com.application.bikestreets.utils.hideCurrentRouteLayer
 import com.application.bikestreets.utils.mapTypeFromPreferences
 import com.application.bikestreets.utils.moveCamera
@@ -85,8 +85,8 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     private lateinit var locationEngine: LocationEngine
     private lateinit var location: Point
 
-    private lateinit var actionSearch: Toolbar
-    private lateinit var searchView: SearchView
+    private lateinit var searchEditText: EditText
+
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<ConstraintLayout>
 
     private lateinit var searchResultsView: SearchResultsView
@@ -104,7 +104,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
-
         setContentView(view)
 
         initBottomNavigationSheet()
@@ -122,6 +121,8 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
         // Show "center location" button if available
         enableFollowRiderButton()
+
+        searchResultsView.isVisible = true
     }
 
     private fun initBottomNavigationSheet() {
@@ -134,12 +135,43 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         val dimenSearchTool =
             resources.getDimension(R.dimen.search_view_height) + resources.getDimension(R.dimen.toolbar_vertical_margin) * 2
 
-        val totalOffset = dimenOffsetTappable + dimenPeekIndicator + dimenSearchTool
+        val totalOffset = (dimenOffsetTappable + dimenPeekIndicator + dimenSearchTool) * 1.3
 
         bottomSheetBehavior =
             BottomSheetBehavior.from(binding.bottomSheet.bottomNavigationContainer)
 
         bottomSheetBehavior.peekHeight = totalOffset.roundToInt()
+
+        // X button will always collapse the bottomsheet
+        binding.bottomSheet.close.setOnClickListener {
+            bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        }
+
+        bottomSheetBehavior.addBottomSheetCallback(object :
+            BottomSheetBehavior.BottomSheetCallback() {
+            override fun onStateChanged(bottomSheet: View, newState: Int) {
+                when (newState) {
+                    BottomSheetBehavior.STATE_COLLAPSED -> {
+                        binding.bottomSheet.close.visibility = View.INVISIBLE
+
+                        // Remove focus from the EditText
+                        searchEditText.clearFocus()
+                    }
+
+                    BottomSheetBehavior.STATE_EXPANDED -> {
+                        binding.bottomSheet.close.visibility = View.VISIBLE
+                    }
+
+                    else -> {
+                        // No custom actions needed for other states
+                    }
+                }
+            }
+
+            override fun onSlide(bottomSheet: View, slideOffset: Float) {
+                // React to dragging events
+            }
+        })
     }
 
     private fun setScreenModeFromPreferences() {
@@ -216,18 +248,14 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         }
 
         // Load Map Markers
+        // TODO: do this in a different thread so UI is not blocked
         mapMarkersManager = MapMarkersManager(mapView)
-
-        actionSearch = binding.bottomSheet.searchView.apply {
-            title = "Search"
-            setSupportActionBar(this)
-        }
 
         loadSearch()
     }
 
     private fun startSearchRouting(coordinate: Point) {
-        closeSearchView()
+        clearSearchText()
         mapMarkersManager.showMarker(destination = coordinate, start = location, activity)
 
         MainScope().launch(Dispatchers.Main) {
@@ -246,7 +274,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
     private fun loadSearch() {
-        //TODO: limit search to be bound to the region (https://docs.mapbox.com/android/search/api/core/1.0.0-rc.6/sdk/com.mapbox.search/-search-options/)
 
         val apiType = ApiType.GEOCODING
 
@@ -287,8 +314,8 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 results: List<SearchResult>,
                 responseInfo: ResponseInfo
             ) {
-                closeSearchView()
-                // Don't currently support multi-location search results.map { it.coordinate }
+                clearSearchText()
+                // TODO Don't currently support multi-location search results.map { it.coordinate }
                 mapMarkersManager.showMarker(
                     destination = results.first().coordinate, start = location,
                     context = activity
@@ -325,7 +352,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             }
 
             override fun onFeedbackItemClick(responseInfo: ResponseInfo) {
-                // No used
+                // Not used
             }
 
             override fun onHistoryItemClick(historyRecord: HistoryRecord) {
@@ -336,12 +363,11 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 suggestion: SearchSuggestion,
                 responseInfo: ResponseInfo
             ) {
-                if (::searchView.isInitialized) {
-                    searchView.setQuery(suggestion.name, true)
-                }
+                searchEditText.setText(suggestion.name)
             }
         })
 
+        initSearchEditText()
         requestLocationPermission(this)
     }
 
@@ -434,16 +460,23 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         }
     }
 
-    private fun closeSearchView() {
-        actionSearch.collapseActionView()
-        searchView.setQuery("", false)
+    private fun clearSearchText() {
+        searchEditText.text.clear()
     }
 
 
+    /**
+     * Native back button will do different actions based on what is open
+     * 1st - clear out search and collapse bottomsheet
+     * 2nd - if bottom sheet is collapsed, remove the currently shown route
+     * 3rd - Close app if none of the above
+     */
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
-            collapseBottomSheet()
+            // Clear search and collapse
+            bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+            clearSearchText()
         } else if (mapMarkersManager.hasMarkers) {
             hideCurrentRouteLayer(mapView.getMapboxMap())
             mapMarkersManager.clearMarkers()
@@ -452,48 +485,28 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.main_activity_options_menu, menu)
+    private fun initSearchEditText() {
 
-        searchResultsView.isVisible = true
+        searchEditText = binding.bottomSheet.searchEditText
 
-        val searchActionView = menu.findItem(R.id.action_search)
-        searchActionView.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
-            override fun onMenuItemActionExpand(item: MenuItem): Boolean {
-                expandBottomSheet()
-                return true
+        searchEditText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+
             }
 
-            override fun onMenuItemActionCollapse(item: MenuItem): Boolean {
-                collapseBottomSheet()
-                return true
-            }
-        })
-
-        searchView = searchActionView.actionView as SearchView
-        searchView.queryHint = "where to?"
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String): Boolean {
-                return false
+            override fun onTextChanged(newText: CharSequence?, p1: Int, p2: Int, p3: Int) {
+                searchEngineUiAdapter.search(newText.toString(), getSearchOptions())
             }
 
-            override fun onQueryTextChange(newText: String): Boolean {
-                searchEngineUiAdapter.search(newText)
-                return false
+            override fun afterTextChanged(p0: Editable?) {
+
             }
         })
-        return true
-    }
 
-    private fun expandBottomSheet() {
-        if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) {
-            bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
-        }
-    }
-
-    private fun collapseBottomSheet() {
-        if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
-            bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        searchEditText.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus && bottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) {
+                bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+            }
         }
     }
 
