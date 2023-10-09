@@ -131,11 +131,15 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         val dimenOffsetTappable =
             resources.getDimension(R.dimen.tappable_icons_height) * 2 + resources.getDimension(R.dimen.tappable_icons_vertical_padding) * 2
         val dimenPeekIndicator =
-            resources.getDimension(R.dimen.draggable_indicator_height) + resources.getDimension(R.dimen.draggable_indicator_vertical_margin)
-        val dimenSearchTool =
-            resources.getDimension(R.dimen.search_view_height) + resources.getDimension(R.dimen.toolbar_vertical_margin) * 2
+            resources.getDimension(R.dimen.draggable_indicator_height) + resources.getDimension(R.dimen.draggable_indicator_top_margin)
+        val dimenClose =
+            resources.getDimension(R.dimen.close_icon_height) + resources.getDimension(R.dimen.close_padding) * 2
+        val dimenSearchEntry =
+            resources.getDimension(R.dimen.search_icon_height) + resources.getDimension(R.dimen.edit_text_padding) * 2 + resources.getDimension(
+                R.dimen.toolbar_vertical_margin
+            )
 
-        val totalOffset = (dimenOffsetTappable + dimenPeekIndicator + dimenSearchTool) * 1.3
+        val totalOffset = (dimenOffsetTappable + dimenPeekIndicator + dimenClose + dimenSearchEntry)
 
         bottomSheetBehavior =
             BottomSheetBehavior.from(binding.bottomSheet.bottomNavigationContainer)
@@ -255,7 +259,9 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
     private fun startSearchRouting(coordinate: Point) {
-        clearSearchText()
+        // Move drawer out of the way
+        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+
         mapMarkersManager.showMarker(destination = coordinate, start = location, activity)
 
         MainScope().launch(Dispatchers.Main) {
@@ -314,12 +320,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 results: List<SearchResult>,
                 responseInfo: ResponseInfo
             ) {
-                clearSearchText()
-                // TODO Don't currently support multi-location search results.map { it.coordinate }
-                mapMarkersManager.showMarker(
-                    destination = results.first().coordinate, start = location,
-                    context = activity
-                )
+                // Do nothing
             }
 
             override fun onOfflineSearchResultsShown(
@@ -503,6 +504,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             }
         })
 
+        // Expand the sheet when the user puts focus on the text box
         searchEditText.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus && bottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) {
                 bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
@@ -517,7 +519,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             }
 
             MAP_TYPE_PREFERENCE_KEY -> {
-                Log.d(javaClass.simpleName, "Updating style")
                 // call this function, only to update the map style
                 loadMapboxStyle(mapView.getMapboxMap())
             }

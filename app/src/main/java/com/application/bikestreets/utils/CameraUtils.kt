@@ -10,7 +10,6 @@ import com.mapbox.maps.plugin.animation.easeTo
 /** Can pass in either a single point to center the map,
  *  or
  *  (optional) pass in a camera option that includes multiple points
- *
  */
 fun moveCamera(map: MapboxMap, location: Point? = null, cameraOptions: CameraOptions? = null) {
     map.easeTo(

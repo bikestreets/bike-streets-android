@@ -61,7 +61,7 @@
                     android:id="@+id/drag_handle"
                     android:layout_width="32dp"
                     android:layout_height="@dimen/draggable_indicator_height"
-                    android:layout_marginTop="@dimen/draggable_indicator_vertical_margin"
+                    android:layout_marginTop="@dimen/draggable_indicator_top_margin"
                     app:cardBackgroundColor="@color/drag_handle"
                     app:cardElevation="0dp"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -96,15 +96,15 @@
                     android:id="@+id/search_edit_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_margin="@dimen/toolbar_vertical_margin"
+                    android:layout_marginHorizontal="@dimen/default_margin"
                     android:background="@drawable/edit_text_shape"
                     android:drawableEnd="@drawable/ic_search"
-                    android:drawablePadding="@dimen/default_margin"
                     android:hint="@string/search_set_destination"
                     android:importantForAutofill="no"
                     android:inputType="textAutoCorrect"
-                    android:padding="@dimen/default_margin"
+                    android:padding="@dimen/edit_text_padding"
                     android:singleLine="true"
+                    android:textSize="@dimen/edit_text_size"
                     app:layout_constraintTop_toBottomOf="@id/close" />
 
                 <com.mapbox.search.ui.view.SearchResultsView
