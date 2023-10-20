@@ -21,6 +21,7 @@
     <dimen name="close_padding">12dp</dimen>
     <dimen name="edit_text_size">16sp</dimen>
     <dimen name="edit_text_padding">12dp</dimen>
+    <dimen name="button_height">48dp</dimen>
     <!-- End Values used to calculate peek bar height -->
 
     <dimen name="rounding">8dp</dimen>

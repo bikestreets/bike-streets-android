@@ -17,12 +17,14 @@ import androidx.core.app.ActivityCompat
 import androidx.core.view.isVisible
 import com.application.bikestreets.api.RoutingService
 import com.application.bikestreets.api.modals.DirectionResponse
+import com.application.bikestreets.api.modals.Location
 import com.application.bikestreets.api.modals.Mode
 import com.application.bikestreets.api.modals.Mode.Companion.getMode
 import com.application.bikestreets.constants.MapLayerConstants.SELECTED_ROUTE_MAP_LAYER
 import com.application.bikestreets.constants.PreferenceConstants.KEEP_SCREEN_ON_PREFERENCE_KEY
 import com.application.bikestreets.constants.PreferenceConstants.MAP_TYPE_PREFERENCE_KEY
 import com.application.bikestreets.databinding.ActivityMainBinding
+import com.application.bikestreets.terms.TermsOfUse
 import com.application.bikestreets.utils.PERMISSIONS_REQUEST_LOCATION
 import com.application.bikestreets.utils.addLayerBasedOnMapType
 import com.application.bikestreets.utils.convertToMapboxGeometry
@@ -30,6 +32,7 @@ import com.application.bikestreets.utils.getColorHexString
 import com.application.bikestreets.utils.getDefaultPackageName
 import com.application.bikestreets.utils.getSearchOptions
 import com.application.bikestreets.utils.hideCurrentRouteLayer
+import com.application.bikestreets.utils.hideKeyboard
 import com.application.bikestreets.utils.mapTypeFromPreferences
 import com.application.bikestreets.utils.moveCamera
 import com.application.bikestreets.utils.requestLocationPermission
@@ -80,17 +83,23 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     ActivityCompat.OnRequestPermissionsResultCallback,
     AboutFragment.OnPermissionButtonClickListener {
     private lateinit var mapView: MapView
-    private val activity: MainActivity = this
 
     private lateinit var locationEngine: LocationEngine
     private lateinit var location: Point
 
-    private lateinit var searchEditText: EditText
+    private lateinit var searchToEditText: EditText
+    private lateinit var searchFromEditText: EditText
+    private var activeTextField: EditText? = null
+
+    private var startLocation: Location? = null
+    private lateinit var endLocation: Location
 
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<ConstraintLayout>
+    private var currentBottomSheetState: BottomSheetStates = BottomSheetStates.INITIAL
 
     private lateinit var searchResultsView: SearchResultsView
     private lateinit var searchEngineUiAdapter: SearchEngineUiAdapter
+    private lateinit var myTextWatcher: TextWatcher
 
     private lateinit var mapMarkersManager: MapMarkersManager
 
@@ -127,28 +136,18 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     private fun initBottomNavigationSheet() {
 
-        // Set the peek height to only show search bar
-        val dimenOffsetTappable =
-            resources.getDimension(R.dimen.tappable_icons_height) * 2 + resources.getDimension(R.dimen.tappable_icons_vertical_padding) * 2
-        val dimenPeekIndicator =
-            resources.getDimension(R.dimen.draggable_indicator_height) + resources.getDimension(R.dimen.draggable_indicator_top_margin)
-        val dimenClose =
-            resources.getDimension(R.dimen.close_icon_height) + resources.getDimension(R.dimen.close_padding) * 2
-        val dimenSearchEntry =
-            resources.getDimension(R.dimen.search_icon_height) + resources.getDimension(R.dimen.edit_text_padding) * 2 + resources.getDimension(
-                R.dimen.toolbar_vertical_margin
-            )
-
-        val totalOffset = (dimenOffsetTappable + dimenPeekIndicator + dimenClose + dimenSearchEntry)
-
         bottomSheetBehavior =
             BottomSheetBehavior.from(binding.bottomSheet.bottomNavigationContainer)
 
-        bottomSheetBehavior.peekHeight = totalOffset.roundToInt()
+        updateBottomSheetPeekHeight()
 
-        // X button will always collapse the bottomsheet
+        // X button will always collapse the bottom sheet
         binding.bottomSheet.close.setOnClickListener {
             bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        }
+
+        binding.bottomSheet.beginRoutingButton.setOnClickListener {
+            startRouting()
         }
 
         bottomSheetBehavior.addBottomSheetCallback(object :
@@ -156,10 +155,10 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             override fun onStateChanged(bottomSheet: View, newState: Int) {
                 when (newState) {
                     BottomSheetBehavior.STATE_COLLAPSED -> {
-                        binding.bottomSheet.close.visibility = View.INVISIBLE
+                        // Hide keyboard if open
+                        hideKeyboard(this@MainActivity)
 
-                        // Remove focus from the EditText
-                        searchEditText.clearFocus()
+                        binding.bottomSheet.close.visibility = View.INVISIBLE
                     }
 
                     BottomSheetBehavior.STATE_EXPANDED -> {
@@ -176,6 +175,30 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 // React to dragging events
             }
         })
+    }
+
+    private fun updateBottomSheetPeekHeight() {
+        // Set the peek height to only show search bar
+        val dimenOffsetTappable =
+            resources.getDimension(R.dimen.tappable_icons_height) * 2 + resources.getDimension(R.dimen.tappable_icons_vertical_padding) * 2
+        val dimenPeekIndicator =
+            resources.getDimension(R.dimen.draggable_indicator_height) + resources.getDimension(R.dimen.draggable_indicator_top_margin)
+        val dimenClose =
+            resources.getDimension(R.dimen.close_icon_height) + resources.getDimension(R.dimen.close_padding) * 2
+        val dimenSearchEntry =
+            resources.getDimension(R.dimen.search_icon_height) + resources.getDimension(R.dimen.edit_text_padding) * 2 + resources.getDimension(
+                R.dimen.toolbar_vertical_margin
+            )
+        val dimenStartRoutingButton = resources.getDimension(R.dimen.button_height)
+
+        val totalOffset = when (currentBottomSheetState) {
+            BottomSheetStates.INITIAL -> (dimenOffsetTappable + dimenPeekIndicator + dimenClose + dimenSearchEntry)
+            BottomSheetStates.DIRECTIONS -> (dimenOffsetTappable + dimenPeekIndicator + dimenClose + dimenSearchEntry * 2 + dimenStartRoutingButton)
+            BottomSheetStates.ROUTE_SELECTION -> (dimenOffsetTappable + dimenPeekIndicator + dimenClose + dimenSearchEntry)
+        }
+
+
+        bottomSheetBehavior.peekHeight = totalOffset.roundToInt()
     }
 
     private fun setScreenModeFromPreferences() {
@@ -222,7 +245,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
     private fun enableFollowRiderButton() {
-        if (PermissionsManager.areLocationPermissionsGranted(activity)) {
+        if (PermissionsManager.areLocationPermissionsGranted(this)) {
             binding.bottomSheet.followRider.visibility = View.VISIBLE
 
             // enable the button's functionality
@@ -258,25 +281,64 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         loadSearch()
     }
 
-    private fun startSearchRouting(coordinate: Point) {
-        // Move drawer out of the way
-        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+    private fun showDirectionsBottomSheet() {
+        if (currentBottomSheetState != BottomSheetStates.DIRECTIONS) {
+            // TODO: don't re-run the visible code and peek height each time if already at this state
+            // Change peek height before collapsing
 
-        mapMarkersManager.showMarker(destination = coordinate, start = location, activity)
+            // Move drawer out of the way
+            bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+
+            // Reveal FROM location textbox
+            searchFromEditText.visibility = View.VISIBLE
+            setTextNoSearch(getString(R.string.current_location), searchFromEditText)
+
+            // Reval Search buttom
+            binding.bottomSheet.beginRoutingButton.visibility = View.VISIBLE
+
+            mapMarkersManager.showMarker(
+                destination = endLocation.coordinate,
+                start = startLocation?.coordinate ?: location,
+                this
+            )
+
+            // Update helper text
+            binding.bottomSheet.vamosText.setText(R.string.search_directions)
+
+            // We are now showing the "directions" version of the bottom sheet
+            currentBottomSheetState = BottomSheetStates.DIRECTIONS
+            updateBottomSheetPeekHeight()
+        } else {
+            mapMarkersManager.clearMarkers()
+            mapMarkersManager.showMarker(
+                destination = endLocation.coordinate,
+                start = startLocation?.coordinate ?: location,
+                this
+            )
+        }
+    }
+
+    private fun startRouting() {
+
+        val startCoordinates =
+            startLocation?.coordinate ?: location
+
 
         MainScope().launch(Dispatchers.Main) {
             try {
                 val routingService = RoutingService()
                 val routingDirections = routingService.getRoutingDirections(
-                    startCoordinates = location,
-                    endCoordinates = coordinate
+                    startCoordinates = startCoordinates,
+                    endCoordinates = endLocation.coordinate
                 )
                 displayRouteOnMap(routingDirections)
             } catch (e: Exception) {
                 Log.e(javaClass.simpleName, "Navigation error: $e")
-                // Handle errors
             }
         }
+
+        // Collapse the bottom sheet
+        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
     }
 
     private fun loadSearch() {
@@ -338,14 +400,18 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 searchResult: SearchResult,
                 responseInfo: ResponseInfo
             ) {
-                startSearchRouting(searchResult.coordinate)
+                setStartOrEndLocation(Location(searchResult), activeTextField)
+                setTextNoSearch(searchResult.name, activeTextField)
+                showDirectionsBottomSheet()
             }
 
             override fun onOfflineSearchResultSelected(
                 searchResult: OfflineSearchResult,
                 responseInfo: OfflineResponseInfo
             ) {
-                startSearchRouting(searchResult.coordinate)
+                setStartOrEndLocation(Location(searchResult), activeTextField)
+                setTextNoSearch(searchResult.name, activeTextField)
+                showDirectionsBottomSheet()
             }
 
             override fun onError(e: Exception) {
@@ -357,14 +423,16 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             }
 
             override fun onHistoryItemClick(historyRecord: HistoryRecord) {
-                startSearchRouting(historyRecord.coordinate)
+                setStartOrEndLocation(Location(historyRecord), activeTextField)
+                setTextNoSearch(historyRecord.name, activeTextField)
+                showDirectionsBottomSheet()
             }
 
             override fun onPopulateQueryClick(
                 suggestion: SearchSuggestion,
                 responseInfo: ResponseInfo
             ) {
-                searchEditText.setText(suggestion.name)
+                searchToEditText.setText(suggestion.name)
             }
         })
 
@@ -373,7 +441,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
     private fun loadLocation() {
-        if (PermissionsManager.areLocationPermissionsGranted(activity)) {
+        if (PermissionsManager.areLocationPermissionsGranted(this)) {
             mapView.location.updateSettings {
                 enabled = true
             }
@@ -419,7 +487,10 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
                 val mapBoxGeometry = convertToMapboxGeometry(it.geometry)
                 val properties = JsonObject()
-                properties.addProperty("stroke", getColorHexString(this, R.color.sidewalk_segment))
+                properties.addProperty(
+                    "stroke",
+                    getColorHexString(this, R.color.sidewalk_segment)
+                )
 
                 selectedRouteGeometry.add(Feature.fromGeometry(mapBoxGeometry, properties))
             } else {
@@ -462,9 +533,9 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
     private fun clearSearchText() {
-        searchEditText.text.clear()
+        searchToEditText.text.clear()
+        searchFromEditText.text.clear()
     }
-
 
     /**
      * Native back button will do different actions based on what is open
@@ -488,26 +559,52 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     private fun initSearchEditText() {
 
-        searchEditText = binding.bottomSheet.searchEditText
+        searchToEditText = binding.bottomSheet.searchToEditText
+        searchFromEditText = binding.bottomSheet.searchFromEditText
 
-        searchEditText.addTextChangedListener(object : TextWatcher {
+        // On Initial state, assume all actions are for the destination
+        activeTextField = searchToEditText
+
+        val searchOptions = getSearchOptions()
+
+        myTextWatcher = object : TextWatcher {
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
 
             }
 
             override fun onTextChanged(newText: CharSequence?, p1: Int, p2: Int, p3: Int) {
-                searchEngineUiAdapter.search(newText.toString(), getSearchOptions())
+                searchEngineUiAdapter.search(newText.toString(), searchOptions)
             }
 
             override fun afterTextChanged(p0: Editable?) {
 
             }
-        })
+        }
+
+        searchToEditText.addTextChangedListener(myTextWatcher)
+        searchFromEditText.addTextChangedListener(myTextWatcher)
 
         // Expand the sheet when the user puts focus on the text box
-        searchEditText.setOnFocusChangeListener { _, hasFocus ->
+        //TODO : Can put use .setCompoundDrawablesRelativeWithIntrinsicBounds to change the icon while focused
+        searchToEditText.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus && bottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) {
                 bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+            }
+
+            // Set active text to last touched search field
+            if (hasFocus) {
+                activeTextField = searchToEditText
+            }
+        }
+
+        searchFromEditText.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus && bottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) {
+                bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+            }
+
+            // Set active text to last touched search field
+            if (hasFocus) {
+                activeTextField = searchFromEditText
             }
         }
     }
@@ -542,7 +639,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 loadLocation()
                 enableFollowRiderButton()
             } else {
-                showToast(activity, getString(R.string.no_location_access))
+                showToast(this, getString(R.string.no_location_access))
             }
         }
     }
@@ -556,4 +653,30 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     override fun onPermissionButtonClicked() {
         requestLocationPermission(this)
     }
+
+    // Temporarily remove the text listener to set the text without performing a search
+    private fun setTextNoSearch(name: String, activeTextField: EditText?) {
+        if (activeTextField != null) {
+            activeTextField.removeTextChangedListener(myTextWatcher)
+            activeTextField.setText(name)
+            activeTextField.addTextChangedListener(myTextWatcher)
+        } else {
+            Log.e(javaClass.simpleName, "No Text field is currently in focus!")
+        }
+
+    }
+
+
+    private fun setStartOrEndLocation(location: Location, activeTextField: EditText?) {
+        if (activeTextField != null) {
+            if (activeTextField == searchToEditText) {
+                endLocation = location
+            } else {
+                startLocation = location
+            }
+        } else {
+            Log.e(javaClass.simpleName, "No Text field is currently in focus!!")
+        }
+    }
+
 }

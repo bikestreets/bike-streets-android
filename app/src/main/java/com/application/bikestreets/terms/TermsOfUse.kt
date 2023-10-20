@@ -1,4 +1,4 @@
-package com.application.bikestreets
+package com.application.bikestreets.terms
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity

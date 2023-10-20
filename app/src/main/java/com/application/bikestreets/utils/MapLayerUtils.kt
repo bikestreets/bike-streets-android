@@ -2,7 +2,7 @@ package com.application.bikestreets.utils
 
 import android.content.Context
 import com.application.bikestreets.R
-import com.application.bikestreets.StringToStream
+import com.application.bikestreets.terms.StringToStream
 import com.application.bikestreets.api.modals.PrimitiveGeometry
 import com.application.bikestreets.constants.MapLayerConstants.SELECTED_ROUTE_MAP_LAYER
 import com.mapbox.geojson.FeatureCollection

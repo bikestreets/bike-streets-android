@@ -1,4 +1,4 @@
-package com.application.bikestreets
+package com.application.bikestreets.terms
 
 import java.io.InputStream
 import java.util.Scanner

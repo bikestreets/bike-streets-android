@@ -1,4 +1,4 @@
-package com.application.bikestreets
+package com.application.bikestreets.terms
 import android.app.Activity
 import android.content.Context
 
