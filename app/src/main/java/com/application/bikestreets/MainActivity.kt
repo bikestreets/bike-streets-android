@@ -20,6 +20,7 @@ import com.application.bikestreets.api.modals.DirectionResponse
 import com.application.bikestreets.api.modals.Location
 import com.application.bikestreets.api.modals.Mode
 import com.application.bikestreets.api.modals.Mode.Companion.getMode
+import com.application.bikestreets.bottomsheet.BottomSheetStates
 import com.application.bikestreets.constants.MapLayerConstants.SELECTED_ROUTE_MAP_LAYER
 import com.application.bikestreets.constants.PreferenceConstants.KEEP_SCREEN_ON_PREFERENCE_KEY
 import com.application.bikestreets.constants.PreferenceConstants.MAP_TYPE_PREFERENCE_KEY
@@ -250,7 +251,9 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
             // enable the button's functionality
             binding.bottomSheet.followRider.setOnClickListener {
-                moveCamera(map = mapView.getMapboxMap(), location = location)
+                if(::location.isInitialized) {
+                    moveCamera(map = mapView.getMapboxMap(), location = location)
+                }
             }
         }
     }
