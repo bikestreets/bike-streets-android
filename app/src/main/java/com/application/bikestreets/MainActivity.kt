@@ -20,6 +20,7 @@ import com.application.bikestreets.api.modals.DirectionResponse
 import com.application.bikestreets.api.modals.Location
 import com.application.bikestreets.api.modals.Mode
 import com.application.bikestreets.api.modals.Mode.Companion.getMode
+import com.application.bikestreets.bottomsheet.BottomSheetFragment
 import com.application.bikestreets.bottomsheet.BottomSheetStates
 import com.application.bikestreets.constants.MapLayerConstants.SELECTED_ROUTE_MAP_LAYER
 import com.application.bikestreets.constants.PreferenceConstants.KEEP_SCREEN_ON_PREFERENCE_KEY
@@ -133,6 +134,10 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         enableFollowRiderButton()
 
         searchResultsView.isVisible = true
+
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_compose_container, BottomSheetFragment()).addToBackStack("null")
+            .commit()
     }
 
     private fun initBottomNavigationSheet() {

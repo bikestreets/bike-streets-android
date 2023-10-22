@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 
-class BottomSheet : Fragment() {
+class BottomSheetFragment : Fragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater,
