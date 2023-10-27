@@ -1,10 +1,4 @@
-package com.application.bikestreets
-
-class BottomSheet {
-
-
-}
-
+package com.application.bikestreets.bottomsheet
 
 enum class BottomSheetStates {
     INITIAL,

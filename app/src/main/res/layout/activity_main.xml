@@ -15,17 +15,15 @@
         mapbox:mapbox_cameraTargetLng="-104.9687837"
         mapbox:mapbox_cameraZoom="12.0" />
 
-    <include
-        android:id="@+id/bottom_sheet"
-        layout="@layout/bottom_draggable_sheet"
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/bottom_sheet_fragment"
+        android:name="com.application.bikestreets.bottomsheet.BottomSheetFragment"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:layout_height="match_parent" />
+
 
     <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/fragment_container"
+        android:id="@+id/settings_fragment_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:elevation="12dp"
