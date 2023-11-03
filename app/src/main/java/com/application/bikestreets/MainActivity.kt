@@ -11,11 +11,12 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import com.application.bikestreets.api.RoutingService
 import com.application.bikestreets.api.modals.DirectionResponse
+import com.application.bikestreets.api.modals.Location
 import com.application.bikestreets.api.modals.Mode
 import com.application.bikestreets.api.modals.Mode.Companion.getMode
+import com.application.bikestreets.bottomsheet.BottomSheetClickListener
 import com.application.bikestreets.constants.MapLayerConstants.SELECTED_ROUTE_MAP_LAYER
 import com.application.bikestreets.constants.PreferenceConstants.KEEP_SCREEN_ON_PREFERENCE_KEY
 import com.application.bikestreets.constants.PreferenceConstants.MAP_TYPE_PREFERENCE_KEY
@@ -27,10 +28,8 @@ import com.application.bikestreets.utils.convertToMapboxGeometry
 import com.application.bikestreets.utils.getColorHexString
 import com.application.bikestreets.utils.getDefaultPackageName
 import com.application.bikestreets.utils.hideCurrentRouteLayer
-import com.application.bikestreets.utils.mapTypeFromPreferences
 import com.application.bikestreets.utils.moveCamera
 import com.application.bikestreets.utils.requestLocationPermission
-import com.application.bikestreets.utils.showMapLayers
 import com.application.bikestreets.utils.showToast
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.gson.JsonObject
@@ -41,8 +40,6 @@ import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
 import com.mapbox.maps.MapView
-import com.mapbox.maps.MapboxMap
-import com.mapbox.maps.Style
 import com.mapbox.maps.extension.style.sources.addSource
 import com.mapbox.maps.extension.style.sources.generated.GeoJsonSource
 import com.mapbox.maps.extension.style.sources.getSourceAs
@@ -51,11 +48,12 @@ import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListen
 import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.maps.plugin.logo.logo
 import com.mapbox.maps.plugin.scalebar.scalebar
+import kotlinx.coroutines.*
 
 
 class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener,
     ActivityCompat.OnRequestPermissionsResultCallback,
-    AboutFragment.OnPermissionButtonClickListener {
+    BottomSheetClickListener {
     private lateinit var mapView: MapView
 
     private lateinit var locationEngine: LocationEngine
@@ -68,7 +66,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     private lateinit var sharedPreferences: SharedPreferences
 
     private lateinit var binding: ActivityMainBinding
-    private val vm:  com.application.bikestreets.ViewModel by viewModels()
+    private val vm: MainVM by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,8 +77,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         val view = binding.root
         setContentView(view)
 
-        initBottomSheet()
-
         setScreenModeFromPreferences()
 
         // launch terms of use if unsigned
@@ -88,14 +84,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
         mapView = binding.mapView
         setupMapboxMap()
-    }
-
-    private fun initBottomSheet() {
-
-
-        // Set the callback in the fragment
-//        val bottomSheetFragment = BottomSheetF()
-
     }
 
     private fun setScreenModeFromPreferences() {
@@ -137,7 +125,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
         // Load Style
         mapView.getMapboxMap().also { mapboxMap ->
-            loadMapboxStyle(mapboxMap)
+            vm.loadMapboxStyle(mapboxMap, this@MainActivity)
             loadLocation()
         }
 
@@ -164,17 +152,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         }
     }
 
-    private fun loadMapboxStyle(mapboxMap: MapboxMap) {
-        var mapStyle = "asset://stylejson/style.json"
-
-        // apply map style conditionally, based on user's preferences.
-        if (mapTypeFromPreferences(this).equals(getString(R.string.preference_satellite))) {
-            mapStyle = Style.SATELLITE
-        }
-
-        // Load style, on compete show layers
-        mapboxMap.loadStyleUri(mapStyle) { showMapLayers(this, it) }
-    }
 
     // Once a search has kicked off, given the response API, we use that route to draw a polyline
     private fun displayRouteOnMap(routingDirections: DirectionResponse?) {
@@ -246,7 +223,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
      */
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
+        if (::bottomSheetBehavior.isInitialized && bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
             // Clear search and collapse
             bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
             vm.clearText()
@@ -266,7 +243,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
             MAP_TYPE_PREFERENCE_KEY -> {
                 // call this function, only to update the map style
-                loadMapboxStyle(mapView.getMapboxMap())
+                vm.loadMapboxStyle(mapView.getMapboxMap(), context = this)
             }
 
             else -> {
@@ -298,9 +275,50 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
     }
 
-    // Triggered when button clicked in settings fragment
-    override fun onPermissionButtonClicked() {
-        requestLocationPermission(this)
+    override fun onSettingsButtonClicked() {
+
+        // Set the callback in the fragment
+        val aboutFragment = AboutFragment()
+
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.settings_fragment_container, aboutFragment).addToBackStack("null")
+            .commit()
     }
 
+    override fun onFollowRiderButtonClicked() {
+        if (PermissionsManager.areLocationPermissionsGranted(this)) {
+            moveCamera(map = mapView.getMapboxMap(), location = location)
+        } else {
+            requestLocationPermission(this)
+        }
+    }
+
+    override fun showRoutes(startLocation: Location?, endLocation: Location) {
+        val startCoordinates = startLocation?.coordinate ?: location
+
+        MainScope().launch(Dispatchers.Main) {
+            try {
+                val routingService = RoutingService()
+                val routingDirections = routingService.getRoutingDirections(
+                    startCoordinates = startCoordinates,
+                    endCoordinates = endLocation.coordinate
+                )
+                displayRouteOnMap(routingDirections)
+            } catch (e: Exception) {
+                Log.e(javaClass.simpleName, "Navigation error: $e")
+            }
+        }
+    }
+
+    override fun clearMarkers() {
+        mapMarkersManager.clearMarkers()
+    }
+
+    override fun showMarkers(startLocation: Location?, endLocation: Location) {
+        mapMarkersManager.showMarker(
+            destination = endLocation.coordinate,
+            start = startLocation?.coordinate ?: location,
+            this
+        )
+    }
 }

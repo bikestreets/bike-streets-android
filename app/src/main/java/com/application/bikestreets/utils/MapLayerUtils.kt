@@ -57,6 +57,7 @@ fun showMapLayers(context: Context, mapStyle: Style) {
     val root = "geojson"
     val mAssetManager = context.assets
 
+    // TODO, may be better to fetch file in the .IO thread, then render separately
     mAssetManager.list("$root/")?.forEach { fileName ->
         val featureCollection = featureCollectionFromStream(
             mAssetManager.open("$root/$fileName")

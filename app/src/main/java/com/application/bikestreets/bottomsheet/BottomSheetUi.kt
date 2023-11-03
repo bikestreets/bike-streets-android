@@ -1,81 +1,75 @@
 package com.application.bikestreets.bottomsheet
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.ModalBottomSheetLayout
-import androidx.compose.material.ModalBottomSheetValue
-import androidx.compose.material.Scaffold
-import androidx.compose.material.TopAppBar
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.rememberModalBottomSheetState
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun BottomSheetUi() {
-    val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
-    val coroutineScope = rememberCoroutineScope()
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(100.dp)
+            .background(colors.secondary)
+    )
 
-    ModalBottomSheetLayout(
-        sheetState = sheetState,
+    BottomSheetScaffold(
         sheetContent = {
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .height(400.dp)
-                    .verticalScroll(rememberScrollState())
+                    .height(128.dp),
+                contentAlignment = Alignment.Center
             ) {
-                // Your sheet content goes here.
-                Text("Drag me up!", modifier = Modifier.align(Alignment.Center))
+                Text("Swipe up to expand sheet")
             }
-        }
-    ) {
-        // Your main screen content goes here
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("Expandable Bottom Sheet") },
-                    navigationIcon = {
-                        IconButton(onClick = {
-                            coroutineScope.launch {
-                                sheetState.show()
-                            }
-                        }) {
-                            Icon(Icons.Default.Menu, "Menu")
-                        }
-                    }
-                )
-            }
-        ) {
-            Box(
+            Column(
                 Modifier
-                    .fillMaxSize()
-                    .padding(it)
+                    .fillMaxWidth()
+                    .padding(64.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Main Content", modifier = Modifier.align(Alignment.Center))
+                Text("Sheet content")
+                Spacer(Modifier.height(20.dp))
+            }
+        },
+        sheetPeekHeight = 128.dp,
+        sheetShape = RoundedCornerShape(
+            topStart = 26.dp,
+            topEnd = 26.dp,
+            bottomEnd = 0.dp,
+            bottomStart = 0.dp
+        ),
+    ) { innerPadding ->
+        LazyColumn(contentPadding = innerPadding) {
+            items(1) {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                        .background(colors.primary)
+                )
             }
         }
     }
+}
+
+@Composable
+fun InitialSheetState() {
+    Text("Hello!")
 }

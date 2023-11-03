@@ -1,6 +1,7 @@
 package com.application.bikestreets.bottomsheet
 
 import android.app.Activity
+import android.content.Context
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -59,6 +60,7 @@ class BottomSheetFragment : Fragment() {
     private lateinit var endLocation: Location
 
     private var context: Activity? = null
+    private lateinit var mListener: BottomSheetClickListener
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -74,15 +76,22 @@ class BottomSheetFragment : Fragment() {
 
         loadSearch()
 
-        // enable settings button
+        // enable settings & location button
         enableSettingsButton()
-
-        // Show "center location" button if available
         enableFollowRiderButton()
 
         searchResultsView.isVisible = true
 
         return view
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        try {
+            mListener = context as BottomSheetClickListener
+        } catch (e: ClassCastException) {
+            throw ClassCastException("$context must implement BottomSheetClickListener")
+        }
     }
 
     private fun setBottomSheetBehavior() {
@@ -97,7 +106,7 @@ class BottomSheetFragment : Fragment() {
         }
 
         binding.beginRoutingButton.setOnClickListener {
-//            startRouting()
+            startRouting()
         }
 
         bottomSheetBehavior.addBottomSheetCallback(object :
@@ -280,8 +289,6 @@ class BottomSheetFragment : Fragment() {
 
     private fun showDirectionsBottomSheet() {
         if (currentBottomSheetState != BottomSheetStates.DIRECTIONS) {
-            // TODO: don't re-run the visible code and peek height each time if already at this state
-            // Change peek height before collapsing
 
             // Move drawer out of the way
             bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
@@ -293,11 +300,7 @@ class BottomSheetFragment : Fragment() {
             // Reveal Search buttom
             binding.beginRoutingButton.visibility = View.VISIBLE
 
-//            mapMarkersManager.showMarker(
-//                destination = endLocation.coordinate,
-//                start = startLocation?.coordinate ?: location,
-//                this
-//            )
+            mListener.showMarkers(startLocation, endLocation)
 
             // Update helper text
             binding.vamosText.setText(R.string.search_directions)
@@ -306,12 +309,8 @@ class BottomSheetFragment : Fragment() {
             currentBottomSheetState = BottomSheetStates.DIRECTIONS
             updateBottomSheetPeekHeight()
         } else {
-//            mapMarkersManager.clearMarkers()
-//            mapMarkersManager.showMarker(
-//                destination = endLocation.coordinate,
-//                start = startLocation?.coordinate ?: location,
-//                this
-//            )
+            mListener.clearMarkers()
+            mListener.showMarkers(startLocation, endLocation)
         }
     }
 
@@ -328,33 +327,16 @@ class BottomSheetFragment : Fragment() {
     }
 
     private fun enableSettingsButton() {
-//        // get the button
-//        val settingsButton = binding.settings
-//
-//        // Set the callback in the fragment
-//        val aboutFragment = AboutFragment()
-//        aboutFragment.setOnPermissionRequested(this)
-//
-//        // show the button
-//        settingsButton.visibility = View.VISIBLE
-//
-//        // enable the button's functionality
-//        settingsButton.setOnClickListener {
-//            supportFragmentManager.beginTransaction()
-//                .replace(R.id.settings_fragment_container, aboutFragment).addToBackStack("null")
-//                .commit()
-//        }
+        // Notify parent on click
+        binding.settings.setOnClickListener {
+            mListener.onSettingsButtonClicked()
+        }
     }
 
     private fun enableFollowRiderButton() {
-//        if (PermissionsManager.areLocationPermissionsGranted(this)) {
-//            binding.followRider.visibility = View.VISIBLE
-//
-//            // enable the button's functionality
-//            binding.followRider.setOnClickListener {
-//                moveCamera(map = mapView.getMapboxMap(), location = location)
-//            }
-//        }
+        binding.followRider.setOnClickListener {
+            mListener?.onFollowRiderButtonClicked()
+        }
     }
 
     private fun updateBottomSheetPeekHeight() {
@@ -397,26 +379,11 @@ class BottomSheetFragment : Fragment() {
     }
 
     private fun startRouting() {
-//
-//        val startCoordinates =
-//            startLocation?.coordinate ?: location
-//
-//
-//        MainScope().launch(Dispatchers.Main) {
-//            try {
-//                val routingService = RoutingService()
-//                val routingDirections = routingService.getRoutingDirections(
-//                    startCoordinates = startCoordinates,
-//                    endCoordinates = endLocation.coordinate
-//                )
-//                displayRouteOnMap(routingDirections)
-//            } catch (e: Exception) {
-//                Log.e(javaClass.simpleName, "Navigation error: $e")
-//            }
-//        }
-//
-//        // Collapse the bottom sheet
-//        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        // Parent activity is where the route will be displayed
+        mListener.showRoutes(startLocation, endLocation)
+
+        // Collapse the bottom sheet
+        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
     }
 
 }

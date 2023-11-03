@@ -22,7 +22,6 @@
             android:background="@drawable/circle"
             android:contentDescription="@string/update_camera_location_button"
             android:padding="8dp"
-            android:visibility="gone"
             app:layout_constraintBottom_toTopOf="@id/settings"
             app:layout_constraintStart_toStartOf="parent"
             app:srcCompat="@drawable/ic_nearme"
