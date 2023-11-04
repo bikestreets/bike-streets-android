@@ -16,7 +16,7 @@
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/bottom_sheet_fragment"
-        android:name="com.application.bikestreets.bottomsheet.BottomSheetFragment"
+        android:name="com.application.bikestreets.bottomsheet.BottomSheetTestFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
