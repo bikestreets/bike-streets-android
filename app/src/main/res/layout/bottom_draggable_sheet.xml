@@ -124,16 +124,6 @@
                     android:textSize="@dimen/edit_text_size"
                     app:layout_constraintTop_toBottomOf="@id/search_from_edit_text" />
 
-                <Button
-                    android:id="@+id/begin_routing_button"
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/button_height"
-                    android:layout_marginHorizontal="@dimen/default_margin"
-                    android:text="Start Routing"
-                    android:visibility="gone"
-                    tools:visibility="visible"
-                    app:layout_constraintTop_toBottomOf="@id/search_to_edit_text" />
-
                 <com.mapbox.search.ui.view.SearchResultsView
                     android:id="@+id/search_results_view"
                     android:layout_width="match_parent"
@@ -142,7 +132,13 @@
                     android:clipToPadding="false"
                     android:theme="@style/AppTheme"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/begin_routing_button" />
+                    app:layout_constraintTop_toBottomOf="@id/search_to_edit_text" />
+
+                <androidx.compose.ui.platform.ComposeView
+                    android:id="@+id/compose_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintTop_toBottomOf="@id/search_results_view" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 

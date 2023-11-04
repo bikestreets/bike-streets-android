@@ -12,11 +12,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import com.application.bikestreets.api.RoutingService
-import com.application.bikestreets.api.modals.DirectionResponse
 import com.application.bikestreets.api.modals.Location
 import com.application.bikestreets.api.modals.Mode
 import com.application.bikestreets.api.modals.Mode.Companion.getMode
+import com.application.bikestreets.api.modals.Route
 import com.application.bikestreets.bottomsheet.BottomSheetClickListener
+import com.application.bikestreets.bottomsheet.BottomSheetFragment
 import com.application.bikestreets.constants.MapLayerConstants.SELECTED_ROUTE_MAP_LAYER
 import com.application.bikestreets.constants.PreferenceConstants.KEEP_SCREEN_ON_PREFERENCE_KEY
 import com.application.bikestreets.constants.PreferenceConstants.MAP_TYPE_PREFERENCE_KEY
@@ -64,6 +65,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     private lateinit var mapMarkersManager: MapMarkersManager
 
     private lateinit var sharedPreferences: SharedPreferences
+
 
     private lateinit var binding: ActivityMainBinding
     private val vm: MainVM by viewModels()
@@ -154,39 +156,39 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
 
     // Once a search has kicked off, given the response API, we use that route to draw a polyline
-    private fun displayRouteOnMap(routingDirections: DirectionResponse?) {
+    private fun displayRouteOnMap(routes: List<Route>?): List<Route>? {
 
         val mapStyle = mapView.getMapboxMap().getStyle()
 
-        // TODO: add route selection step
-        val selectedRoute = routingDirections?.routes?.first()
-
         val selectedRouteGeometry: MutableList<Feature> = mutableListOf()
 
-        val legs = selectedRoute?.legs
-        val steps = legs?.flatMap { it.steps }
-        steps?.forEach {
-            if (getMode(it.mode) == Mode.PUSHING_BIKE) {
+        routes?.forEach {
+            val legs = it.legs
+            val steps = legs.flatMap { leg -> leg.steps }
+            steps.forEach { step ->
+                if (getMode(step.mode) == Mode.PUSHING_BIKE) {
 
-                val mapBoxGeometry = convertToMapboxGeometry(it.geometry)
-                val properties = JsonObject()
-                properties.addProperty(
-                    "stroke",
-                    getColorHexString(this, R.color.sidewalk_segment)
-                )
+                    val mapBoxGeometry = convertToMapboxGeometry(step.geometry)
+                    val properties = JsonObject()
+                    properties.addProperty(
+                        "stroke",
+                        getColorHexString(this, R.color.sidewalk_segment)
+                    )
 
-                selectedRouteGeometry.add(Feature.fromGeometry(mapBoxGeometry, properties))
-            } else {
-                val mapBoxGeometry = convertToMapboxGeometry(it.geometry)
-                val properties = JsonObject()
-                properties.addProperty(
-                    "stroke",
-                    getColorHexString(this, R.color.vamos_light_blue)
-                )
+                    selectedRouteGeometry.add(Feature.fromGeometry(mapBoxGeometry, properties))
+                } else {
+                    val mapBoxGeometry = convertToMapboxGeometry(step.geometry)
+                    val properties = JsonObject()
+                    properties.addProperty(
+                        "stroke",
+                        getColorHexString(this, R.color.vamos_light_blue)
+                    )
 
-                selectedRouteGeometry.add(Feature.fromGeometry(mapBoxGeometry, properties))
+                    selectedRouteGeometry.add(Feature.fromGeometry(mapBoxGeometry, properties))
+                }
             }
         }
+
 
         val pushingFeatureCollection: FeatureCollection =
             FeatureCollection.fromFeatures(selectedRouteGeometry)
@@ -213,6 +215,8 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         } else {
             layerSource.featureCollection(pushingFeatureCollection)
         }
+
+        return routes
     }
 
     /**
@@ -303,7 +307,16 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                     startCoordinates = startCoordinates,
                     endCoordinates = endLocation.coordinate
                 )
-                displayRouteOnMap(routingDirections)
+                val routes = displayRouteOnMap(routingDirections?.routes)
+
+                if (routes != null) {
+                    // Show go button on child for the route options
+                    Log.d("Apples", "${routes.first().distance}")
+                    val bottomSheetFragment =
+                        supportFragmentManager.findFragmentById(R.id.bottom_sheet_fragment) as? BottomSheetFragment
+                    bottomSheetFragment?.showRouteOptions(routes)
+                }
+
             } catch (e: Exception) {
                 Log.e(javaClass.simpleName, "Navigation error: $e")
             }
@@ -320,5 +333,9 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             start = startLocation?.coordinate ?: location,
             this
         )
+    }
+
+    override fun routeChosen(route: Route) {
+        displayRouteOnMap(routes = listOf(route))
     }
 }

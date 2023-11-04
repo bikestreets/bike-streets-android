@@ -10,11 +10,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import androidx.compose.foundation.layout.Column
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.application.bikestreets.R
 import com.application.bikestreets.api.modals.Location
+import com.application.bikestreets.api.modals.Route
+import com.application.bikestreets.composables.RouteOption
 import com.application.bikestreets.databinding.BottomDraggableSheetBinding
 import com.application.bikestreets.utils.getSearchOptions
 import com.application.bikestreets.utils.hideKeyboard
@@ -103,10 +106,6 @@ class BottomSheetFragment : Fragment() {
         // X button will always collapse the bottom sheet
         binding.close.setOnClickListener {
             bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
-        }
-
-        binding.beginRoutingButton.setOnClickListener {
-            startRouting()
         }
 
         bottomSheetBehavior.addBottomSheetCallback(object :
@@ -297,9 +296,6 @@ class BottomSheetFragment : Fragment() {
             searchFromEditText.visibility = View.VISIBLE
             setTextNoSearch(getString(R.string.current_location), searchFromEditText)
 
-            // Reveal Search buttom
-            binding.beginRoutingButton.visibility = View.VISIBLE
-
             mListener.showMarkers(startLocation, endLocation)
 
             // Update helper text
@@ -308,9 +304,14 @@ class BottomSheetFragment : Fragment() {
             // We are now showing the "directions" version of the bottom sheet
             currentBottomSheetState = BottomSheetStates.DIRECTIONS
             updateBottomSheetPeekHeight()
+
+            mListener.showRoutes(startLocation, endLocation)
         } else {
             mListener.clearMarkers()
             mListener.showMarkers(startLocation, endLocation)
+            mListener.showRoutes(startLocation, endLocation)
+
+            // We render on the map, but we want to show a start
         }
     }
 
@@ -335,7 +336,7 @@ class BottomSheetFragment : Fragment() {
 
     private fun enableFollowRiderButton() {
         binding.followRider.setOnClickListener {
-            mListener?.onFollowRiderButtonClicked()
+            mListener.onFollowRiderButtonClicked()
         }
     }
 
@@ -378,12 +379,31 @@ class BottomSheetFragment : Fragment() {
         searchFromEditText.text.clear()
     }
 
-    private fun startRouting() {
-        // Parent activity is where the route will be displayed
-        mListener.showRoutes(startLocation, endLocation)
+    fun showRouteOptions(routes: List<Route>) {
+        // Todo show the distance in
 
-        // Collapse the bottom sheet
-        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        val composeView = binding.composeView
+
+        composeView.setContent {
+
+            Column {
+                routes.forEachIndexed { index, route ->
+                    RouteOption(
+                        index = index + 1,
+                        distance = route.distance,
+                        onGoClicked = { notifyRouteChosen(route)() }
+                    )
+                }
+            }
+        }
     }
 
+    private fun notifyRouteChosen(route: Route): () -> Unit {
+        return {
+            // Collapse the bottom sheet
+            bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+
+            mListener.routeChosen(route)
+        }
+    }
 }

@@ -30,3 +30,8 @@ fun hideKeyboard(activity: Activity) {
         inputMethodManager.hideSoftInputFromWindow(activity.window.decorView.windowToken, 0)
     }
 }
+
+fun metersToMiles(meters: Double): Double {
+    val metersInAMile = 1609.34
+    return meters / metersInAMile
+}
