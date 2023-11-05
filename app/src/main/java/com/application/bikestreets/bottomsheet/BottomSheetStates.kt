@@ -3,7 +3,6 @@ package com.application.bikestreets.bottomsheet
 enum class BottomSheetStates {
     INITIAL,
     DIRECTIONS,
-    ROUTE_SELECTION,
 
 //    companion object {
 //        fun getBottomSheetState(){

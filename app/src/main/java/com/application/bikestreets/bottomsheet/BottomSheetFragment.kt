@@ -357,7 +357,6 @@ class BottomSheetFragment : Fragment() {
         val totalOffset = when (currentBottomSheetState) {
             BottomSheetStates.INITIAL -> (dimenOffsetTappable + dimenPeekIndicator + dimenClose + dimenSearchEntry)
             BottomSheetStates.DIRECTIONS -> (dimenOffsetTappable + dimenPeekIndicator + dimenClose + dimenSearchEntry * 2 + dimenStartRoutingButton)
-            BottomSheetStates.ROUTE_SELECTION -> (dimenOffsetTappable + dimenPeekIndicator + dimenClose + dimenSearchEntry)
         }
 
         bottomSheetBehavior.peekHeight = totalOffset.roundToInt()
@@ -380,8 +379,6 @@ class BottomSheetFragment : Fragment() {
     }
 
     fun showRouteOptions(routes: List<Route>) {
-        // Todo show the distance in
-
         val composeView = binding.composeView
 
         composeView.setContent {
