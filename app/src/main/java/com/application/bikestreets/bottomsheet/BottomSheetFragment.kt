@@ -3,42 +3,25 @@ package com.application.bikestreets.bottomsheet
 import android.app.Activity
 import android.content.Context
 import android.os.Bundle
-import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
-import androidx.compose.foundation.layout.Column
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import com.application.bikestreets.R
+import com.application.bikestreets.SharedViewModel
 import com.application.bikestreets.api.modals.Location
 import com.application.bikestreets.api.modals.Route
-import com.application.bikestreets.composables.RouteOption
+import com.application.bikestreets.composables.BottomSheetUi
 import com.application.bikestreets.databinding.BottomDraggableSheetBinding
-import com.application.bikestreets.utils.getSearchOptions
 import com.application.bikestreets.utils.hideKeyboard
-import com.application.bikestreets.utils.requestLocationPermission
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.mapbox.search.ApiType
-import com.mapbox.search.ResponseInfo
-import com.mapbox.search.SearchEngine
-import com.mapbox.search.SearchEngineSettings
-import com.mapbox.search.offline.OfflineResponseInfo
-import com.mapbox.search.offline.OfflineSearchEngine
-import com.mapbox.search.offline.OfflineSearchEngineSettings
-import com.mapbox.search.offline.OfflineSearchResult
-import com.mapbox.search.record.HistoryRecord
-import com.mapbox.search.result.SearchResult
-import com.mapbox.search.result.SearchSuggestion
-import com.mapbox.search.ui.adapter.engines.SearchEngineUiAdapter
-import com.mapbox.search.ui.view.CommonSearchViewConfiguration
-import com.mapbox.search.ui.view.DistanceUnitType
-import com.mapbox.search.ui.view.SearchMode
-import com.mapbox.search.ui.view.SearchResultsView
 import kotlin.math.roundToInt
 
 class BottomSheetFragment : Fragment() {
@@ -50,20 +33,14 @@ class BottomSheetFragment : Fragment() {
 
     private lateinit var myTextWatcher: TextWatcher
 
-    private var activeTextField: EditText? = null
-
-    private lateinit var searchEngineUiAdapter: SearchEngineUiAdapter
-
-    private lateinit var searchResultsView: SearchResultsView
-
-    private lateinit var searchToEditText: EditText
-    private lateinit var searchFromEditText: EditText
-
-    private var startLocation: Location? = null
-    private lateinit var endLocation: Location
-
     private var context: Activity? = null
     private lateinit var mListener: BottomSheetClickListener
+
+    private val viewModel: SharedViewModel by activityViewModels()
+
+    private fun updateUiWithNewRoutes(routes: List<Route>?) {
+        Log.d("apples", routes.toString())
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -77,15 +54,20 @@ class BottomSheetFragment : Fragment() {
 
         setBottomSheetBehavior()
 
+        // Load all composables
         loadSearch()
 
         // enable settings & location button
         enableSettingsButton()
         enableFollowRiderButton()
 
-        searchResultsView.isVisible = true
-
         return view
+    }
+
+    private fun onSearchOptionSelected(origin: Location?, destination: Location?) {
+//        setStartOrEndLocation(location, activeTextField)
+//        setTextNoSearch(location.name, activeTextField)
+        showDirectionsBottomSheet(origin, destination)
     }
 
     override fun onAttach(context: Context) {
@@ -137,194 +119,121 @@ class BottomSheetFragment : Fragment() {
 
     private fun loadSearch() {
 
-        val apiType = ApiType.GEOCODING
+        val composeView = binding.composeView
 
-        searchResultsView = binding.searchResultsView.apply {
-            initialize(
-                SearchResultsView.Configuration(CommonSearchViewConfiguration(DistanceUnitType.IMPERIAL))
+        composeView.setContent {
+
+            val routes by viewModel.route.observeAsState(initial = emptyList())
+
+            BottomSheetUi(
+                onSearchPerformed = { origin: Location?, destination: Location? ->
+                    onSearchOptionSelected(
+                        origin,
+                        destination
+                    )
+                },
+                routes = routes,
+                notifyRouteChosen = { route -> notifyRouteChosen(route) }
             )
-            isVisible = false
         }
 
-        val searchEngine = SearchEngine.createSearchEngineWithBuiltInDataProviders(
-            apiType = apiType,
-            settings = SearchEngineSettings(getString(R.string.mapbox_access_token))
-        )
-
-        val offlineSearchEngine = OfflineSearchEngine.create(
-            OfflineSearchEngineSettings(getString(R.string.mapbox_access_token))
-        )
-
-        searchEngineUiAdapter = SearchEngineUiAdapter(
-            view = searchResultsView,
-            searchEngine = searchEngine,
-            offlineSearchEngine = offlineSearchEngine,
-        )
-
-        searchEngineUiAdapter.searchMode = SearchMode.AUTO
-        searchEngineUiAdapter.addSearchListener(object : SearchEngineUiAdapter.SearchListener {
-
-            override fun onSuggestionsShown(
-                suggestions: List<SearchSuggestion>,
-                responseInfo: ResponseInfo
-            ) {
-                // Nothing to do
-            }
-
-            override fun onSearchResultsShown(
-                suggestion: SearchSuggestion,
-                results: List<SearchResult>,
-                responseInfo: ResponseInfo
-            ) {
-                // Do nothing
-            }
-
-            override fun onOfflineSearchResultsShown(
-                results: List<OfflineSearchResult>,
-                responseInfo: OfflineResponseInfo
-            ) {
-                // Nothing to do
-            }
-
-            override fun onSuggestionSelected(searchSuggestion: SearchSuggestion): Boolean {
-                return false
-            }
-
-            override fun onSearchResultSelected(
-                searchResult: SearchResult,
-                responseInfo: ResponseInfo
-            ) {
-                setStartOrEndLocation(Location(searchResult), activeTextField)
-                setTextNoSearch(searchResult.name, activeTextField)
-                showDirectionsBottomSheet()
-            }
-
-            override fun onOfflineSearchResultSelected(
-                searchResult: OfflineSearchResult,
-                responseInfo: OfflineResponseInfo
-            ) {
-                setStartOrEndLocation(Location(searchResult), activeTextField)
-                setTextNoSearch(searchResult.name, activeTextField)
-                showDirectionsBottomSheet()
-            }
-
-            override fun onError(e: Exception) {
-                Log.e(javaClass.simpleName, "Mapbox Search Error: $e")
-            }
-
-            override fun onFeedbackItemClick(responseInfo: ResponseInfo) {
-                // Not used
-            }
-
-            override fun onHistoryItemClick(historyRecord: HistoryRecord) {
-                setStartOrEndLocation(Location(historyRecord), activeTextField)
-                setTextNoSearch(historyRecord.name, activeTextField)
-                showDirectionsBottomSheet()
-            }
-
-            override fun onPopulateQueryClick(
-                suggestion: SearchSuggestion,
-                responseInfo: ResponseInfo
-            ) {
-                searchToEditText.setText(suggestion.name)
-            }
-        })
-
         initSearchEditText()
-        context?.let { requestLocationPermission(it) }
     }
 
     private fun initSearchEditText() {
-
-        searchToEditText = binding.searchToEditText
-        searchFromEditText = binding.searchFromEditText
-
-        // On Initial state, assume all actions are for the destination
-        activeTextField = searchToEditText
-
-        val searchOptions = getSearchOptions()
-
-        myTextWatcher = object : TextWatcher {
-            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-
-            }
-
-            override fun onTextChanged(newText: CharSequence?, p1: Int, p2: Int, p3: Int) {
-                searchEngineUiAdapter.search(newText.toString(), searchOptions)
-            }
-
-            override fun afterTextChanged(p0: Editable?) {
-
-            }
-        }
-
-        searchToEditText.addTextChangedListener(myTextWatcher)
-        searchFromEditText.addTextChangedListener(myTextWatcher)
-
-        // Expand the sheet when the user puts focus on the text box
-        //TODO : Can put use .setCompoundDrawablesRelativeWithIntrinsicBounds to change the icon while focused
-        searchToEditText.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus && bottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) {
-                bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
-            }
-
-            // Set active text to last touched search field
-            if (hasFocus) {
-                activeTextField = searchToEditText
-            }
-        }
-
-        searchFromEditText.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus && bottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) {
-                bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
-            }
-
-            // Set active text to last touched search field
-            if (hasFocus) {
-                activeTextField = searchFromEditText
-            }
-        }
+//
+//        searchToEditText = binding.searchToEditText
+//        searchFromEditText = binding.searchFromEditText
+//
+//        // On Initial state, assume all actions are for the destination
+//        activeTextField = searchToEditText
+//
+//        val searchOptions = getSearchOptions()
+//
+//        myTextWatcher = object : TextWatcher {
+//            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+//
+//            }
+//
+//            override fun onTextChanged(newText: CharSequence?, p1: Int, p2: Int, p3: Int) {
+//                searchEngineUiAdapter.search(newText.toString(), searchOptions)
+//            }
+//
+//            override fun afterTextChanged(p0: Editable?) {
+//
+//            }
+//        }
+//
+//        searchToEditText.addTextChangedListener(myTextWatcher)
+//        searchFromEditText.addTextChangedListener(myTextWatcher)
+//
+//        // Expand the sheet when the user puts focus on the text box
+//        searchToEditText.setOnFocusChangeListener { _, hasFocus ->
+//            if (hasFocus && bottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) {
+//                bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+//            }
+//
+//            // Set active text to last touched search field
+//            if (hasFocus) {
+//                activeTextField = searchToEditText
+//            }
+//        }
+//
+//        searchFromEditText.setOnFocusChangeListener { _, hasFocus ->
+//            if (hasFocus && bottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) {
+//                bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+//            }
+//
+//            // Set active text to last touched search field
+//            if (hasFocus) {
+//                activeTextField = searchFromEditText
+//            }
+//        }
     }
 
-    private fun showDirectionsBottomSheet() {
-        if (currentBottomSheetState != BottomSheetStates.DIRECTIONS) {
+    private fun showDirectionsBottomSheet(origin: Location?, destination: Location?) {
+        if (destination != null) {
+            if (currentBottomSheetState != BottomSheetStates.DIRECTIONS) {
 
-            // Move drawer out of the way
-            bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+                // Move drawer out of the way
+                bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
 
-            // Reveal FROM location textbox
-            searchFromEditText.visibility = View.VISIBLE
-            setTextNoSearch(getString(R.string.current_location), searchFromEditText)
+                // Reveal FROM location textbox
+//            searchFromEditText.visibility = View.VISIBLE
+//            setTextNoSearch(getString(R.string.current_location), searchFromEditText)
 
-            mListener.showMarkers(startLocation, endLocation)
+                mListener.showMarkers(origin, destination)
 
-            // Update helper text
-            binding.vamosText.setText(R.string.search_directions)
+                // Update helper text
+//                binding.vamosText.setText(R.string.search_directions)
 
-            // We are now showing the "directions" version of the bottom sheet
-            currentBottomSheetState = BottomSheetStates.DIRECTIONS
-            updateBottomSheetPeekHeight()
+                // We are now showing the "directions" version of the bottom sheet
+                currentBottomSheetState = BottomSheetStates.DIRECTIONS
+                updateBottomSheetPeekHeight()
 
-            mListener.showRoutes(startLocation, endLocation)
+                mListener.showRoutes(origin, destination)
+            } else {
+                mListener.clearMarkers()
+                mListener.showMarkers(origin, destination)
+                mListener.showRoutes(origin, destination)
+
+                // We render on the map, but we want to show a start
+            }
         } else {
-            mListener.clearMarkers()
-            mListener.showMarkers(startLocation, endLocation)
-            mListener.showRoutes(startLocation, endLocation)
-
-            // We render on the map, but we want to show a start
+            Log.e(javaClass.name, "Destination not set!, cannot show route on map")
         }
     }
 
     private fun setStartOrEndLocation(location: Location, activeTextField: EditText?) {
-        if (activeTextField != null) {
-            if (activeTextField == searchToEditText) {
-                endLocation = location
-            } else {
-                startLocation = location
-            }
-        } else {
-            Log.e(javaClass.simpleName, "No Text field is currently in focus!!")
-        }
+//        if (activeTextField != null) {
+//            if (activeTextField == searchToEditText) {
+//                endLocation = location
+//            } else {
+//                startLocation = location
+//            }
+//        } else {
+//            Log.e(javaClass.simpleName, "No Text field is currently in focus!!")
+//        }
     }
 
     private fun enableSettingsButton() {
@@ -362,37 +271,9 @@ class BottomSheetFragment : Fragment() {
         bottomSheetBehavior.peekHeight = totalOffset.roundToInt()
     }
 
-    // Temporarily remove the text listener to set the text without performing a search
-    private fun setTextNoSearch(name: String, activeTextField: EditText?) {
-        if (activeTextField != null) {
-            activeTextField.removeTextChangedListener(myTextWatcher)
-            activeTextField.setText(name)
-            activeTextField.addTextChangedListener(myTextWatcher)
-        } else {
-            Log.e(javaClass.simpleName, "No Text field is currently in focus!")
-        }
-    }
-
     private fun clearSearchText() {
-        searchToEditText.text.clear()
-        searchFromEditText.text.clear()
-    }
-
-    fun showRouteOptions(routes: List<Route>) {
-        val composeView = binding.composeView
-
-        composeView.setContent {
-
-            Column {
-                routes.forEachIndexed { index, route ->
-                    RouteOption(
-                        index = index + 1,
-                        distance = route.distance,
-                        onGoClicked = { notifyRouteChosen(route)() }
-                    )
-                }
-            }
-        }
+//        searchToEditText.text.clear()
+//        searchFromEditText.text.clear()
     }
 
     private fun notifyRouteChosen(route: Route): () -> Unit {

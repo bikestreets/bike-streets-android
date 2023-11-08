@@ -91,54 +91,11 @@
                     app:layout_constraintTop_toBottomOf="@id/drag_handle"
                     tools:visibility="visible" />
 
-                <EditText
-                    android:id="@+id/search_from_edit_text"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="@dimen/default_margin"
-                    android:layout_marginBottom="8dp"
-                    android:background="@drawable/edit_text_shape"
-                    android:drawableEnd="@drawable/ic_search"
-                    android:hint="@string/search_set_from"
-                    android:importantForAutofill="no"
-                    android:inputType="textAutoCorrect"
-                    android:padding="@dimen/edit_text_padding"
-                    android:singleLine="true"
-                    android:textSize="@dimen/edit_text_size"
-                    android:visibility="gone"
-                    app:layout_constraintTop_toBottomOf="@id/close"
-                    tools:visibility="visible" />
-
-                <EditText
-                    android:id="@+id/search_to_edit_text"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="@dimen/default_margin"
-                    android:background="@drawable/edit_text_shape"
-                    android:drawableEnd="@drawable/ic_search"
-                    android:hint="@string/search_set_destination"
-                    android:importantForAutofill="no"
-                    android:inputType="textAutoCorrect"
-                    android:padding="@dimen/edit_text_padding"
-                    android:singleLine="true"
-                    android:textSize="@dimen/edit_text_size"
-                    app:layout_constraintTop_toBottomOf="@id/search_from_edit_text" />
-
-                <com.mapbox.search.ui.view.SearchResultsView
-                    android:id="@+id/search_results_view"
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_marginTop="@dimen/toolbar_vertical_margin"
-                    android:clipToPadding="false"
-                    android:theme="@style/AppTheme"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/search_to_edit_text" />
-
                 <androidx.compose.ui.platform.ComposeView
                     android:id="@+id/compose_view"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:layout_constraintTop_toBottomOf="@id/search_results_view" />
+                    app:layout_constraintTop_toBottomOf="@id/close" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.application.bikestreets.utils.metersToMiles
 
 @Composable
-fun RouteOption(index: Int, distance: Double, onGoClicked: () -> Unit) {
+fun RouteOption(index: Int, distance: Double, onGoClicked: (() -> Unit)) {
 
     // Convert from Meters to Miles
     val distanceInMiles =  String.format("%.1f", metersToMiles(distance))

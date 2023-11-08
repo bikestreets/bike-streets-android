@@ -17,7 +17,6 @@ import com.application.bikestreets.api.modals.Mode
 import com.application.bikestreets.api.modals.Mode.Companion.getMode
 import com.application.bikestreets.api.modals.Route
 import com.application.bikestreets.bottomsheet.BottomSheetClickListener
-import com.application.bikestreets.bottomsheet.BottomSheetFragment
 import com.application.bikestreets.constants.MapLayerConstants.SELECTED_ROUTE_MAP_LAYER
 import com.application.bikestreets.constants.PreferenceConstants.KEEP_SCREEN_ON_PREFERENCE_KEY
 import com.application.bikestreets.constants.PreferenceConstants.MAP_TYPE_PREFERENCE_KEY
@@ -69,6 +68,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     private lateinit var binding: ActivityMainBinding
     private val vm: MainVM by viewModels()
+    private val viewModel: SharedViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -310,11 +310,8 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 val routes = displayRouteOnMap(routingDirections?.routes)
 
                 if (routes != null) {
-                    // Show go button on child for the route options
-                    Log.d("Apples", "${routes.first().distance}")
-                    val bottomSheetFragment =
-                        supportFragmentManager.findFragmentById(R.id.bottom_sheet_fragment) as? BottomSheetFragment
-                    bottomSheetFragment?.showRouteOptions(routes)
+                    // Pass the routes list to the bottom sheet so the user can make a selection
+                    viewModel.route.value = routes
                 }
 
             } catch (e: Exception) {

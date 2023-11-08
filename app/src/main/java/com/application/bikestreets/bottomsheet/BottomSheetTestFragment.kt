@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
+import com.application.bikestreets.composables.BottomSheetTestUi
 
 class BottomSheetTestFragment : Fragment() {
 
@@ -16,7 +17,7 @@ class BottomSheetTestFragment : Fragment() {
     ): View {
         return ComposeView(requireContext()).apply {
             setContent {
-                BottomSheetUi()
+                BottomSheetTestUi()
             }
         }
     }
