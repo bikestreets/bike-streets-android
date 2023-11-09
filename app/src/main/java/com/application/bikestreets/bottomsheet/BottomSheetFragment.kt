@@ -3,12 +3,11 @@ package com.application.bikestreets.bottomsheet
 import android.app.Activity
 import android.content.Context
 import android.os.Bundle
-import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -29,18 +28,11 @@ class BottomSheetFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<ConstraintLayout>
-    private var currentBottomSheetState: BottomSheetStates = BottomSheetStates.INITIAL
-
-    private lateinit var myTextWatcher: TextWatcher
 
     private var context: Activity? = null
     private lateinit var mListener: BottomSheetClickListener
 
     private val viewModel: SharedViewModel by activityViewModels()
-
-    private fun updateUiWithNewRoutes(routes: List<Route>?) {
-        Log.d("apples", routes.toString())
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -55,11 +47,11 @@ class BottomSheetFragment : Fragment() {
         setBottomSheetBehavior()
 
         // Load all composables
-        loadSearch()
+        loadComposable()
 
         // enable settings & location button
-        enableSettingsButton()
-        enableFollowRiderButton()
+        initSettingsButton()
+        initFollowRiderButton()
 
         return view
     }
@@ -83,7 +75,6 @@ class BottomSheetFragment : Fragment() {
         bottomSheetBehavior =
             BottomSheetBehavior.from(binding.bottomNavigationContainer)
 
-        updateBottomSheetPeekHeight()
 
         // X button will always collapse the bottom sheet
         binding.close.setOnClickListener {
@@ -117,13 +108,14 @@ class BottomSheetFragment : Fragment() {
         })
     }
 
-    private fun loadSearch() {
+    private fun loadComposable() {
 
         val composeView = binding.composeView
 
         composeView.setContent {
 
             val routes by viewModel.route.observeAsState(initial = emptyList())
+            val bottomSheetState by viewModel.bottomSheetState.observeAsState(initial = BottomSheetStates.INITIAL)
 
             BottomSheetUi(
                 onSearchPerformed = { origin: Location?, destination: Location? ->
@@ -133,11 +125,13 @@ class BottomSheetFragment : Fragment() {
                     )
                 },
                 routes = routes,
-                notifyRouteChosen = { route -> notifyRouteChosen(route) }
+                notifyRouteChosen = { route -> notifyRouteChosen(route) },
+                bottomSheetState = bottomSheetState
             )
         }
 
         initSearchEditText()
+
     }
 
     private fun initSearchEditText() {
@@ -193,7 +187,7 @@ class BottomSheetFragment : Fragment() {
 
     private fun showDirectionsBottomSheet(origin: Location?, destination: Location?) {
         if (destination != null) {
-            if (currentBottomSheetState != BottomSheetStates.DIRECTIONS) {
+            if (viewModel.bottomSheetState.value != BottomSheetStates.DIRECTIONS) {
 
                 // Move drawer out of the way
                 bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
@@ -208,7 +202,7 @@ class BottomSheetFragment : Fragment() {
 //                binding.vamosText.setText(R.string.search_directions)
 
                 // We are now showing the "directions" version of the bottom sheet
-                currentBottomSheetState = BottomSheetStates.DIRECTIONS
+                viewModel.bottomSheetState.value = BottomSheetStates.DIRECTIONS
                 updateBottomSheetPeekHeight()
 
                 mListener.showRoutes(origin, destination)
@@ -216,34 +210,20 @@ class BottomSheetFragment : Fragment() {
                 mListener.clearMarkers()
                 mListener.showMarkers(origin, destination)
                 mListener.showRoutes(origin, destination)
-
-                // We render on the map, but we want to show a start
             }
         } else {
             Log.e(javaClass.name, "Destination not set!, cannot show route on map")
         }
     }
 
-    private fun setStartOrEndLocation(location: Location, activeTextField: EditText?) {
-//        if (activeTextField != null) {
-//            if (activeTextField == searchToEditText) {
-//                endLocation = location
-//            } else {
-//                startLocation = location
-//            }
-//        } else {
-//            Log.e(javaClass.simpleName, "No Text field is currently in focus!!")
-//        }
-    }
-
-    private fun enableSettingsButton() {
+    private fun initSettingsButton() {
         // Notify parent on click
         binding.settings.setOnClickListener {
             mListener.onSettingsButtonClicked()
         }
     }
 
-    private fun enableFollowRiderButton() {
+    private fun initFollowRiderButton() {
         binding.followRider.setOnClickListener {
             mListener.onFollowRiderButtonClicked()
         }
@@ -263,9 +243,10 @@ class BottomSheetFragment : Fragment() {
             )
         val dimenStartRoutingButton = resources.getDimension(R.dimen.button_height)
 
-        val totalOffset = when (currentBottomSheetState) {
+        val totalOffset = when (viewModel.bottomSheetState.value) {
             BottomSheetStates.INITIAL -> (dimenOffsetTappable + dimenPeekIndicator + dimenClose + dimenSearchEntry)
             BottomSheetStates.DIRECTIONS -> (dimenOffsetTappable + dimenPeekIndicator + dimenClose + dimenSearchEntry * 2 + dimenStartRoutingButton)
+            else -> 0f
         }
 
         bottomSheetBehavior.peekHeight = totalOffset.roundToInt()
