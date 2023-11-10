@@ -14,6 +14,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.application.bikestreets.R
 import com.application.bikestreets.api.modals.Location
@@ -25,7 +26,6 @@ fun BottomSheetContent(
     onSearchPerformed: ((Location?, Location?) -> Unit),
     routes: List<Route>,
     notifyRouteChosen: ((Route) -> Unit),
-    bottomSheetState: BottomSheetStates
 ) {
     var originLocation by remember { mutableStateOf<Location?>(null) }
     var destinationLocation by remember { mutableStateOf<Location?>(null) }
@@ -38,6 +38,8 @@ fun BottomSheetContent(
 
     var originSearchIsFocused by remember { mutableStateOf(false) }
     var destinationSearchIsFocused by remember { mutableStateOf(false) }
+
+    val bottomSheetState by remember { mutableStateOf(BottomSheetStates.INITIAL) }
 
 
     // End/Destination selected by default
@@ -57,6 +59,7 @@ fun BottomSheetContent(
             originLocation = location
             originSearchText.apply { location.name }
         }
+        bottomSheetState.apply { BottomSheetStates.DIRECTIONS }
         onSearchPerformed(originLocation, destinationLocation)
     }
 
@@ -66,11 +69,11 @@ fun BottomSheetContent(
             .padding(horizontal = dimensionResource(R.dimen.default_margin))
     ) {
         DragIndicator()
-        if (bottomSheetState == BottomSheetStates.INITIAL) {
+        if (bottomSheetState == BottomSheetStates.DIRECTIONS) {
             SearchEditText(
                 value = originSearchText,
                 onValueChange = { value -> originSearchText = value },
-                hint = SafeStringResource(id = R.string.search_set_origin),
+                hint = stringResource(id = R.string.search_set_origin),
                 modifier = Modifier
                     .focusRequester(destinationSearchFocusRequester)
                     .onFocusChanged { focusState ->
@@ -81,7 +84,7 @@ fun BottomSheetContent(
         SearchEditText(
             value = destinationSearchText,
             onValueChange = { value -> destinationSearchText = value },
-            hint = SafeStringResource(id = R.string.search_set_destination),
+            hint = stringResource(id = R.string.search_set_destination),
             modifier = Modifier
                 .focusRequester(destinationSearchFocusRequester)
                 .onFocusChanged { focusState ->
@@ -114,6 +117,5 @@ fun BottomSheetUiPreview() {
         onSearchPerformed = { _, _ -> {} },
         routes = listOf(),
         notifyRouteChosen = {},
-        bottomSheetState = BottomSheetStates.INITIAL
     )
 }

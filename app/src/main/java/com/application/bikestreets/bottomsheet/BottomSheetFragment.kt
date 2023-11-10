@@ -36,7 +36,7 @@ class BottomSheetFragment : Fragment() {
             setContent {
 
                 val routes: List<Route> by viewModel.route.observeAsState(initial = emptyList())
-                val bottomSheetState by viewModel.bottomSheetState.observeAsState(initial = BottomSheetStates.INITIAL)
+
 
                 BottomSheet(
                     sheetContent = {
@@ -48,8 +48,7 @@ class BottomSheetFragment : Fragment() {
                                 )
                             },
                             routes = routes,
-                            notifyRouteChosen = { route -> notifyRouteChosen(route) },
-                            bottomSheetState = bottomSheetState
+                            notifyRouteChosen = { route -> notifyRouteChosen(route) }
                         )
                     }
                 )

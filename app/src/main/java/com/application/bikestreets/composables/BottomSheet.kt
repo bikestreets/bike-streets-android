@@ -43,7 +43,7 @@ fun BottomSheet(
     val height by animateIntAsState(
         when (expandedType) {
             ExpandedType.EXPANDED -> 300
-            ExpandedType.COLLAPSED -> 70
+            ExpandedType.COLLAPSED -> 120
         }, label = "Drawer Animation"
     )
 
