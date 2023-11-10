@@ -14,7 +14,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.application.bikestreets.R
 import com.application.bikestreets.api.modals.Location
@@ -22,7 +21,7 @@ import com.application.bikestreets.api.modals.Route
 import com.application.bikestreets.bottomsheet.BottomSheetStates
 
 @Composable
-fun BottomSheetUi(
+fun BottomSheetContent(
     onSearchPerformed: ((Location?, Location?) -> Unit),
     routes: List<Route>,
     notifyRouteChosen: ((Route) -> Unit),
@@ -66,11 +65,12 @@ fun BottomSheetUi(
             .fillMaxWidth()
             .padding(horizontal = dimensionResource(R.dimen.default_margin))
     ) {
+        DragIndicator()
         if (bottomSheetState == BottomSheetStates.INITIAL) {
             SearchEditText(
                 value = originSearchText,
                 onValueChange = { value -> originSearchText = value },
-                hint = stringResource(id = R.string.search_set_origin),
+                hint = SafeStringResource(id = R.string.search_set_origin),
                 modifier = Modifier
                     .focusRequester(destinationSearchFocusRequester)
                     .onFocusChanged { focusState ->
@@ -81,7 +81,7 @@ fun BottomSheetUi(
         SearchEditText(
             value = destinationSearchText,
             onValueChange = { value -> destinationSearchText = value },
-            hint = stringResource(id = R.string.search_set_destination),
+            hint = SafeStringResource(id = R.string.search_set_destination),
             modifier = Modifier
                 .focusRequester(destinationSearchFocusRequester)
                 .onFocusChanged { focusState ->
@@ -107,10 +107,10 @@ fun BottomSheetUi(
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun BottomSheetUiPreview() {
-    BottomSheetUi(
+    BottomSheetContent(
         onSearchPerformed = { _, _ -> {} },
         routes = listOf(),
         notifyRouteChosen = {},

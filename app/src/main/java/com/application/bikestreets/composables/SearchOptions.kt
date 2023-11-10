@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat.getString
 import androidx.core.view.isVisible
@@ -35,110 +36,117 @@ fun SearchOptions(
     onSearchOptionSelected: (Location) -> Unit,
     newSearchQuery: String,
 ) {
-    val context = LocalContext.current
+    // This XML breaks the compose previewer, hide from preview
+    if (!LocalInspectionMode.current) {
+        val context = LocalContext.current
 
-    val apiType = ApiType.GEOCODING
+        val apiType = ApiType.GEOCODING
 
-    val searchEngine = SearchEngine.createSearchEngineWithBuiltInDataProviders(
-        apiType = apiType,
-        settings = SearchEngineSettings(getString(context, R.string.mapbox_access_token))
-    )
+        val searchEngine = SearchEngine.createSearchEngineWithBuiltInDataProviders(
+            apiType = apiType,
+            settings = SearchEngineSettings(getString(context, R.string.mapbox_access_token))
+        )
 
-    val offlineSearchEngine = OfflineSearchEngine.create(
-        OfflineSearchEngineSettings(getString(context, R.string.mapbox_access_token))
-    )
+        val offlineSearchEngine = OfflineSearchEngine.create(
+            OfflineSearchEngineSettings(getString(context, R.string.mapbox_access_token))
+        )
 
-    AndroidView(
-        modifier = modifier,
-        factory = { ctx ->
-            SearchResultsView(ctx).apply {
-                initialize(
-                    SearchResultsView.Configuration(CommonSearchViewConfiguration(DistanceUnitType.IMPERIAL))
-                )
-                isVisible = true
+        AndroidView(
+            modifier = modifier,
+            factory = { ctx ->
+                SearchResultsView(ctx).apply {
+                    initialize(
+                        SearchResultsView.Configuration(
+                            CommonSearchViewConfiguration(
+                                DistanceUnitType.IMPERIAL
+                            )
+                        )
+                    )
+                    isVisible = true
 
-                searchEngineUiAdapter = SearchEngineUiAdapter(
-                    view = this,
-                    searchEngine = searchEngine,
-                    offlineSearchEngine = offlineSearchEngine,
-                )
+                    searchEngineUiAdapter = SearchEngineUiAdapter(
+                        view = this,
+                        searchEngine = searchEngine,
+                        offlineSearchEngine = offlineSearchEngine,
+                    )
 
-                searchEngineUiAdapter.searchMode = SearchMode.AUTO
-                searchEngineUiAdapter.addSearchListener(object :
-                    SearchEngineUiAdapter.SearchListener {
+                    searchEngineUiAdapter.searchMode = SearchMode.AUTO
+                    searchEngineUiAdapter.addSearchListener(object :
+                        SearchEngineUiAdapter.SearchListener {
 
-                    override fun onSuggestionsShown(
-                        suggestions: List<SearchSuggestion>,
-                        responseInfo: ResponseInfo
-                    ) {
-                        // Nothing to do
-                    }
+                        override fun onSuggestionsShown(
+                            suggestions: List<SearchSuggestion>,
+                            responseInfo: ResponseInfo
+                        ) {
+                            // Nothing to do
+                        }
 
-                    override fun onSearchResultsShown(
-                        suggestion: SearchSuggestion,
-                        results: List<SearchResult>,
-                        responseInfo: ResponseInfo
-                    ) {
-                        // Do nothing
-                    }
+                        override fun onSearchResultsShown(
+                            suggestion: SearchSuggestion,
+                            results: List<SearchResult>,
+                            responseInfo: ResponseInfo
+                        ) {
+                            // Do nothing
+                        }
 
-                    override fun onOfflineSearchResultsShown(
-                        results: List<OfflineSearchResult>,
-                        responseInfo: OfflineResponseInfo
-                    ) {
-                        // Nothing to do
-                    }
+                        override fun onOfflineSearchResultsShown(
+                            results: List<OfflineSearchResult>,
+                            responseInfo: OfflineResponseInfo
+                        ) {
+                            // Nothing to do
+                        }
 
-                    override fun onSuggestionSelected(searchSuggestion: SearchSuggestion): Boolean {
-                        return false
-                    }
+                        override fun onSuggestionSelected(searchSuggestion: SearchSuggestion): Boolean {
+                            return false
+                        }
 
-                    override fun onSearchResultSelected(
-                        searchResult: SearchResult,
-                        responseInfo: ResponseInfo
-                    ) {
-                        val location = Location(searchResult)
-                        onSearchOptionSelected(location)
+                        override fun onSearchResultSelected(
+                            searchResult: SearchResult,
+                            responseInfo: ResponseInfo
+                        ) {
+                            val location = Location(searchResult)
+                            onSearchOptionSelected(location)
 //                        setStartOrEndLocation(Location(searchResult), activeTextField)
 //                        setTextNoSearch(searchResult.name, activeTextField)
 //                        showDirectionsBottomSheet()
-                    }
+                        }
 
-                    override fun onOfflineSearchResultSelected(
-                        searchResult: OfflineSearchResult,
-                        responseInfo: OfflineResponseInfo
-                    ) {
-                        onSearchOptionSelected(Location(searchResult))
+                        override fun onOfflineSearchResultSelected(
+                            searchResult: OfflineSearchResult,
+                            responseInfo: OfflineResponseInfo
+                        ) {
+                            onSearchOptionSelected(Location(searchResult))
 //                        setStartOrEndLocation(Location(searchResult), activeTextField)
 //                        setTextNoSearch(searchResult.name, activeTextField)
 //                        showDirectionsBottomSheet()
-                    }
+                        }
 
-                    override fun onError(e: Exception) {
-                        Log.e(javaClass.simpleName, "Mapbox Search Error: $e")
-                    }
+                        override fun onError(e: Exception) {
+                            Log.e(javaClass.simpleName, "Mapbox Search Error: $e")
+                        }
 
-                    override fun onFeedbackItemClick(responseInfo: ResponseInfo) {
-                        // Not used
-                    }
+                        override fun onFeedbackItemClick(responseInfo: ResponseInfo) {
+                            // Not used
+                        }
 
-                    override fun onHistoryItemClick(historyRecord: HistoryRecord) {
-                        onSearchOptionSelected(Location(historyRecord))
-                    }
+                        override fun onHistoryItemClick(historyRecord: HistoryRecord) {
+                            onSearchOptionSelected(Location(historyRecord))
+                        }
 
-                    override fun onPopulateQueryClick(
-                        suggestion: SearchSuggestion,
-                        responseInfo: ResponseInfo
-                    ) {
-                        // Not used
-                    }
-                })
+                        override fun onPopulateQueryClick(
+                            suggestion: SearchSuggestion,
+                            responseInfo: ResponseInfo
+                        ) {
+                            // Not used
+                        }
+                    })
 
+                }
+            },
+            update = { view ->
+                // TODO: if new searchQuery is null, show history or nothing
+                searchEngineUiAdapter.search(newSearchQuery, getSearchOptions())
             }
-        },
-        update = { view ->
-            // TODO: if new searchQuery is null, show history or nothing
-            searchEngineUiAdapter.search(newSearchQuery, getSearchOptions())
-        }
-    )
+        )
+    }
 }

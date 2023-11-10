@@ -7,27 +7,19 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.application.bikestreets.R
 import com.application.bikestreets.SharedViewModel
 import com.application.bikestreets.api.modals.Location
 import com.application.bikestreets.api.modals.Route
-import com.application.bikestreets.composables.BottomSheetUi
-import com.application.bikestreets.databinding.BottomDraggableSheetBinding
-import com.application.bikestreets.utils.hideKeyboard
-import com.google.android.material.bottomsheet.BottomSheetBehavior
-import kotlin.math.roundToInt
+import com.application.bikestreets.composables.BottomSheet
+import com.application.bikestreets.composables.BottomSheetContent
 
 class BottomSheetFragment : Fragment() {
-    private var _binding: BottomDraggableSheetBinding? = null
-    private val binding get() = _binding!!
-
-    private lateinit var bottomSheetBehavior: BottomSheetBehavior<ConstraintLayout>
 
     private var context: Activity? = null
     private lateinit var mListener: BottomSheetClickListener
@@ -35,25 +27,34 @@ class BottomSheetFragment : Fragment() {
     private val viewModel: SharedViewModel by activityViewModels()
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
+        inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = BottomDraggableSheetBinding.inflate(inflater, container, false)
-        val view = binding.root
 
-        context = activity
+        return ComposeView(requireContext()).apply {
 
-        setBottomSheetBehavior()
+            setContent {
 
-        // Load all composables
-        loadComposable()
+                val routes: List<Route> by viewModel.route.observeAsState(initial = emptyList())
+                val bottomSheetState by viewModel.bottomSheetState.observeAsState(initial = BottomSheetStates.INITIAL)
 
-        // enable settings & location button
-        initSettingsButton()
-        initFollowRiderButton()
-
-        return view
+                BottomSheet(
+                    sheetContent = {
+                        BottomSheetContent(
+                            onSearchPerformed = { origin: Location?, destination: Location? ->
+                                onSearchOptionSelected(
+                                    origin,
+                                    destination
+                                )
+                            },
+                            routes = routes,
+                            notifyRouteChosen = { route -> notifyRouteChosen(route) },
+                            bottomSheetState = bottomSheetState
+                        )
+                    }
+                )
+            }
+        }
     }
 
     private fun onSearchOptionSelected(origin: Location?, destination: Location?) {
@@ -72,117 +73,40 @@ class BottomSheetFragment : Fragment() {
     }
 
     private fun setBottomSheetBehavior() {
-        bottomSheetBehavior =
-            BottomSheetBehavior.from(binding.bottomNavigationContainer)
-
-
-        // X button will always collapse the bottom sheet
-        binding.close.setOnClickListener {
-            bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
-        }
-
-        bottomSheetBehavior.addBottomSheetCallback(object :
-            BottomSheetBehavior.BottomSheetCallback() {
-            override fun onStateChanged(bottomSheet: View, newState: Int) {
-                when (newState) {
-                    BottomSheetBehavior.STATE_COLLAPSED -> {
-                        // Hide keyboard if open
-                        context?.let { hideKeyboard(it) }
-
-                        binding.close.visibility = View.INVISIBLE
-                    }
-
-                    BottomSheetBehavior.STATE_EXPANDED -> {
-                        binding.close.visibility = View.VISIBLE
-                    }
-
-                    else -> {
-                        // No custom actions needed for other states
-                    }
-                }
-            }
-
-            override fun onSlide(bottomSheet: View, slideOffset: Float) {
-                // React to dragging events
-            }
-        })
-    }
-
-    private fun loadComposable() {
-
-        val composeView = binding.composeView
-
-        composeView.setContent {
-
-            val routes by viewModel.route.observeAsState(initial = emptyList())
-            val bottomSheetState by viewModel.bottomSheetState.observeAsState(initial = BottomSheetStates.INITIAL)
-
-            BottomSheetUi(
-                onSearchPerformed = { origin: Location?, destination: Location? ->
-                    onSearchOptionSelected(
-                        origin,
-                        destination
-                    )
-                },
-                routes = routes,
-                notifyRouteChosen = { route -> notifyRouteChosen(route) },
-                bottomSheetState = bottomSheetState
-            )
-        }
-
-        initSearchEditText()
-
-    }
-
-    private fun initSearchEditText() {
+//        bottomSheetBehavior =
+//            BottomSheetBehavior.from(binding.bottomNavigationContainer)
 //
-//        searchToEditText = binding.searchToEditText
-//        searchFromEditText = binding.searchFromEditText
 //
-//        // On Initial state, assume all actions are for the destination
-//        activeTextField = searchToEditText
-//
-//        val searchOptions = getSearchOptions()
-//
-//        myTextWatcher = object : TextWatcher {
-//            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-//
-//            }
-//
-//            override fun onTextChanged(newText: CharSequence?, p1: Int, p2: Int, p3: Int) {
-//                searchEngineUiAdapter.search(newText.toString(), searchOptions)
-//            }
-//
-//            override fun afterTextChanged(p0: Editable?) {
-//
-//            }
+//        // X button will always collapse the bottom sheet
+//        binding.close.setOnClickListener {
+//            bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
 //        }
 //
-//        searchToEditText.addTextChangedListener(myTextWatcher)
-//        searchFromEditText.addTextChangedListener(myTextWatcher)
+//        bottomSheetBehavior.addBottomSheetCallback(object :
+//            BottomSheetBehavior.BottomSheetCallback() {
+//            override fun onStateChanged(bottomSheet: View, newState: Int) {
+//                when (newState) {
+//                    BottomSheetBehavior.STATE_COLLAPSED -> {
+//                        // Hide keyboard if open
+//                        context?.let { hideKeyboard(it) }
 //
-//        // Expand the sheet when the user puts focus on the text box
-//        searchToEditText.setOnFocusChangeListener { _, hasFocus ->
-//            if (hasFocus && bottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) {
-//                bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+//                        binding.close.visibility = View.INVISIBLE
+//                    }
+//
+//                    BottomSheetBehavior.STATE_EXPANDED -> {
+//                        binding.close.visibility = View.VISIBLE
+//                    }
+//
+//                    else -> {
+//                        // No custom actions needed for other states
+//                    }
+//                }
 //            }
 //
-//            // Set active text to last touched search field
-//            if (hasFocus) {
-//                activeTextField = searchToEditText
+//            override fun onSlide(bottomSheet: View, slideOffset: Float) {
+//                // React to dragging events
 //            }
-//        }
-//
-//        searchFromEditText.setOnFocusChangeListener { _, hasFocus ->
-//            if (hasFocus && bottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) {
-//                bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
-//            }
-//
-//            // Set active text to last touched search field
-//            if (hasFocus) {
-//                activeTextField = searchFromEditText
-//            }
-//        }
+//        })
     }
 
     private fun showDirectionsBottomSheet(origin: Location?, destination: Location?) {
@@ -190,7 +114,7 @@ class BottomSheetFragment : Fragment() {
             if (viewModel.bottomSheetState.value != BottomSheetStates.DIRECTIONS) {
 
                 // Move drawer out of the way
-                bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+//                bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
 
                 // Reveal FROM location textbox
 //            searchFromEditText.visibility = View.VISIBLE
@@ -218,15 +142,15 @@ class BottomSheetFragment : Fragment() {
 
     private fun initSettingsButton() {
         // Notify parent on click
-        binding.settings.setOnClickListener {
-            mListener.onSettingsButtonClicked()
-        }
+//        binding.settings.setOnClickListener {
+//            mListener.onSettingsButtonClicked()
+//        }
     }
 
     private fun initFollowRiderButton() {
-        binding.followRider.setOnClickListener {
-            mListener.onFollowRiderButtonClicked()
-        }
+//        binding.followRider.setOnClickListener {
+//            mListener.onFollowRiderButtonClicked()
+//        }
     }
 
     private fun updateBottomSheetPeekHeight() {
@@ -249,7 +173,7 @@ class BottomSheetFragment : Fragment() {
             else -> 0f
         }
 
-        bottomSheetBehavior.peekHeight = totalOffset.roundToInt()
+//        bottomSheetBehavior.peekHeight = totalOffset.roundToInt()
     }
 
     private fun clearSearchText() {
@@ -260,7 +184,7 @@ class BottomSheetFragment : Fragment() {
     private fun notifyRouteChosen(route: Route): () -> Unit {
         return {
             // Collapse the bottom sheet
-            bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+//            bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
 
             mListener.routeChosen(route)
         }

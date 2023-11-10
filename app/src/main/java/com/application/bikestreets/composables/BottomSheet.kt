@@ -24,7 +24,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 
 enum class ExpandedType {
@@ -33,21 +32,26 @@ enum class ExpandedType {
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun BottomSheet() {
-    val configuration = LocalConfiguration.current
-    val screenHeight = configuration.screenHeightDp
+fun BottomSheet(
+    sheetContent: @Composable () -> Unit
+
+) {
+
     var expandedType by remember {
         mutableStateOf(ExpandedType.COLLAPSED)
     }
     val height by animateIntAsState(
         when (expandedType) {
-            ExpandedType.EXPANDED -> screenHeight / 2
+            ExpandedType.EXPANDED -> 300
             ExpandedType.COLLAPSED -> 70
         }, label = "Drawer Animation"
     )
+
+    @OptIn(ExperimentalMaterialApi::class)
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
         bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed)
     )
+
     BottomSheetScaffold(
         scaffoldState = bottomSheetScaffoldState,
         sheetElevation = 8.dp,
@@ -59,6 +63,7 @@ fun BottomSheet() {
         ),
         sheetContent = {
             var isUpdated = false
+            // Parent box handles swipes
             Box(
                 Modifier
                     .fillMaxWidth()
@@ -89,14 +94,17 @@ fun BottomSheet() {
                             }
                         )
                     }
-                    .background(Color.Gray)
-            )
+                    .background(Color.White)
+            ) {
+                sheetContent()
+            }
         },
         sheetPeekHeight = height.dp
     ) {
         Box(
             Modifier
                 .fillMaxSize()
+                .background(Color.Transparent)
         ) {
             Box(
                 modifier = Modifier
