@@ -99,7 +99,8 @@ fun BottomSheet(
                 sheetContent()
             }
         },
-        sheetPeekHeight = height.dp
+        sheetPeekHeight = height.dp,
+        backgroundColor = Color.Transparent
     ) {
         Box(
             Modifier
