@@ -298,25 +298,29 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
     override fun showRoutes(startLocation: Location?, endLocation: Location) {
-        val startCoordinates = startLocation?.coordinate ?: location
+        if (isPossibleRoute(startLocation)) {
+            val startCoordinates = startLocation?.coordinate ?: location
 
-        MainScope().launch(Dispatchers.Main) {
-            try {
-                val routingService = RoutingService()
-                val routingDirections = routingService.getRoutingDirections(
-                    startCoordinates = startCoordinates,
-                    endCoordinates = endLocation.coordinate
-                )
-                val routes = displayRouteOnMap(routingDirections?.routes)
+            MainScope().launch(Dispatchers.Main) {
+                try {
+                    val routingService = RoutingService()
+                    val routingDirections = routingService.getRoutingDirections(
+                        startCoordinates = startCoordinates,
+                        endCoordinates = endLocation.coordinate
+                    )
+                    val routes = displayRouteOnMap(routingDirections?.routes)
 
-                if (routes != null) {
-                    // Pass the routes list to the bottom sheet so the user can make a selection
-                    viewModel.route.value = routes
+                    if (routes != null) {
+                        // Pass the routes list to the bottom sheet so the user can make a selection
+                        viewModel.route.value = routes
+                    }
+
+                } catch (e: Exception) {
+                    Log.e(javaClass.simpleName, "Navigation error: $e")
                 }
-
-            } catch (e: Exception) {
-                Log.e(javaClass.simpleName, "Navigation error: $e")
             }
+        } else {
+            showToast(this, "Location is not set, cannot show route")
         }
     }
 
@@ -325,11 +329,19 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
     override fun showMarkers(startLocation: Location?, endLocation: Location) {
-        mapMarkersManager.showMarker(
-            destination = endLocation.coordinate,
-            start = startLocation?.coordinate ?: location,
-            this
-        )
+        if (isPossibleRoute(startLocation))
+            mapMarkersManager.showMarker(
+                destination = endLocation.coordinate,
+                start = startLocation?.coordinate ?: location,
+                this
+            ) else {
+            showToast(this, "Location is not set, cannot show makers")
+        }
+    }
+
+    private fun isPossibleRoute(startLocation: Location?): Boolean {
+        //TODO: Refine this when location is turned off
+        return startLocation != null || ::location.isInitialized
     }
 
     override fun routeChosen(route: Route) {

@@ -36,13 +36,12 @@ fun BottomSheet(
     sheetContent: @Composable () -> Unit
 
 ) {
-
     var expandedType by remember {
         mutableStateOf(ExpandedType.COLLAPSED)
     }
     val height by animateIntAsState(
         when (expandedType) {
-            ExpandedType.EXPANDED -> 300
+            ExpandedType.EXPANDED -> 350
             ExpandedType.COLLAPSED -> 120
         }, label = "Drawer Animation"
     )
@@ -115,6 +114,5 @@ fun BottomSheet(
                     .background(Color.Cyan)
             )
         }
-
     }
 }

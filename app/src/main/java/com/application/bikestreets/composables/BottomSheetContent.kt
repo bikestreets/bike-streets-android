@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,9 +39,23 @@ fun BottomSheetContent(
 
     var originSearchIsFocused by remember { mutableStateOf(false) }
     var destinationSearchIsFocused by remember { mutableStateOf(false) }
+    var showRoutes by remember { mutableStateOf(false) }
 
-    val bottomSheetState by remember { mutableStateOf(BottomSheetStates.INITIAL) }
+    var bottomSheetState by remember { mutableStateOf(BottomSheetStates.INITIAL) }
 
+
+    // Toggle if routes or text helper is shown
+    LaunchedEffect(originSearchText) {
+        showRoutes = false
+    }
+    LaunchedEffect(destinationSearchText) {
+        showRoutes = false
+    }
+    LaunchedEffect(routes) {
+        if(routes.isNotEmpty()){
+            showRoutes = true
+        }
+    }
 
     // End/Destination selected by default
     fun currentlyFocusedTextField(): String {
@@ -51,15 +66,22 @@ fun BottomSheetContent(
         }
     }
 
+    fun defaultToCurrentLocation() {
+        if (originSearchText.isEmpty()) {
+            originSearchText = "Current Location"
+        }
+    }
+
     fun onSearchOptionSelected(location: Location) {
         if (currentlyFocusedTextField() == destinationSearchText) {
             destinationLocation = location
-            destinationSearchText.apply { location.name }
+            destinationSearchText = location.name
         } else {
             originLocation = location
-            originSearchText.apply { location.name }
+            originSearchText = location.name
         }
-        bottomSheetState.apply { BottomSheetStates.DIRECTIONS }
+        defaultToCurrentLocation()
+        bottomSheetState = BottomSheetStates.DIRECTIONS
         onSearchPerformed(originLocation, destinationLocation)
     }
 
@@ -92,7 +114,7 @@ fun BottomSheetContent(
                 }
         )
 
-        if (routes.isEmpty()) {
+        if (!showRoutes) {
             SearchOptions(
                 modifier = Modifier.fillMaxWidth(),
                 onSearchOptionSelected = { location -> onSearchOptionSelected(location) },
