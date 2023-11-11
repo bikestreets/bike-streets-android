@@ -52,7 +52,7 @@ fun BottomSheetContent(
         showRoutes = false
     }
     LaunchedEffect(routes) {
-        if(routes.isNotEmpty()){
+        if (routes.isNotEmpty()) {
             showRoutes = true
         }
     }
@@ -85,12 +85,21 @@ fun BottomSheetContent(
         onSearchPerformed(originLocation, destinationLocation)
     }
 
+    fun getTitleText(): String {
+        return if (bottomSheetState == BottomSheetStates.INITIAL) {
+            "Find a Route with VAMOS"
+        } else {
+            "Directions"
+        }
+    }
+
     Column(
         Modifier
             .fillMaxWidth()
             .padding(horizontal = dimensionResource(R.dimen.default_margin))
     ) {
         DragIndicator()
+        TopRow(getTitleText(), onCloseClicked = { onCloseClicked() })
         if (bottomSheetState == BottomSheetStates.DIRECTIONS) {
             SearchEditText(
                 value = originSearchText,
@@ -130,6 +139,11 @@ fun BottomSheetContent(
             }
         }
     }
+}
+
+// Collapse the bottomsheet
+fun onCloseClicked() {
+
 }
 
 @Preview(showBackground = true)
