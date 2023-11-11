@@ -58,7 +58,8 @@ dependencies {
     implementation 'androidx.compose.material3:material3'
     implementation 'androidx.compose.material:material'
     implementation 'androidx.compose.foundation:foundation'
-    implementation "androidx.compose.runtime:runtime-livedata"
+    implementation 'androidx.compose.runtime:runtime-livedata'
+    implementation 'androidx.compose.material:material-icons-extended'
 
     // MapBox
     implementation 'com.mapbox.maps:android:10.15.0'

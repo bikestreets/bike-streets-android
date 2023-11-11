@@ -5,7 +5,7 @@ import com.application.bikestreets.api.modals.Route
 
 interface BottomSheetClickListener {
     fun onSettingsButtonClicked()
-    fun onFollowRiderButtonClicked()
+    fun onLocationButtonClicked()
     fun showRoutes(startLocation : Location?, endLocation : Location)
     fun clearMarkers()
     fun showMarkers(startLocation: Location?, endLocation: Location)

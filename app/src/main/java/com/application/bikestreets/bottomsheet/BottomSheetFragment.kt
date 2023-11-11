@@ -16,6 +16,7 @@ import com.application.bikestreets.R
 import com.application.bikestreets.SharedViewModel
 import com.application.bikestreets.api.modals.Location
 import com.application.bikestreets.api.modals.Route
+import com.application.bikestreets.composables.ActionButtonsContainer
 import com.application.bikestreets.composables.BottomSheet
 import com.application.bikestreets.composables.BottomSheetContent
 
@@ -49,6 +50,12 @@ class BottomSheetFragment : Fragment() {
                             },
                             routes = routes,
                             notifyRouteChosen = { route -> notifyRouteChosen(route) }
+                        )
+                    },
+                    actionButtons = {
+                        ActionButtonsContainer(
+                            onSettingsButtonClicked = { mListener.onSettingsButtonClicked() },
+                            onLocationButtonClicked = { mListener.onLocationButtonClicked() }
                         )
                     }
                 )
@@ -137,19 +144,6 @@ class BottomSheetFragment : Fragment() {
         } else {
             Log.e(javaClass.name, "Destination not set!, cannot show route on map")
         }
-    }
-
-    private fun initSettingsButton() {
-        // Notify parent on click
-//        binding.settings.setOnClickListener {
-//            mListener.onSettingsButtonClicked()
-//        }
-    }
-
-    private fun initFollowRiderButton() {
-//        binding.followRider.setOnClickListener {
-//            mListener.onFollowRiderButtonClicked()
-//        }
     }
 
     private fun updateBottomSheetPeekHeight() {

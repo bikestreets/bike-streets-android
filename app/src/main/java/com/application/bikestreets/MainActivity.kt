@@ -289,7 +289,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             .commit()
     }
 
-    override fun onFollowRiderButtonClicked() {
+    override fun onLocationButtonClicked() {
         if (PermissionsManager.areLocationPermissionsGranted(this)) {
             moveCamera(map = mapView.getMapboxMap(), location = location)
         } else {

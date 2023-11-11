@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.BottomSheetState
@@ -33,7 +33,8 @@ enum class ExpandedType {
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun BottomSheet(
-    sheetContent: @Composable () -> Unit
+    sheetContent: @Composable () -> Unit,
+    actionButtons: @Composable () -> Unit
 
 ) {
     var expandedType by remember {
@@ -105,14 +106,16 @@ fun BottomSheet(
             Modifier
                 .fillMaxSize()
                 .background(Color.Transparent)
+                .padding(8.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .align(Alignment.BottomStart) // Aligns the child Box to the bottom end of the parent Box
-                    .size(100.dp) // Sets the size of the child Box
+                    .align(Alignment.BottomStart)
                     .offset(y = -height.dp)
-                    .background(Color.Cyan)
-            )
+            ) {
+                // Buttons that will appear anchored to the bottomsheet
+                actionButtons()
+            }
         }
     }
 }
