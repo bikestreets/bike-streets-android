@@ -1,6 +1,5 @@
 package com.application.bikestreets.bottomsheet
 
-import android.app.Activity
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
@@ -22,7 +21,6 @@ import com.application.bikestreets.composables.BottomSheetContent
 
 class BottomSheetFragment : Fragment() {
 
-    private var context: Activity? = null
     private lateinit var mListener: BottomSheetClickListener
 
     private val viewModel: SharedViewModel by activityViewModels()
@@ -49,7 +47,8 @@ class BottomSheetFragment : Fragment() {
                                 )
                             },
                             routes = routes,
-                            notifyRouteChosen = { route -> notifyRouteChosen(route) }
+                            notifyRouteChosen = { route -> notifyRouteChosen(route) },
+                            onCloseClicked = { closeBottomSheet() }
                         )
                     },
                     actionButtons = {
@@ -57,10 +56,19 @@ class BottomSheetFragment : Fragment() {
                             onSettingsButtonClicked = { mListener.onSettingsButtonClicked() },
                             onLocationButtonClicked = { mListener.onLocationButtonClicked() }
                         )
-                    }
+                    },
+                    closeBottomSheet = { notifyOfBottomSheetClose() }
                 )
             }
         }
+    }
+
+    private fun notifyOfBottomSheetClose() {
+        TODO("Not yet implemented")
+    }
+
+    private fun closeBottomSheet() {
+        TODO("Not yet implemented")
     }
 
     private fun onSearchOptionSelected(origin: Location?, destination: Location?) {

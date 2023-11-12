@@ -27,6 +27,7 @@ fun BottomSheetContent(
     onSearchPerformed: ((Location?, Location?) -> Unit),
     routes: List<Route>,
     notifyRouteChosen: ((Route) -> Unit),
+    onCloseClicked: (() -> Unit),
 ) {
     var originLocation by remember { mutableStateOf<Location?>(null) }
     var destinationLocation by remember { mutableStateOf<Location?>(null) }
@@ -141,11 +142,6 @@ fun BottomSheetContent(
     }
 }
 
-// Collapse the bottomsheet
-fun onCloseClicked() {
-
-}
-
 @Preview(showBackground = true)
 @Composable
 fun BottomSheetUiPreview() {
@@ -153,5 +149,6 @@ fun BottomSheetUiPreview() {
         onSearchPerformed = { _, _ -> {} },
         routes = listOf(),
         notifyRouteChosen = {},
+        onCloseClicked = {}
     )
 }

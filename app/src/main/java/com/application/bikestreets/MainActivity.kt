@@ -340,7 +340,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
     private fun isPossibleRoute(startLocation: Location?): Boolean {
-        //TODO: Refine this when location is turned off
+        // TODO: Refine this when location is turned off
         return startLocation != null || ::location.isInitialized
     }
 

@@ -34,8 +34,8 @@ enum class ExpandedType {
 @Composable
 fun BottomSheet(
     sheetContent: @Composable () -> Unit,
-    actionButtons: @Composable () -> Unit
-
+    actionButtons: @Composable () -> Unit,
+    closeBottomSheet: (() -> Unit),
 ) {
     var expandedType by remember {
         mutableStateOf(ExpandedType.COLLAPSED)
