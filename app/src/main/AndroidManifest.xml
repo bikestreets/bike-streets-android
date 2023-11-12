@@ -24,7 +24,7 @@
             android:label="Terms of Use"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".MainActivity"
+            android:name=".newstuff.MainActivity2"
             android:exported="true"
             android:theme="@style/MapTheme">
             <intent-filter>

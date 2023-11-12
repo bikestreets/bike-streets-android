@@ -17,15 +17,19 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 
+/**
+ * Creating our own Expanded and Collapsed state,
+ * this is done to track the height of bottom sheet.
+ * Using the default scaffold state does not give us a way
+ * to track the height, which is required to position our buttons.
+ * Unfortunately this causes worse swiping behavior
+ */
 enum class ExpandedType {
     EXPANDED, COLLAPSED
 }
@@ -33,15 +37,15 @@ enum class ExpandedType {
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun BottomSheet(
+    expandedState: ExpandedType,
+    onExpandedTypeChange: (ExpandedType) -> Unit,
     sheetContent: @Composable () -> Unit,
     actionButtons: @Composable () -> Unit,
-    closeBottomSheet: (() -> Unit),
+    content: @Composable () -> Unit,
 ) {
-    var expandedType by remember {
-        mutableStateOf(ExpandedType.COLLAPSED)
-    }
+
     val height by animateIntAsState(
-        when (expandedType) {
+        when (expandedState) {
             ExpandedType.EXPANDED -> 350
             ExpandedType.COLLAPSED -> 120
         }, label = "Drawer Animation"
@@ -73,17 +77,17 @@ fun BottomSheet(
                             onVerticalDrag = { change, dragAmount ->
                                 change.consume()
                                 if (!isUpdated) {
-                                    expandedType = when {
-                                        dragAmount < 0 && expandedType == ExpandedType.COLLAPSED -> {
-                                            ExpandedType.EXPANDED
+                                    when {
+                                        dragAmount < 0 && expandedState == ExpandedType.COLLAPSED -> {
+                                            onExpandedTypeChange(ExpandedType.EXPANDED)
                                         }
 
-                                        dragAmount > 0 && expandedType == ExpandedType.EXPANDED -> {
-                                            ExpandedType.COLLAPSED
+                                        dragAmount > 0 && expandedState == ExpandedType.EXPANDED -> {
+                                            onExpandedTypeChange(ExpandedType.COLLAPSED)
                                         }
 
                                         else -> {
-                                            ExpandedType.EXPANDED
+                                            onExpandedTypeChange(ExpandedType.EXPANDED)
                                         }
                                     }
                                     isUpdated = true
@@ -106,11 +110,12 @@ fun BottomSheet(
             Modifier
                 .fillMaxSize()
                 .background(Color.Transparent)
-                .padding(8.dp)
         ) {
+            content()
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
+                    .padding(8.dp)
                     .offset(y = -height.dp)
             ) {
                 // Buttons that will appear anchored to the bottomsheet

@@ -33,43 +33,35 @@ class BottomSheetFragment : Fragment() {
         return ComposeView(requireContext()).apply {
 
             setContent {
-
-                val routes: List<Route> by viewModel.route.observeAsState(initial = emptyList())
-
-
-                BottomSheet(
-                    sheetContent = {
-                        BottomSheetContent(
-                            onSearchPerformed = { origin: Location?, destination: Location? ->
-                                onSearchOptionSelected(
-                                    origin,
-                                    destination
-                                )
-                            },
-                            routes = routes,
-                            notifyRouteChosen = { route -> notifyRouteChosen(route) },
-                            onCloseClicked = { closeBottomSheet() }
-                        )
-                    },
-                    actionButtons = {
-                        ActionButtonsContainer(
-                            onSettingsButtonClicked = { mListener.onSettingsButtonClicked() },
-                            onLocationButtonClicked = { mListener.onLocationButtonClicked() }
-                        )
-                    },
-                    closeBottomSheet = { notifyOfBottomSheetClose() }
-                )
+//
+//                val routes: List<Route> by viewModel.route.observeAsState(initial = emptyList())
+//
+//
+//                BottomSheet(
+//                    sheetContent = {
+//                        BottomSheetContent(
+//                            onSearchPerformed = { origin: Location?, destination: Location? ->
+//                                onSearchOptionSelected(
+//                                    origin,
+//                                    destination
+//                                )
+//                            },
+//                            routes = routes,
+//                            notifyRouteChosen = { route -> notifyRouteChosen(route) },
+//                            onCloseClicked = { closeBottomSheet() }
+//                        )
+//                    },
+//                    actionButtons = {
+//                        ActionButtonsContainer(
+//                            onSettingsButtonClicked = { mListener.onSettingsButtonClicked() },
+//                            onLocationButtonClicked = { mListener.onLocationButtonClicked() }
+//                        )
+//                    }
+//                )
             }
         }
     }
 
-    private fun notifyOfBottomSheetClose() {
-        TODO("Not yet implemented")
-    }
-
-    private fun closeBottomSheet() {
-        TODO("Not yet implemented")
-    }
 
     private fun onSearchOptionSelected(origin: Location?, destination: Location?) {
 //        setStartOrEndLocation(location, activeTextField)
