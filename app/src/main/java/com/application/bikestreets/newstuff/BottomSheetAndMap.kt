@@ -12,6 +12,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.application.bikestreets.api.modals.Location
 import com.application.bikestreets.api.modals.Route
+import com.application.bikestreets.bottomsheet.BottomSheetContentState
 import com.application.bikestreets.composables.ActionButtonsContainer
 import com.application.bikestreets.composables.BottomSheet
 import com.application.bikestreets.composables.BottomSheetContent
@@ -25,10 +26,10 @@ fun BottomSheetAndMap(onSettingsClicked: (() -> Unit)) {
         bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed)
     )
 
-    var centerCameraTrigger by remember { mutableStateOf(false) }
-
     val mapboxMapController = remember { MapboxMapController() }
-    var routes = remember { mutableStateOf<List<Route>>(listOf()) }
+    val routes = remember { mutableStateOf<List<Route>>(listOf()) }
+
+    var bottomSheetContentState by remember { mutableStateOf(BottomSheetContentState.INITIAL) }
 
     /**
      * Sheet can either be changed due to swipe (in BottomSheet)
@@ -46,20 +47,16 @@ fun BottomSheetAndMap(onSettingsClicked: (() -> Unit)) {
         }
     }
 
+    /**
+     * Used to change the sizing and content shown on bottom sheet
+     */
+    fun modifySheetContentState(newContentState: BottomSheetContentState) {
+        bottomSheetContentState = newContentState
+    }
+
     BottomSheet(
         bottomSheetScaffoldState = bottomSheetScaffoldState,
         sheetContent = {
-//            BottomSheetContent(
-//                onSearchPerformed = { origin: Location?, destination: Location? ->
-//                    onSearchOptionSelected(
-//                        origin,
-//                        destination
-//                    )
-//                },
-//                routes = routes,
-//                notifyRouteChosen = { route -> notifyRouteChosen(route) },
-//                onCloseClicked = { closeBottomSheet() }
-//            )
             BottomSheetContent(
                 onSearchPerformed = { origin: Location?, destination: Location? ->
                     coroutineScope.launch {
@@ -68,18 +65,26 @@ fun BottomSheetAndMap(onSettingsClicked: (() -> Unit)) {
                     }
                 },
                 routes = routes.value,
-                notifyRouteChosen = { route -> mapboxMapController.updateMapForRoute(route) },
+                notifyRouteChosen = { route -> {} },
                 bottomSheetScaffoldState = bottomSheetScaffoldState,
-                onCloseClicked = { modifySheetScaffoldState(BottomSheetValue.Collapsed) }
+                onCloseClicked = { modifySheetScaffoldState(BottomSheetValue.Collapsed) },
+                bottomSheetContentState = bottomSheetContentState,
+                onBottomSheetContentChange = { newContentState ->
+                    modifySheetContentState(
+                        newContentState
+                    )
+                }
             )
         },
         actionButtons = {
             ActionButtonsContainer(
                 onSettingsButtonClicked = { onSettingsClicked() },
                 onLocationButtonClicked = {
-                    centerCameraTrigger = !centerCameraTrigger
+                    mapboxMapController.centerOnCurrentLocation()
                 }
             )
         },
+        bottomSheetContentState = bottomSheetContentState,
     ) { MapboxMap(mapboxMapController) }
 }
+

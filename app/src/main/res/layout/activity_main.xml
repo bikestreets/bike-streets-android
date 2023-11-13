@@ -14,13 +14,6 @@
         mapbox:mapbox_cameraTargetLng="-104.9687837"
         mapbox:mapbox_cameraZoom="12.0" />
 
-    <androidx.fragment.app.FragmentContainerView
-        android:background="@color/transparent"
-        android:id="@+id/bottom_sheet_fragment"
-        android:name="com.application.bikestreets.bottomsheet.BottomSheetFragment"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/settings_fragment_container"

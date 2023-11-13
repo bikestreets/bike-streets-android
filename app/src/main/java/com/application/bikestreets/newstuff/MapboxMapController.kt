@@ -2,6 +2,7 @@ package com.application.bikestreets.newstuff
 
 import android.content.Context
 import android.util.Log
+import com.application.bikestreets.MapMarkersManager
 import com.application.bikestreets.R
 import com.application.bikestreets.api.RoutingService
 import com.application.bikestreets.api.modals.Location
@@ -32,6 +33,7 @@ class MapboxMapController {
     private var mapboxMap: MapboxMap? = null
     private lateinit var mContext: Context
     private lateinit var location: Point
+    private lateinit var mapMarkersManager: MapMarkersManager
 
 
     fun attachMapboxMap(mapView: MapView, map: MapboxMap, context: Context) {
@@ -40,9 +42,12 @@ class MapboxMapController {
 
         loadLocation(mapView, context)
 
+        // Load Map Markers
+        mapMarkersManager = MapMarkersManager(mapView)
+
     }
 
-    fun loadLocation(mapView: MapView, context: Context) {
+    private fun loadLocation(mapView: MapView, context: Context) {
         if (PermissionsManager.areLocationPermissionsGranted(context)) {
             mapView.location.updateSettings {
                 enabled = true
@@ -58,6 +63,7 @@ class MapboxMapController {
                 }
             })
         } else {
+            // TODO: Currently a crash, need track permission in state and register on change
             // Location not enabled, move camera to a default location
             moveCamera(
                 map = mapView.getMapboxMap(),
@@ -67,7 +73,6 @@ class MapboxMapController {
     }
 
     suspend fun updateMapForSearch(origin: Location?, destination: Location?): List<Route> {
-
         var routes = listOf<Route>()
 
         if (isPossibleRoute(origin) && destination != null) {
@@ -80,6 +85,15 @@ class MapboxMapController {
                         startCoordinates = startCoordinates,
                         endCoordinates = destination.coordinate,
                     )
+
+                    // Show markers on map
+                    mapMarkersManager.showMarker(
+                        destination = destination.coordinate,
+                        start = startCoordinates,
+                        mContext
+                    )
+
+                    // Render Route line on map
                     if (routingDirections?.routes != null) {
                         displayRoutesOnMap(routingDirections.routes)
                         routes = routingDirections.routes
@@ -93,7 +107,6 @@ class MapboxMapController {
         } else {
             showToast(mContext, "Location is not set, cannot show route")
         }
-
         return routes
     }
 
@@ -166,17 +179,17 @@ class MapboxMapController {
         }
     }
 
-    fun updateMapForRoute(route: Route) {
-        // Update map logic
-    }
-
     private fun isPossibleRoute(startLocation: Location?): Boolean {
         // TODO: Refine this when location is turned off
         return startLocation != null || ::location.isInitialized
     }
 
 
-//    fun centerOnCurrentLocation() {
-//        moveCamera(mapboxMap)
-//    }
+    fun centerOnCurrentLocation() {
+        if (PermissionsManager.areLocationPermissionsGranted(mContext)) {
+            mapboxMap?.let { moveCamera(it, location) }
+        } else {
+            //TODO: Notify parent activity to prompt for permission
+        }
+    }
 }

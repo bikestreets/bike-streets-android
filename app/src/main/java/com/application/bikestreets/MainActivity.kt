@@ -1,5 +1,6 @@
 package com.application.bikestreets
 
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
@@ -7,16 +8,13 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
 import android.view.WindowManager
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
-import com.application.bikestreets.api.RoutingService
 import com.application.bikestreets.api.modals.Location
 import com.application.bikestreets.api.modals.Mode
 import com.application.bikestreets.api.modals.Mode.Companion.getMode
 import com.application.bikestreets.api.modals.Route
-import com.application.bikestreets.bottomsheet.BottomSheetClickListener
 import com.application.bikestreets.constants.MapLayerConstants.SELECTED_ROUTE_MAP_LAYER
 import com.application.bikestreets.constants.PreferenceConstants.KEEP_SCREEN_ON_PREFERENCE_KEY
 import com.application.bikestreets.constants.PreferenceConstants.MAP_TYPE_PREFERENCE_KEY
@@ -28,32 +26,27 @@ import com.application.bikestreets.utils.convertToMapboxGeometry
 import com.application.bikestreets.utils.getColorHexString
 import com.application.bikestreets.utils.getDefaultPackageName
 import com.application.bikestreets.utils.hideCurrentRouteLayer
-import com.application.bikestreets.utils.moveCamera
-import com.application.bikestreets.utils.requestLocationPermission
 import com.application.bikestreets.utils.showToast
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.gson.JsonObject
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineProvider
-import com.mapbox.android.core.permissions.PermissionsManager
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
 import com.mapbox.maps.MapView
+import com.mapbox.maps.MapboxMap
 import com.mapbox.maps.extension.style.sources.addSource
 import com.mapbox.maps.extension.style.sources.generated.GeoJsonSource
 import com.mapbox.maps.extension.style.sources.getSourceAs
 import com.mapbox.maps.plugin.attribution.attribution
-import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
-import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.maps.plugin.logo.logo
 import com.mapbox.maps.plugin.scalebar.scalebar
 import kotlinx.coroutines.*
 
 
 class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener,
-    ActivityCompat.OnRequestPermissionsResultCallback,
-    BottomSheetClickListener {
+    ActivityCompat.OnRequestPermissionsResultCallback {
     private lateinit var mapView: MapView
 
     private lateinit var locationEngine: LocationEngine
@@ -67,8 +60,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
 
     private lateinit var binding: ActivityMainBinding
-    private val vm: MainVM by viewModels()
-    private val viewModel: SharedViewModel by viewModels()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -127,7 +119,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
         // Load Style
         mapView.getMapboxMap().also { mapboxMap ->
-            vm.loadMapboxStyle(mapboxMap, this@MainActivity)
+            loadMapboxStyle(mapboxMap, this@MainActivity)
 //            loadLocation()
         }
 
@@ -135,7 +127,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         // TODO: do this in a different thread so UI is not blocked
         mapMarkersManager = MapMarkersManager(mapView)
     }
-
 
 
     // Once a search has kicked off, given the response API, we use that route to draw a polyline
@@ -213,7 +204,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         if (::bottomSheetBehavior.isInitialized && bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
             // Clear search and collapse
             bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
-            vm.clearText()
+//            vm.clearText()
         } else if (mapMarkersManager.hasMarkers) {
             hideCurrentRouteLayer(mapView.getMapboxMap())
             mapMarkersManager.clearMarkers()
@@ -230,7 +221,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
             MAP_TYPE_PREFERENCE_KEY -> {
                 // call this function, only to update the map style
-                vm.loadMapboxStyle(mapView.getMapboxMap(), context = this)
+                loadMapboxStyle(mapView.getMapboxMap(), context = this)
             }
 
             else -> {
@@ -250,7 +241,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission granted, handle location access
 //                loadLocation()
-                vm.enableFollowRiderButton()
+//                enableFollowRiderButton()
             } else {
                 showToast(this, getString(R.string.no_location_access))
             }
@@ -262,72 +253,93 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
     }
 
-    override fun onSettingsButtonClicked() {
+//    override fun onSettingsButtonClicked() {
+//
+//        // Set the callback in the fragment
+//        val aboutFragment = AboutFragment()
+//
+//        supportFragmentManager.beginTransaction()
+//            .replace(R.id.settings_fragment_container, aboutFragment).addToBackStack("null")
+//            .commit()
+//    }
 
-        // Set the callback in the fragment
-        val aboutFragment = AboutFragment()
+//    override fun onLocationButtonClicked() {
+//        if (PermissionsManager.areLocationPermissionsGranted(this)) {
+//            moveCamera(map = mapView.getMapboxMap(), location = location)
+//        } else {
+//            requestLocationPermission(this)
+//        }
+//    }
 
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.settings_fragment_container, aboutFragment).addToBackStack("null")
-            .commit()
-    }
+//    override fun showRoutes(startLocation: Location?, endLocation: Location) {
+//        if (isPossibleRoute(startLocation)) {
+//            val startCoordinates = startLocation?.coordinate ?: location
+//
+//            MainScope().launch(Dispatchers.Main) {
+//                try {
+//                    val routingService = RoutingService()
+//                    val routingDirections = routingService.getRoutingDirections(
+//                        startCoordinates = startCoordinates,
+//                        endCoordinates = endLocation.coordinate
+//                    )
+//                    val routes = displayRouteOnMap(routingDirections?.routes)
+//
+//                    if (routes != null) {
+//                        // Pass the routes list to the bottom sheet so the user can make a selection
+//                        viewModel.route.value = routes
+//                    }
+//
+//                } catch (e: Exception) {
+//                    Log.e(javaClass.simpleName, "Navigation error: $e")
+//                }
+//            }
+//        } else {
+//            showToast(this, "Location is not set, cannot show route")
+//        }
+//    }
 
-    override fun onLocationButtonClicked() {
-        if (PermissionsManager.areLocationPermissionsGranted(this)) {
-            moveCamera(map = mapView.getMapboxMap(), location = location)
-        } else {
-            requestLocationPermission(this)
-        }
-    }
+//    override fun clearMarkers() {
+//        mapMarkersManager.clearMarkers()
+//    }
 
-    override fun showRoutes(startLocation: Location?, endLocation: Location) {
-        if (isPossibleRoute(startLocation)) {
-            val startCoordinates = startLocation?.coordinate ?: location
-
-            MainScope().launch(Dispatchers.Main) {
-                try {
-                    val routingService = RoutingService()
-                    val routingDirections = routingService.getRoutingDirections(
-                        startCoordinates = startCoordinates,
-                        endCoordinates = endLocation.coordinate
-                    )
-                    val routes = displayRouteOnMap(routingDirections?.routes)
-
-                    if (routes != null) {
-                        // Pass the routes list to the bottom sheet so the user can make a selection
-                        viewModel.route.value = routes
-                    }
-
-                } catch (e: Exception) {
-                    Log.e(javaClass.simpleName, "Navigation error: $e")
-                }
-            }
-        } else {
-            showToast(this, "Location is not set, cannot show route")
-        }
-    }
-
-    override fun clearMarkers() {
-        mapMarkersManager.clearMarkers()
-    }
-
-    override fun showMarkers(startLocation: Location?, endLocation: Location) {
-        if (isPossibleRoute(startLocation))
-            mapMarkersManager.showMarker(
-                destination = endLocation.coordinate,
-                start = startLocation?.coordinate ?: location,
-                this
-            ) else {
-            showToast(this, "Location is not set, cannot show makers")
-        }
-    }
+//    override fun showMarkers(startLocation: Location?, endLocation: Location) {
+//        if (isPossibleRoute(startLocation))
+//            mapMarkersManager.showMarker(
+//                destination = endLocation.coordinate,
+//                start = startLocation?.coordinate ?: location,
+//                this
+//            ) else {
+//            showToast(this, "Location is not set, cannot show makers")
+//        }
+//    }
 
     private fun isPossibleRoute(startLocation: Location?): Boolean {
         // TODO: Refine this when location is turned off
         return startLocation != null || ::location.isInitialized
     }
 
-    override fun routeChosen(route: Route) {
-        displayRouteOnMap(routes = listOf(route))
+    fun loadMapboxStyle(mapboxMap: MapboxMap, context: Context) {
+//        viewModelScope.launch {
+//            var mapStyle = "asset://stylejson/style.json"
+//
+//            // apply map style conditionally, based on user's preferences.
+//            if (mapTypeFromPreferences(context).equals(
+//                    ContextCompat.getString(
+//                        context,
+//                        R.string.preference_satellite
+//                    )
+//                )
+//            ) {
+//                mapStyle = Style.SATELLITE
+//            }
+//
+//            // Load style, on compete show layers
+//
+//            mapboxMap.loadStyleUri(mapStyle) { showMapLayers(context, it) }
+//        }
     }
+
+//    override fun routeChosen(route: Route) {
+//        displayRouteOnMap(routes = listOf(route))
+//    }
 }

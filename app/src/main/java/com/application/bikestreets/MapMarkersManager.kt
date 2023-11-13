@@ -19,7 +19,7 @@ class MapMarkersManager(mapView: MapView) {
         mapView.annotations.createCircleAnnotationManager(null)
     private val markers = mutableMapOf<Long, Point>()
 
-    var onMarkersChangeListener: (() -> Unit)? = null
+    private var onMarkersChangeListener: (() -> Unit)? = null
 
     val hasMarkers: Boolean
         get() = markers.isNotEmpty()

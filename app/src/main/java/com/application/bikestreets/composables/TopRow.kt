@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun TopRow(titleText: String, onCloseClicked: () -> Unit, isCollapsed: Boolean) {
-    //TODO: Fix Row rendering the IconButton pre-offset, may need to set a height and enforce clipping
+    // TODO: Fix Row rendering the IconButton pre-offset, may need to set a height and enforce clipping
     Row(
         Modifier
             .fillMaxWidth()

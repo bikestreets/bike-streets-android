@@ -1,5 +1,6 @@
 package com.application.bikestreets.newstuff
 
+import android.Manifest
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -17,9 +18,8 @@ import com.application.bikestreets.R
 import com.application.bikestreets.constants.PreferenceConstants
 import com.application.bikestreets.utils.PERMISSIONS_REQUEST_LOCATION
 import com.application.bikestreets.utils.getDefaultPackageName
-import com.application.bikestreets.utils.hideCurrentRouteLayer
 import com.application.bikestreets.utils.showToast
-import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.mapbox.android.core.permissions.PermissionsManager
 
 class MainActivity2 : ComponentActivity(), SharedPreferences.OnSharedPreferenceChangeListener,
     ActivityCompat.OnRequestPermissionsResultCallback {
@@ -31,6 +31,21 @@ class MainActivity2 : ComponentActivity(), SharedPreferences.OnSharedPreferenceC
         // Set the UI content of this activity
         setContent {
             MainUi()
+        }
+
+        checkForLocationPermission()
+    }
+
+    private fun checkForLocationPermission() {
+        if (!PermissionsManager.areLocationPermissionsGranted(this)) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ),
+                PERMISSIONS_REQUEST_LOCATION
+            )
         }
     }
 
@@ -106,7 +121,8 @@ class MainActivity2 : ComponentActivity(), SharedPreferences.OnSharedPreferenceC
     }
 
 
-    @Deprecated("Deprecated in Java",
+    @Deprecated(
+        "Deprecated in Java",
         ReplaceWith("super.onBackPressed()", "androidx.activity.ComponentActivity")
     )
     override fun onBackPressed() {
@@ -119,7 +135,9 @@ class MainActivity2 : ComponentActivity(), SharedPreferences.OnSharedPreferenceC
 //            hideCurrentRouteLayer(mapView.getMapboxMap())
 //            mapMarkersManager.clearMarkers()
 //        } else {
-            super.onBackPressed()
+        super.onBackPressed()
 //        }
     }
+
+
 }

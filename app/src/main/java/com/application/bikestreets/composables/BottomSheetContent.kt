@@ -27,7 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.application.bikestreets.R
 import com.application.bikestreets.api.modals.Location
 import com.application.bikestreets.api.modals.Route
-import com.application.bikestreets.bottomsheet.BottomSheetStates
+import com.application.bikestreets.bottomsheet.BottomSheetContentState
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -37,6 +37,8 @@ fun BottomSheetContent(
     notifyRouteChosen: (Route) -> Unit,
     onCloseClicked: () -> Unit,
     bottomSheetScaffoldState: BottomSheetScaffoldState,
+    bottomSheetContentState: BottomSheetContentState,
+    onBottomSheetContentChange: (BottomSheetContentState) -> Unit,
 ) {
     var originLocation by remember { mutableStateOf<Location?>(null) }
     var destinationLocation by remember { mutableStateOf<Location?>(null) }
@@ -50,8 +52,6 @@ fun BottomSheetContent(
     var originSearchIsFocused by remember { mutableStateOf(false) }
     var destinationSearchIsFocused by remember { mutableStateOf(false) }
     var showRoutes by remember { mutableStateOf(false) }
-
-    var bottomSheetState by remember { mutableStateOf(BottomSheetStates.INITIAL) }
 
 
     // Toggle if routes or text helper is shown
@@ -91,12 +91,12 @@ fun BottomSheetContent(
             originSearchText = location.name
         }
         defaultToCurrentLocation()
-        bottomSheetState = BottomSheetStates.DIRECTIONS
+        onBottomSheetContentChange(BottomSheetContentState.DIRECTIONS)
         onSearchPerformed(originLocation, destinationLocation)
     }
 
     fun getTitleText(): String {
-        return if (bottomSheetState == BottomSheetStates.INITIAL) {
+        return if (bottomSheetContentState == BottomSheetContentState.INITIAL) {
             "Find a Route with VAMOS"
         } else {
             "Directions"
@@ -114,7 +114,7 @@ fun BottomSheetContent(
             onCloseClicked = { onCloseClicked() },
             isCollapsed = bottomSheetScaffoldState.bottomSheetState.isCollapsed
         )
-        if (bottomSheetState == BottomSheetStates.DIRECTIONS) {
+        if (bottomSheetContentState == BottomSheetContentState.DIRECTIONS) {
             SearchEditText(
                 value = originSearchText,
                 onValueChange = { value -> originSearchText = value },
@@ -170,6 +170,8 @@ fun BottomSheetUiPreview() {
             ),
             BottomSheetState(BottomSheetValue.Expanded),
             SnackbarHostState()
-        )
+        ),
+        bottomSheetContentState = BottomSheetContentState.DIRECTIONS,
+        onBottomSheetContentChange = { _ -> {} }
     )
 }
