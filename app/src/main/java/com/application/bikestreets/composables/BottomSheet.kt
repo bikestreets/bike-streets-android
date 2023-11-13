@@ -35,7 +35,7 @@ fun BottomSheet(
         sheetContent = {
             sheetContent()
         },
-        sheetPeekHeight = 120.dp,
+        sheetPeekHeight = 150.dp,
         backgroundColor = Color.Transparent
     ) {
         Box(

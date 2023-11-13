@@ -26,13 +26,13 @@ import com.mapbox.maps.extension.style.sources.getSourceAs
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.locationcomponent.location
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MapboxMapController {
     private var mapboxMap: MapboxMap? = null
     private lateinit var mContext: Context
     private lateinit var location: Point
+
 
     fun attachMapboxMap(mapView: MapView, map: MapboxMap, context: Context) {
         mapboxMap = map
@@ -66,25 +66,26 @@ class MapboxMapController {
         }
     }
 
-    fun updateMapForSearch(origin: Location?, destination: Location?) {
+    suspend fun updateMapForSearch(origin: Location?, destination: Location?): List<Route> {
+
+        var routes = listOf<Route>()
 
         if (isPossibleRoute(origin) && destination != null) {
             val startCoordinates = origin?.coordinate ?: location
 
-            MainScope().launch(Dispatchers.Main) {
+            withContext(Dispatchers.Main) {
                 try {
                     val routingService = RoutingService()
                     val routingDirections = routingService.getRoutingDirections(
                         startCoordinates = startCoordinates,
                         endCoordinates = destination.coordinate,
                     )
-                    val routes = displayRouteOnMap(routingDirections?.routes)
-
-//                    if (routes != null) {
-//                        // Pass the routes list to the bottom sheet so the user can make a selection
-//                        viewModel.route.value = routes
-//                    }
-
+                    if (routingDirections?.routes != null) {
+                        displayRoutesOnMap(routingDirections.routes)
+                        routes = routingDirections.routes
+                    } else {
+                        // Do Nothing
+                    }
                 } catch (e: Exception) {
                     Log.e(javaClass.simpleName, "Navigation error: $e")
                 }
@@ -92,10 +93,12 @@ class MapboxMapController {
         } else {
             showToast(mContext, "Location is not set, cannot show route")
         }
+
+        return routes
     }
 
 
-    private fun displayRouteOnMap(routes: List<Route>?): List<Route>? {
+    private fun displayRoutesOnMap(routes: List<Route>?) {
 
         val mapStyle = mapboxMap?.getStyle()
 
@@ -161,8 +164,6 @@ class MapboxMapController {
         } else {
             layerSource.featureCollection(pushingFeatureCollection)
         }
-
-        return routes
     }
 
     fun updateMapForRoute(route: Route) {

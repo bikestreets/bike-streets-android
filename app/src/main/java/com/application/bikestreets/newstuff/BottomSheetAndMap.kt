@@ -11,10 +11,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.application.bikestreets.api.modals.Location
+import com.application.bikestreets.api.modals.Route
 import com.application.bikestreets.composables.ActionButtonsContainer
 import com.application.bikestreets.composables.BottomSheet
 import com.application.bikestreets.composables.BottomSheetContent
-import com.application.bikestreets.composables.MapboxMapViewComposable
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -28,6 +28,7 @@ fun BottomSheetAndMap(onSettingsClicked: (() -> Unit)) {
     var centerCameraTrigger by remember { mutableStateOf(false) }
 
     val mapboxMapController = remember { MapboxMapController() }
+    var routes = remember { mutableStateOf<List<Route>>(listOf()) }
 
     /**
      * Sheet can either be changed due to swipe (in BottomSheet)
@@ -61,9 +62,12 @@ fun BottomSheetAndMap(onSettingsClicked: (() -> Unit)) {
 //            )
             BottomSheetContent(
                 onSearchPerformed = { origin: Location?, destination: Location? ->
-                    mapboxMapController.updateMapForSearch(origin, destination)
+                    coroutineScope.launch {
+                        val newRoutes = mapboxMapController.updateMapForSearch(origin, destination)
+                        routes.value = newRoutes
+                    }
                 },
-                routes = listOf(),
+                routes = routes.value,
                 notifyRouteChosen = { route -> mapboxMapController.updateMapForRoute(route) },
                 bottomSheetScaffoldState = bottomSheetScaffoldState,
                 onCloseClicked = { modifySheetScaffoldState(BottomSheetValue.Collapsed) }
