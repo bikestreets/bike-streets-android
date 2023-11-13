@@ -128,7 +128,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         // Load Style
         mapView.getMapboxMap().also { mapboxMap ->
             vm.loadMapboxStyle(mapboxMap, this@MainActivity)
-            loadLocation()
+//            loadLocation()
         }
 
         // Load Map Markers
@@ -136,23 +136,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         mapMarkersManager = MapMarkersManager(mapView)
     }
 
-    private fun loadLocation() {
-        if (PermissionsManager.areLocationPermissionsGranted(this)) {
-            mapView.location.updateSettings {
-                enabled = true
-            }
-
-            mapView.location.addOnIndicatorPositionChangedListener(object :
-                OnIndicatorPositionChangedListener {
-                override fun onIndicatorPositionChanged(point: Point) {
-                    location = point
-                    moveCamera(map = mapView.getMapboxMap(), location = location)
-
-                    mapView.location.removeOnIndicatorPositionChangedListener(this)
-                }
-            })
-        }
-    }
 
 
     // Once a search has kicked off, given the response API, we use that route to draw a polyline
@@ -266,7 +249,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         if (requestCode == PERMISSIONS_REQUEST_LOCATION) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission granted, handle location access
-                loadLocation()
+//                loadLocation()
                 vm.enableFollowRiderButton()
             } else {
                 showToast(this, getString(R.string.no_location_access))

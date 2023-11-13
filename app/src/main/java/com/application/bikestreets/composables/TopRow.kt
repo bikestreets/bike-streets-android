@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun TopRow(titleText: String, onCloseClicked: () -> Unit) {
+fun TopRow(titleText: String, onCloseClicked: () -> Unit, isCollapsed: Boolean) {
     //TODO: Fix Row rendering the IconButton pre-offset, may need to set a height and enforce clipping
     Row(
         Modifier
@@ -24,16 +24,18 @@ fun TopRow(titleText: String, onCloseClicked: () -> Unit) {
     ) {
         Text(text = titleText, fontSize = 18.sp)
         Spacer(modifier = Modifier.weight(1f))
-        IconButton(
-            onClick = onCloseClicked,
-            modifier = Modifier
-                .absoluteOffset(y = (-14).dp)
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.Close,
-                contentDescription = "Close Drawer",
-                tint = Color.Gray
-            )
+        if (!isCollapsed) {
+            IconButton(
+                onClick = onCloseClicked,
+                modifier = Modifier
+                    .absoluteOffset(y = (-14).dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Close,
+                    contentDescription = "Close Drawer",
+                    tint = Color.Gray
+                )
+            }
         }
     }
 }

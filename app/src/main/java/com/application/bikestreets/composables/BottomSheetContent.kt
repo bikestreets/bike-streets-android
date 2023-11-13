@@ -3,6 +3,13 @@ package com.application.bikestreets.composables
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.BottomSheetScaffoldState
+import androidx.compose.material.BottomSheetState
+import androidx.compose.material.BottomSheetValue
+import androidx.compose.material.DrawerState
+import androidx.compose.material.DrawerValue
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -22,12 +29,14 @@ import com.application.bikestreets.api.modals.Location
 import com.application.bikestreets.api.modals.Route
 import com.application.bikestreets.bottomsheet.BottomSheetStates
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun BottomSheetContent(
-    onSearchPerformed: ((Location?, Location?) -> Unit),
+    onSearchPerformed: (Location?, Location?) -> Unit,
     routes: List<Route>,
-    notifyRouteChosen: ((Route) -> Unit),
-    onCloseClicked: (() -> Unit),
+    notifyRouteChosen: (Route) -> Unit,
+    onCloseClicked: () -> Unit,
+    bottomSheetScaffoldState: BottomSheetScaffoldState,
 ) {
     var originLocation by remember { mutableStateOf<Location?>(null) }
     var destinationLocation by remember { mutableStateOf<Location?>(null) }
@@ -100,7 +109,11 @@ fun BottomSheetContent(
             .padding(horizontal = dimensionResource(R.dimen.default_margin))
     ) {
         DragIndicator()
-        TopRow(getTitleText(), onCloseClicked = { onCloseClicked() })
+        TopRow(
+            getTitleText(),
+            onCloseClicked = { onCloseClicked() },
+            isCollapsed = bottomSheetScaffoldState.bottomSheetState.isCollapsed
+        )
         if (bottomSheetState == BottomSheetStates.DIRECTIONS) {
             SearchEditText(
                 value = originSearchText,
@@ -142,6 +155,7 @@ fun BottomSheetContent(
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Preview(showBackground = true)
 @Composable
 fun BottomSheetUiPreview() {
@@ -149,6 +163,13 @@ fun BottomSheetUiPreview() {
         onSearchPerformed = { _, _ -> {} },
         routes = listOf(),
         notifyRouteChosen = {},
-        onCloseClicked = {}
+        onCloseClicked = {},
+        bottomSheetScaffoldState = BottomSheetScaffoldState(
+            drawerState = DrawerState(
+                DrawerValue.Closed
+            ),
+            BottomSheetState(BottomSheetValue.Expanded),
+            SnackbarHostState()
+        )
     )
 }
