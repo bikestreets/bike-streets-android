@@ -16,12 +16,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.application.bikestreets.R
+import com.application.bikestreets.theme.Colors
+import com.application.bikestreets.theme.Dimens
 
 @Composable
 fun ActionButtonsContainer(
@@ -54,11 +54,11 @@ fun BlueActionButtons(
         onClick = onClick,
         modifier = Modifier
             .background(
-                color = colorResource(id = R.color.vamos_blue),
+                color = Colors.vamosBlue,
                 shape = CircleShape
             ) // Change the color as needed
             .size(
-                dimensionResource(id = R.dimen.tappable_icons_height)
+                Dimens.tappableIconSize
             )
             .padding(8.dp)
     ) {

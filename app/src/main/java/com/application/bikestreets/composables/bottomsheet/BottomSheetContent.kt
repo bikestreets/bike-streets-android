@@ -1,8 +1,7 @@
-package com.application.bikestreets.composables
+package com.application.bikestreets.composables.bottomsheet
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.BottomSheetScaffoldState
 import androidx.compose.material.BottomSheetState
 import androidx.compose.material.BottomSheetValue
@@ -21,13 +20,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.application.bikestreets.R
 import com.application.bikestreets.api.modals.Location
 import com.application.bikestreets.api.modals.Route
-import com.application.bikestreets.bottomsheet.BottomSheetContentState
+import com.application.bikestreets.BottomSheetContentState
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -106,7 +104,6 @@ fun BottomSheetContent(
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = dimensionResource(R.dimen.default_margin))
     ) {
         DragIndicator()
         TopRow(

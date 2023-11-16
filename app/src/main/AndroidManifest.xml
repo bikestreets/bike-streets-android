@@ -20,13 +20,8 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
         <activity
-            android:name=".terms.TermsOfUse"
-            android:label="Terms of Use"
-            android:theme="@style/AppTheme.NoActionBar" />
-        <activity
-            android:name=".newstuff.MainActivity2"
-            android:exported="true"
-            android:theme="@style/MapTheme">
+            android:name=".MainActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

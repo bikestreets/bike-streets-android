@@ -1,4 +1,4 @@
-package com.application.bikestreets.bottomsheet
+package com.application.bikestreets
 
 /**
  * Used for controlling sheet height and when content appears

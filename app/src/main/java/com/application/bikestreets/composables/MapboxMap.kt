@@ -1,4 +1,4 @@
-package com.application.bikestreets.newstuff
+package com.application.bikestreets.composables
 
 import android.content.Context
 import android.view.Gravity
@@ -6,18 +6,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import com.application.bikestreets.MapboxMapController
 import com.application.bikestreets.R
 import com.application.bikestreets.utils.mapTypeFromPreferences
-import com.application.bikestreets.utils.moveCamera
 import com.application.bikestreets.utils.showMapLayers
-import com.mapbox.android.core.permissions.PermissionsManager
 import com.mapbox.geojson.Point
 import com.mapbox.maps.MapView
 import com.mapbox.maps.MapboxMap
 import com.mapbox.maps.Style
 import com.mapbox.maps.plugin.attribution.attribution
-import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
-import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.maps.plugin.logo.logo
 import com.mapbox.maps.plugin.scalebar.scalebar
 import kotlinx.coroutines.launch
@@ -25,10 +22,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun MapboxMap(mapboxMapController: MapboxMapController) {
     val coroutineScope = rememberCoroutineScope()
-
-    // TODO: How to better handle this
-    var location: Point
-
 
     fun loadMapboxStyle(mapboxMap: MapboxMap, context: Context) {
         coroutineScope.launch {
@@ -75,7 +68,6 @@ fun MapboxMap(mapboxMapController: MapboxMapController) {
 
                 // Load Map Markers
                 // TODO: do this in a different thread so UI is not blocked
-//                mapMarkersManager = MapMarkersManager(mapView)
                 // Initialization code if necessary, e.g., setting up listeners, starting loading, etc.
             }
         },

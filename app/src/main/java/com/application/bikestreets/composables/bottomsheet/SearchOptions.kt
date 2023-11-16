@@ -1,4 +1,4 @@
-package com.application.bikestreets.composables
+package com.application.bikestreets.composables.bottomsheet
 
 import android.util.Log
 import androidx.compose.runtime.Composable
@@ -106,9 +106,6 @@ fun SearchOptions(
                         ) {
                             val location = Location(searchResult)
                             onSearchOptionSelected(location)
-//                        setStartOrEndLocation(Location(searchResult), activeTextField)
-//                        setTextNoSearch(searchResult.name, activeTextField)
-//                        showDirectionsBottomSheet()
                         }
 
                         override fun onOfflineSearchResultSelected(
@@ -116,9 +113,6 @@ fun SearchOptions(
                             responseInfo: OfflineResponseInfo
                         ) {
                             onSearchOptionSelected(Location(searchResult))
-//                        setStartOrEndLocation(Location(searchResult), activeTextField)
-//                        setTextNoSearch(searchResult.name, activeTextField)
-//                        showDirectionsBottomSheet()
                         }
 
                         override fun onError(e: Exception) {
@@ -144,7 +138,6 @@ fun SearchOptions(
                 }
             },
             update = { view ->
-                // TODO: if new searchQuery is null, show history or nothing
                 searchEngineUiAdapter.search(newSearchQuery, getSearchOptions())
             }
         )

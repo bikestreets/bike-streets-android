@@ -2,7 +2,6 @@ package com.application.bikestreets.utils
 
 import android.content.Context
 import com.application.bikestreets.R
-import com.application.bikestreets.terms.StringToStream
 import com.application.bikestreets.api.modals.PrimitiveGeometry
 import com.application.bikestreets.constants.MapLayerConstants.SELECTED_ROUTE_MAP_LAYER
 import com.mapbox.geojson.FeatureCollection
@@ -22,6 +21,7 @@ import com.mapbox.maps.extension.style.sources.addSource
 import com.mapbox.maps.extension.style.sources.generated.GeoJsonSource
 import com.mapbox.maps.extension.style.sources.getSourceAs
 import java.io.InputStream
+import java.util.Scanner
 
 // Was unsure how to consume this directly in retrofit, so doing to conversion after the fact
 fun convertToMapboxGeometry(geometry: PrimitiveGeometry): Geometry? {
@@ -33,6 +33,7 @@ fun convertToMapboxGeometry(geometry: PrimitiveGeometry): Geometry? {
             }
             LineString.fromLngLats(coordinates)
         }
+
         else -> null
     }
 }
@@ -69,10 +70,16 @@ fun showMapLayers(context: Context, mapStyle: Style) {
 }
 
 private fun featureCollectionFromStream(fileStream: InputStream): FeatureCollection {
-    val geoJsonString = StringToStream.convert(fileStream)
+    val geoJsonString = convert(fileStream)
 
     return FeatureCollection.fromJson(geoJsonString)
 }
+
+private fun convert(input: InputStream): String {
+    val scanner = Scanner(input).useDelimiter("\\A")
+    return if (scanner.hasNext()) scanner.next() else ""
+}
+
 
 private fun renderFeatureCollection(
     layerName: String, featureCollection: FeatureCollection, mapStyle: Style, context: Context
@@ -88,7 +95,7 @@ private fun renderFeatureCollection(
 }
 
 // Satellite layer does not have road labels
-fun addLayerBasedOnMapType(context: Context, mapStyle: Style, layerName: String){
+fun addLayerBasedOnMapType(context: Context, mapStyle: Style, layerName: String) {
     if (mapTypeFromPreferences(context) == context.getString(R.string.preference_satellite)) {
         mapStyle.addLayer(createLineLayer(layerName))
     } else {

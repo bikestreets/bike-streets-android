@@ -1,4 +1,4 @@
-package com.application.bikestreets.composables
+package com.application.bikestreets.composables.bottomsheet
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.application.bikestreets.theme.Dimens
 import com.application.bikestreets.utils.metersToMiles
 
 @Composable
@@ -26,7 +27,7 @@ fun RouteOption(index: Int, distance: Double, onGoClicked: (() -> Unit)) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
+            .padding(vertical = 8.dp, horizontal = Dimens.defaultPadding),
         shape = RoundedCornerShape(8.dp), color = Color(0xFFDBDBDB)
     ) {
         Row(modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {

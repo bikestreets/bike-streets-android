@@ -1,14 +1,13 @@
-package com.application.bikestreets.newstuff
+package com.application.bikestreets
 
 import android.content.Context
 import android.util.Log
-import com.application.bikestreets.MapMarkersManager
-import com.application.bikestreets.R
 import com.application.bikestreets.api.RoutingService
 import com.application.bikestreets.api.modals.Location
 import com.application.bikestreets.api.modals.Mode
 import com.application.bikestreets.api.modals.Route
 import com.application.bikestreets.constants.MapLayerConstants
+import com.application.bikestreets.theme.Colors
 import com.application.bikestreets.utils.addLayerBasedOnMapType
 import com.application.bikestreets.utils.convertToMapboxGeometry
 import com.application.bikestreets.utils.getColorHexString
@@ -29,6 +28,10 @@ import com.mapbox.maps.plugin.locationcomponent.location
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+/**
+ * Handles the bridge between actions taken on the bottom sheet
+ * and what changes need to be made on the map
+ */
 class MapboxMapController {
     private var mapboxMap: MapboxMap? = null
     private lateinit var mContext: Context
@@ -68,6 +71,7 @@ class MapboxMapController {
             moveCamera(
                 map = mapView.getMapboxMap(),
                 location = Point.fromLngLat(-104.9687837, 39.7326381)
+                // TODO: add in ability to move camera with a zoom argument default of (12)
             )
         }
     }
@@ -90,7 +94,6 @@ class MapboxMapController {
                     mapMarkersManager.showMarker(
                         destination = destination.coordinate,
                         start = startCoordinates,
-                        mContext
                     )
 
                     // Render Route line on map
@@ -127,7 +130,7 @@ class MapboxMapController {
                     val properties = JsonObject()
                     properties.addProperty(
                         "stroke",
-                        getColorHexString(mContext, R.color.sidewalk_segment)
+                        getColorHexString(Colors.sidewalk)
                     )
 
                     selectedRouteGeometry.add(Feature.fromGeometry(mapBoxGeometry, properties))
@@ -136,7 +139,7 @@ class MapboxMapController {
                     val properties = JsonObject()
                     properties.addProperty(
                         "stroke",
-                        getColorHexString(mContext, R.color.vamos_light_blue)
+                        getColorHexString(Colors.vamosLightBlue)
                     )
 
                     selectedRouteGeometry.add(Feature.fromGeometry(mapBoxGeometry, properties))

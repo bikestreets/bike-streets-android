@@ -9,18 +9,13 @@
     android:padding="16dp"
     tools:context=".AboutFragment">
 
-    <!--  The Map Legend  -->
-    <include
-        android:id="@+id/include"
-        layout="@layout/map_legend" />
-
     <!-- The Settings Section -->
     <LinearLayout
         android:id="@+id/settings"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintTop_toBottomOf="@+id/include" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- Feedback Button -->
     <Button

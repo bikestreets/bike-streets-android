@@ -1,7 +1,7 @@
 package com.application.bikestreets
 
-import android.content.Context
-import androidx.core.content.ContextCompat
+import androidx.compose.ui.graphics.toArgb
+import com.application.bikestreets.theme.Colors
 import com.application.bikestreets.utils.moveCamera
 import com.mapbox.android.gestures.Utils
 import com.mapbox.geojson.Point
@@ -29,13 +29,13 @@ class MapMarkersManager(mapView: MapView) {
         circleAnnotationManager.deleteAll()
     }
 
-    fun showMarker(destination: Point, start: Point, context: Context) {
+    fun showMarker(destination: Point, start: Point) {
         clearMarkers()
 
         val circleAnnotationOptions: CircleAnnotationOptions = CircleAnnotationOptions()
             .withPoint(destination)
             .withCircleRadius(8.0)
-            .withCircleColor(ContextCompat.getColor(context, R.color.destination_pin))
+            .withCircleColor(Colors.destinationPin.toArgb())
             .withCircleStrokeWidth(3.0)
             .withCircleStrokeColor("#ffffff")
 

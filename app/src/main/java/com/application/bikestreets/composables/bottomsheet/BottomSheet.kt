@@ -1,4 +1,4 @@
-package com.application.bikestreets.composables
+package com.application.bikestreets.composables.bottomsheet
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -9,15 +9,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.BottomSheetScaffoldState
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.application.bikestreets.R
-import com.application.bikestreets.bottomsheet.BottomSheetContentState
+import com.application.bikestreets.BottomSheetContentState
+import com.application.bikestreets.theme.Dimens
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -28,22 +28,22 @@ fun BottomSheet(
     bottomSheetContentState: BottomSheetContentState,
     content: @Composable () -> Unit,
 ) {
-
+    /**
+     * Peek height changes based on what content is being shown
+     */
     @Composable
     fun updateBottomSheetPeekHeight(): Dp {
-        // Set the peek height to only show search bar
-        val dimenPeekIndicator =
-            dimensionResource(R.dimen.draggable_indicator_height) + dimensionResource(R.dimen.draggable_indicator_top_margin)
-        val dimenClose =
-            dimensionResource(R.dimen.close_icon_height) + dimensionResource(R.dimen.close_padding) * 2
-        val dimenSearchEntry =
-            dimensionResource(R.dimen.search_icon_height) + dimensionResource(R.dimen.edit_text_padding) * 2 +
-                    dimensionResource(R.dimen.toolbar_vertical_margin)
 
+        val dimenPeekIndicator =
+            Dimens.draggableIndicatorHeight + Dimens.draggableIndicatorTopMargin
+        val dimenClose =
+            Dimens.closeSheetBtnSize
+        val dimenEditText =
+            TextFieldDefaults.MinHeight + Dimens.editTextVerticalPadding * 2
 
         return when (bottomSheetContentState) {
-            BottomSheetContentState.INITIAL -> (dimenPeekIndicator + dimenClose + dimenSearchEntry)
-            BottomSheetContentState.DIRECTIONS -> (dimenPeekIndicator + dimenClose + dimenSearchEntry * 2)
+            BottomSheetContentState.INITIAL -> (dimenPeekIndicator + dimenClose + dimenEditText)
+            BottomSheetContentState.DIRECTIONS -> (dimenPeekIndicator + dimenClose + dimenEditText * 2)
         }
     }
 

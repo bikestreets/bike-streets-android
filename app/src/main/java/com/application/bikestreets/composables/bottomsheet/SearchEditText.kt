@@ -1,7 +1,8 @@
-package com.application.bikestreets.composables
+package com.application.bikestreets.composables.bottomsheet
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Icon
@@ -17,6 +18,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.application.bikestreets.theme.Dimens
 
 @Composable
 fun SearchEditText(
@@ -32,9 +34,13 @@ fun SearchEditText(
         textStyle = androidx.compose.ui.text.TextStyle(fontSize = 16.sp),
         modifier = modifier.then(
             Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = Dimens.defaultPadding,
+                    vertical = Dimens.editTextVerticalPadding
+                )
                 .clip(RoundedCornerShape(8.dp))
                 .background(color = Color.White)
-                .fillMaxWidth()
         ),
         keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Search),
         placeholder = { Text(text = hint) },
