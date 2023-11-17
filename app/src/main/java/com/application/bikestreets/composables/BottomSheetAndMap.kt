@@ -20,7 +20,11 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun BottomSheetAndMap(onSettingsClicked: (() -> Unit)) {
+fun BottomSheetAndMap(
+    onInfoClicked: (() -> Unit),
+    onLocationRequested: (() -> Unit),
+    isLocationGranted: Boolean?
+) {
     val coroutineScope = rememberCoroutineScope()
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
         bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed)
@@ -78,13 +82,16 @@ fun BottomSheetAndMap(onSettingsClicked: (() -> Unit)) {
         },
         actionButtons = {
             ActionButtonsContainer(
-                onSettingsButtonClicked = { onSettingsClicked() },
+                onInfoButtonClicked = { onInfoClicked() },
                 onLocationButtonClicked = {
-                    mapboxMapController.centerOnCurrentLocation()
+                    // If location not granted, notify parent to ask
+                    if (!mapboxMapController.centerOnCurrentLocation()) {
+                        onLocationRequested()
+                    }
                 }
             )
         },
         bottomSheetContentState = bottomSheetContentState,
-    ) { MapboxMap(mapboxMapController) }
+    ) { MapboxMap(mapboxMapController, isLocationGranted) }
 }
 

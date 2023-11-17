@@ -25,7 +25,7 @@ import com.application.bikestreets.theme.Dimens
 
 @Composable
 fun ActionButtonsContainer(
-    onSettingsButtonClicked: (() -> Unit),
+    onInfoButtonClicked: (() -> Unit),
     onLocationButtonClicked: (() -> Unit)
 ) {
 
@@ -38,8 +38,8 @@ fun ActionButtonsContainer(
         Spacer(modifier = Modifier.padding(4.dp))
         BlueActionButtons(
             icon = Icons.Rounded.Settings,
-            contentDescription = stringResource(R.string.settings_button),
-            onClick = { onSettingsButtonClicked() }
+            contentDescription = stringResource(R.string.info_button),
+            onClick = { onInfoButtonClicked() }
         )
     }
 }

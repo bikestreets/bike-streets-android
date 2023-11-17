@@ -1,8 +1,10 @@
 package com.application.bikestreets
 
 import android.Manifest
+import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.WindowManager
@@ -14,9 +16,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.app.ActivityCompat
-import com.application.bikestreets.constants.PreferenceConstants
 import com.application.bikestreets.composables.BottomSheetAndMap
-import com.application.bikestreets.composables.SettingsModal
+import com.application.bikestreets.composables.dialogs.InformationDialog
+import com.application.bikestreets.composables.dialogs.TermsOfUseDialog
+import com.application.bikestreets.composables.dialogs.WelcomeDialog
+import com.application.bikestreets.constants.PreferenceConstants
 import com.application.bikestreets.theme.BikeStreetsTheme
 import com.application.bikestreets.utils.PERMISSIONS_REQUEST_LOCATION
 import com.application.bikestreets.utils.getDefaultPackageName
@@ -27,20 +31,45 @@ class MainActivity : ComponentActivity(), SharedPreferences.OnSharedPreferenceCh
     ActivityCompat.OnRequestPermissionsResultCallback {
 
     private lateinit var sharedPreferences: SharedPreferences
+
+    // Used to update the map if permission is granted mid-session
+    private var isLocationGranted: Boolean? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
 
         // Set the UI content of this activity
         setContent {
             BikeStreetsTheme {
-                MainUi()
+                MainUi(isLocationGranted)
             }
         }
-
-        checkForLocationPermission()
     }
 
-    private fun checkForLocationPermission() {
+    // Handle permission results
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == PERMISSIONS_REQUEST_LOCATION) {
+            val fineLocationGranted =
+                grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
+            val coarseLocationGranted =
+                grantResults.size > 1 && grantResults[1] == PackageManager.PERMISSION_GRANTED
+
+            if (fineLocationGranted || coarseLocationGranted) {
+                // Permission granted
+                isLocationGranted = true
+            } else {
+                showToast(this, getString(R.string.no_location_access))
+            }
+        }
+    }
+
+    private fun requestLocationPermission() {
         if (!PermissionsManager.areLocationPermissionsGranted(this)) {
             ActivityCompat.requestPermissions(
                 this,
@@ -54,17 +83,47 @@ class MainActivity : ComponentActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
     @Composable
-    fun MainUi() {
+    fun MainUi(isLocationGranted: Boolean?) {
 
-        var showSettings by remember { mutableStateOf(false) }
+        val termsOfUseManager = TermsOfUseManager(this)
 
-        // TermsOfUse()
-        if (showSettings) {
-            SettingsModal(onCloseSettingsClicked = { showSettings = false })
+        var showInformationDialog by remember { mutableStateOf(false) }
+        var showWelcomeDialog by remember { mutableStateOf(false) }
+
+
+        // Dialogs
+        if (showInformationDialog) {
+            InformationDialog(onCloseInformationClicked = { showInformationDialog = false })
         }
+        if (termsOfUseManager.hasUnsignedTermsOfUse()) {
+            TermsOfUseDialog(
+                onTermsAccepted = {
+                    termsOfUseManager.accept()
+                    showWelcomeDialog = true
+                },
+                viewFullTerms = { openTermsUrl(termsOfUseManager) })
+        }
+        if (showWelcomeDialog) {
+            WelcomeDialog(
+                onShareLocationClicked = {
+                    showWelcomeDialog = false
+                    requestLocationPermission()
+                },
+            )
+        }
+
+
         BottomSheetAndMap(
-            onSettingsClicked = { showSettings = true }
+            onInfoClicked = { showInformationDialog = true },
+            onLocationRequested = { requestLocationPermission() },
+            isLocationGranted = isLocationGranted
         )
+    }
+
+    private fun openTermsUrl(termsOfUseManager: TermsOfUseManager) {
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.data = Uri.parse(termsOfUseManager.termsUrl)
+        startActivity(intent)
     }
 
     private fun setScreenModeFromPreferences() {
@@ -102,22 +161,6 @@ class MainActivity : ComponentActivity(), SharedPreferences.OnSharedPreferenceCh
         }
     }
 
-    // Handle permission results
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == PERMISSIONS_REQUEST_LOCATION) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission granted
-                // TODO: Do we need to do anything with this knowledge?
-            } else {
-                showToast(this, getString(R.string.no_location_access))
-            }
-        }
-    }
 
     override fun onDestroy() {
         super.onDestroy()

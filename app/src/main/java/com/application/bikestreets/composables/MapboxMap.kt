@@ -3,6 +3,7 @@ package com.application.bikestreets.composables
 import android.content.Context
 import android.view.Gravity
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -10,7 +11,6 @@ import com.application.bikestreets.MapboxMapController
 import com.application.bikestreets.R
 import com.application.bikestreets.utils.mapTypeFromPreferences
 import com.application.bikestreets.utils.showMapLayers
-import com.mapbox.geojson.Point
 import com.mapbox.maps.MapView
 import com.mapbox.maps.MapboxMap
 import com.mapbox.maps.Style
@@ -20,8 +20,12 @@ import com.mapbox.maps.plugin.scalebar.scalebar
 import kotlinx.coroutines.launch
 
 @Composable
-fun MapboxMap(mapboxMapController: MapboxMapController) {
+fun MapboxMap(mapboxMapController: MapboxMapController, isLocationGranted: Boolean?) {
     val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(isLocationGranted) {
+        mapboxMapController.loadLocation()
+    }
 
     fun loadMapboxStyle(mapboxMap: MapboxMap, context: Context) {
         coroutineScope.launch {

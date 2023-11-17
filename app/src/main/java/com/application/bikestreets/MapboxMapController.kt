@@ -18,6 +18,7 @@ import com.mapbox.android.core.permissions.PermissionsManager
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
+import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.MapView
 import com.mapbox.maps.MapboxMap
 import com.mapbox.maps.extension.style.sources.addSource
@@ -33,6 +34,7 @@ import kotlinx.coroutines.withContext
  * and what changes need to be made on the map
  */
 class MapboxMapController {
+    private lateinit var mMapView : MapView
     private var mapboxMap: MapboxMap? = null
     private lateinit var mContext: Context
     private lateinit var location: Point
@@ -40,39 +42,38 @@ class MapboxMapController {
 
 
     fun attachMapboxMap(mapView: MapView, map: MapboxMap, context: Context) {
+        mMapView = mapView
         mapboxMap = map
         mContext = context
-
-        loadLocation(mapView, context)
 
         // Load Map Markers
         mapMarkersManager = MapMarkersManager(mapView)
 
     }
 
-    private fun loadLocation(mapView: MapView, context: Context) {
-        if (PermissionsManager.areLocationPermissionsGranted(context)) {
-            mapView.location.updateSettings {
+    fun loadLocation() {
+        if (PermissionsManager.areLocationPermissionsGranted(mContext)) {
+            mMapView.location.updateSettings {
                 enabled = true
             }
 
-            mapView.location.addOnIndicatorPositionChangedListener(object :
+            mMapView.location.addOnIndicatorPositionChangedListener(object :
                 OnIndicatorPositionChangedListener {
                 override fun onIndicatorPositionChanged(point: Point) {
                     location = point
-                    moveCamera(map = mapView.getMapboxMap(), location = location)
+                    moveCamera(map = mMapView.getMapboxMap(), location = location)
 
-                    mapView.location.removeOnIndicatorPositionChangedListener(this)
+                    mMapView.location.removeOnIndicatorPositionChangedListener(this)
                 }
             })
         } else {
-            // TODO: Currently a crash, need track permission in state and register on change
-            // Location not enabled, move camera to a default location
-            moveCamera(
-                map = mapView.getMapboxMap(),
-                location = Point.fromLngLat(-104.9687837, 39.7326381)
-                // TODO: add in ability to move camera with a zoom argument default of (12)
-            )
+            // Location not enabled, move camera to a default location (No animation)
+            val cameraPosition = CameraOptions.Builder()
+                .zoom(12.0)
+                .center(Point.fromLngLat(-104.9687837, 39.7326381))
+                .build()
+            // set camera position
+            mMapView.getMapboxMap().setCamera(cameraPosition)
         }
     }
 
@@ -188,11 +189,19 @@ class MapboxMapController {
     }
 
 
-    fun centerOnCurrentLocation() {
-        if (PermissionsManager.areLocationPermissionsGranted(mContext)) {
-            mapboxMap?.let { moveCamera(it, location) }
+    /**
+     * Preform a camera update. Return false if unable
+     */
+    fun centerOnCurrentLocation(): Boolean {
+        return if (PermissionsManager.areLocationPermissionsGranted(mContext)) {
+            if(::location.isInitialized){
+                mapboxMap?.let { moveCamera(it, location) }
+            } else {
+                loadLocation()
+            }
+            true
         } else {
-            //TODO: Notify parent activity to prompt for permission
+            false
         }
     }
 }

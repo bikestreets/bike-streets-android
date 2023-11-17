@@ -1,4 +1,4 @@
-package com.application.bikestreets.composables
+package com.application.bikestreets.composables.dialogs
 
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Text
@@ -8,11 +8,17 @@ import androidx.compose.runtime.Composable
 @Composable
 fun BikeStreetsDialog(
     onCloseClicked: () -> Unit,
-    isDismissible: Boolean? = true
+    title: String? = "",
+    dialogContent: @Composable () -> Unit,
+    confirmationText: String? = "Continue",
+    isDismissible: Boolean? = true,
 ) {
     AlertDialog(
         title = {
-            Text(text = "Settings")
+            Text(text = title.toString())
+        },
+        text = {
+            dialogContent()
         },
         onDismissRequest = {
             if (isDismissible == true) {
@@ -25,7 +31,7 @@ fun BikeStreetsDialog(
                     onCloseClicked()
                 }
             ) {
-                Text("Continue")
+                Text(confirmationText.toString())
             }
         },
     )
