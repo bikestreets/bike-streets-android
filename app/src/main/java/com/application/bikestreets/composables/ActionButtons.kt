@@ -35,7 +35,7 @@ fun ActionButtonsContainer(
             contentDescription = stringResource(R.string.update_camera_location_button),
             onClick = { onLocationButtonClicked() }
         )
-        Spacer(modifier = Modifier.padding(4.dp))
+        Spacer(modifier = Modifier.padding(6.dp))
         BlueActionButtons(
             icon = Icons.Rounded.Settings,
             contentDescription = stringResource(R.string.info_button),

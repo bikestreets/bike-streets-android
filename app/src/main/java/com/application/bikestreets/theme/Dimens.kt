@@ -13,6 +13,6 @@ object Dimens {
 
     // General
     val defaultPadding = 16.dp
-    val tappableIconSize = 35.dp
+    val tappableIconSize = 40.dp
 
 }
