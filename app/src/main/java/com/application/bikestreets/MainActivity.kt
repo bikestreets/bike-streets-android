@@ -151,8 +151,8 @@ class MainActivity : ComponentActivity(), SharedPreferences.OnSharedPreferenceCh
 
             PreferenceConstants.MAP_TYPE_PREFERENCE_KEY -> {
                 // call this function, only to update the map style
-                // TODO, check if this is responsive
-//                loadMapboxStyle(mapView.getMapboxMap(), context = this)
+                // Changing map style type is currently disabled
+                // loadMapboxStyle(mapView.getMapboxMap(), context = this)
             }
 
             else -> {

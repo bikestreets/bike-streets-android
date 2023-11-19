@@ -28,22 +28,22 @@ fun MapboxMap(mapboxMapController: MapboxMapController, isLocationGranted: Boole
     }
 
     fun loadMapboxStyle(mapboxMap: MapboxMap, context: Context) {
-        coroutineScope.launch {
-            var mapStyle = "asset://stylejson/style.json"
+        var mapStyle = "asset://stylejson/style.json"
 
-            // apply map style conditionally, based on user's preferences.
-            if (mapTypeFromPreferences(context).equals(
-                    ContextCompat.getString(
-                        context,
-                        R.string.preference_satellite
-                    )
+        // apply map style conditionally, based on user's preferences.
+        if (mapTypeFromPreferences(context).equals(
+                ContextCompat.getString(
+                    context,
+                    R.string.preference_satellite
                 )
-            ) {
-                mapStyle = Style.SATELLITE
-            }
+            )
+        ) {
+            mapStyle = Style.SATELLITE
+        }
 
-            // Load style, on compete show layers
-            mapboxMap.loadStyleUri(mapStyle) { showMapLayers(context, it) }
+        // Load style, on compete show layers
+        mapboxMap.loadStyleUri(mapStyle) {
+            coroutineScope.launch { showMapLayers(context, it) }
         }
     }
 

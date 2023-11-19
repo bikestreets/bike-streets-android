@@ -58,7 +58,8 @@ fun showMapLayers(context: Context, mapStyle: Style) {
     val root = "geojson"
     val mAssetManager = context.assets
 
-    // TODO, may be better to fetch file in the .IO thread, then render separately
+    // Big source of lag - rendering on map will probably be always be slow
+    // But it may be possible to speed this up the IO running asynchronously?
     mAssetManager.list("$root/")?.forEach { fileName ->
         val featureCollection = featureCollectionFromStream(
             mAssetManager.open("$root/$fileName")
