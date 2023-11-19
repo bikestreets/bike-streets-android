@@ -88,28 +88,37 @@ class MainActivity : ComponentActivity(), SharedPreferences.OnSharedPreferenceCh
         val termsOfUseManager = TermsOfUseManager(this)
 
         var showInformationDialog by remember { mutableStateOf(false) }
-        var showWelcomeDialog by remember { mutableStateOf(false) }
+        var showTermsDialog by remember { mutableStateOf(false) }
+        var showWelcomeDialog by remember {
+            mutableStateOf(
+                !PermissionsManager.areLocationPermissionsGranted(
+                    this
+                )
+            )
+        }
 
 
         // Dialogs
         if (showInformationDialog) {
             InformationDialog(onCloseInformationClicked = { showInformationDialog = false })
         }
-        if (termsOfUseManager.hasUnsignedTermsOfUse()) {
-            TermsOfUseDialog(
-                onTermsAccepted = {
-                    termsOfUseManager.accept()
-                    showWelcomeDialog = true
-                },
-                viewFullTerms = { openTermsUrl(termsOfUseManager) })
-        }
         if (showWelcomeDialog) {
             WelcomeDialog(
                 onShareLocationClicked = {
                     showWelcomeDialog = false
+                    showTermsDialog = true
                     requestLocationPermission()
                 },
             )
+        }
+        // We want to show this after the
+        if (termsOfUseManager.hasUnsignedTermsOfUse() && showTermsDialog) {
+            TermsOfUseDialog(
+                onTermsAccepted = {
+                    termsOfUseManager.accept()
+                    showTermsDialog = false
+                },
+                viewFullTerms = { openTermsUrl(termsOfUseManager) })
         }
 
 
@@ -164,7 +173,9 @@ class MainActivity : ComponentActivity(), SharedPreferences.OnSharedPreferenceCh
 
     override fun onDestroy() {
         super.onDestroy()
-        sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
+        if (::sharedPreferences.isInitialized) {
+            sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
+        }
     }
 
 

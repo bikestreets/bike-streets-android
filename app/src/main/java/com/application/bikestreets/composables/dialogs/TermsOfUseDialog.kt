@@ -56,7 +56,7 @@ fun TermsOfUseContent(viewFullTerms: () -> Unit) {
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun TermsOfUseDialogPreview() {
     BikeStreetsDialog(
