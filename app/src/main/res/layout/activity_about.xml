@@ -9,18 +9,13 @@
     android:padding="16dp"
     tools:context=".AboutFragment">
 
-    <!--  The Map Legend  -->
-    <include
-        android:id="@+id/include"
-        layout="@layout/map_legend" />
-
     <!-- The Settings Section -->
     <LinearLayout
         android:id="@+id/settings"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintTop_toBottomOf="@+id/include" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- Feedback Button -->
     <Button
@@ -32,18 +27,6 @@
         android:focusable="true"
         android:text="@string/send_feedback"
         app:layout_constraintTop_toBottomOf="@+id/settings" />
-
-    <Button
-        android:id="@+id/enable_location_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/default_margin"
-        android:clickable="true"
-        android:focusable="true"
-        tools:visibility="visible"
-        android:visibility="invisible"
-        android:text="@string/enable_location_permission"
-        app:layout_constraintTop_toBottomOf="@+id/feedback_button" />
 
     <TextView
         android:id="@+id/version_number"
