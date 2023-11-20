@@ -71,7 +71,7 @@ fun BottomSheetAndMap(
                 routes = routes.value,
                 notifyRouteChosen = { route -> {} },
                 bottomSheetScaffoldState = bottomSheetScaffoldState,
-                onCloseClicked = { modifySheetScaffoldState(BottomSheetValue.Collapsed) },
+                onBottomSheetScaffoldChange = { bottomSheetValue ->  modifySheetScaffoldState(bottomSheetValue) },
                 bottomSheetContentState = bottomSheetContentState,
                 onBottomSheetContentChange = { newContentState ->
                     modifySheetContentState(

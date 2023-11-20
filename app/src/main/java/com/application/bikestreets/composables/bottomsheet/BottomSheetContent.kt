@@ -33,8 +33,12 @@ fun BottomSheetContent(
     onSearchPerformed: (Location?, Location?) -> Unit,
     routes: List<Route>,
     notifyRouteChosen: (Route) -> Unit,
-    onCloseClicked: () -> Unit,
+
+    // Expanding or collapsing
     bottomSheetScaffoldState: BottomSheetScaffoldState,
+    onBottomSheetScaffoldChange: (BottomSheetValue) -> Unit,
+
+    // Showing what content on the bottom sheet
     bottomSheetContentState: BottomSheetContentState,
     onBottomSheetContentChange: (BottomSheetContentState) -> Unit,
 ) {
@@ -51,7 +55,6 @@ fun BottomSheetContent(
     var destinationSearchIsFocused by remember { mutableStateOf(false) }
     var showRoutes by remember { mutableStateOf(false) }
 
-
     // Toggle if routes or text helper is shown
     LaunchedEffect(originSearchText) {
         showRoutes = false
@@ -61,6 +64,8 @@ fun BottomSheetContent(
     }
     LaunchedEffect(routes) {
         if (routes.isNotEmpty()) {
+            // Expand to show that routes are available
+
             showRoutes = true
         }
     }
@@ -108,7 +113,7 @@ fun BottomSheetContent(
         DragIndicator()
         TopRow(
             getTitleText(),
-            onCloseClicked = { onCloseClicked() },
+            onCloseClicked = { onBottomSheetScaffoldChange(BottomSheetValue.Collapsed) },
             isCollapsed = bottomSheetScaffoldState.bottomSheetState.isCollapsed
         )
         if (bottomSheetContentState == BottomSheetContentState.DIRECTIONS) {
@@ -119,7 +124,10 @@ fun BottomSheetContent(
                 modifier = Modifier
                     .focusRequester(destinationSearchFocusRequester)
                     .onFocusChanged { focusState ->
-                        originSearchIsFocused = focusState.isFocused
+                        if(focusState.isFocused){
+                            originSearchIsFocused = focusState.isFocused
+                            onBottomSheetScaffoldChange(BottomSheetValue.Expanded)
+                        }
                     }
             )
         }
@@ -130,7 +138,10 @@ fun BottomSheetContent(
             modifier = Modifier
                 .focusRequester(destinationSearchFocusRequester)
                 .onFocusChanged { focusState ->
-                    destinationSearchIsFocused = focusState.isFocused
+                    if(focusState.isFocused) {
+                        destinationSearchIsFocused = focusState.isFocused
+                        onBottomSheetScaffoldChange(BottomSheetValue.Expanded)
+                    }
                 }
         )
 
@@ -157,10 +168,9 @@ fun BottomSheetContent(
 @Composable
 fun BottomSheetUiPreview() {
     BottomSheetContent(
-        onSearchPerformed = { _, _ -> {} },
+        onSearchPerformed = { _, _ -> },
         routes = listOf(),
         notifyRouteChosen = {},
-        onCloseClicked = {},
         bottomSheetScaffoldState = BottomSheetScaffoldState(
             drawerState = DrawerState(
                 DrawerValue.Closed
@@ -168,7 +178,8 @@ fun BottomSheetUiPreview() {
             BottomSheetState(BottomSheetValue.Expanded),
             SnackbarHostState()
         ),
+        onBottomSheetScaffoldChange = { _ -> },
         bottomSheetContentState = BottomSheetContentState.DIRECTIONS,
-        onBottomSheetContentChange = { _ -> {} }
+        onBottomSheetContentChange = { _ -> }
     )
 }
