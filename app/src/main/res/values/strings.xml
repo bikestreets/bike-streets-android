@@ -23,7 +23,7 @@
     <string name="search_bar_instruction">Search</string>
     <string name="search_content_desc">search icon</string>
 
-    <string name="search_set_from">Set From</string>
+    <string name="search_set_origin">Set Origin</string>
     <string name="search_set_destination">Set Destination</string>
     <string name="close_bottom_drawer_description">Close bottom sheet button</string>
 
@@ -33,7 +33,7 @@
     <string name="enable_location_permission">Enable Location Marker</string>
     <string name="send_feedback">Send Feedback</string>
     <string name="version_info">v%s.%d%s</string>
-    <string name="settings_button">settings</string>
+    <string name="info_button">information</string>
     <string name="update_camera_location_button">update camera location</string>
 
 

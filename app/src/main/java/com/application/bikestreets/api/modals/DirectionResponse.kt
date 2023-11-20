@@ -18,7 +18,7 @@ data class Route(
     val weight_name: String,
     val weight: Number,
     val duration: Number,
-    val distance: Number,
+    val distance: Double,
 )
 
 data class Legs(
