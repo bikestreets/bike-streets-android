@@ -32,10 +32,11 @@
     <!-- Settings/About -->
     <string name="enable_location_permission">Enable Location Marker</string>
     <string name="send_feedback">Send Feedback</string>
-    <string name="version_info">v%s.%d%s</string>
     <string name="info_button">information</string>
     <string name="update_camera_location_button">update camera location</string>
 
+    <!-- Terns of Use -->
+    <string name="terms_instructions">You must accept our Release and Waiver, Terms of Service, and Privacy Policy to use the app.</string>
 
     <string name="no_location_access">No location - some features are limited</string>
 </resources>
