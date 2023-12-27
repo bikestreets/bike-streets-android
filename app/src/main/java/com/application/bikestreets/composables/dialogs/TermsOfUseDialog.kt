@@ -7,12 +7,14 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.application.bikestreets.R
 import com.application.bikestreets.theme.Colors
 
 @Composable
@@ -42,11 +44,7 @@ fun TermsOfUseContent(viewFullTerms: () -> Unit) {
     }
     Column {
         Text(
-            "You must accept the VAMOS Routes terms of use before you use the app.\n" +
-                    "- Thing one\n" +
-                    "- Thing two\n" +
-                    "- They run up\n" +
-                    "- They run down"
+            stringResource(R.string.terms_instructions)
         )
         Spacer(modifier = Modifier.padding(vertical = 5.dp))
         ClickableText(
