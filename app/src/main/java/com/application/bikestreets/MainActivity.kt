@@ -184,7 +184,7 @@ class MainActivity : ComponentActivity(), SharedPreferences.OnSharedPreferenceCh
         ReplaceWith("super.onBackPressed()", "androidx.activity.ComponentActivity")
     )
     override fun onBackPressed() {
-        //TODO:
+        //TODO: Ideally we want a way for the user to use the native android back button to quickly clear text fields. This is more of a nice to have
 //        if (::bottomSheetBehavior.isInitialized && bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
 //            // Clear search and collapse
 //            bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED

@@ -69,10 +69,6 @@ fun MapboxMap(mapboxMapController: MapboxMapController, isLocationGranted: Boole
                     // Attach map to controller
                     mapboxMapController.attachMapboxMap(mapView, mapboxMap, context)
                 }
-
-                // Load Map Markers
-                // TODO: do this in a different thread so UI is not blocked
-                // Initialization code if necessary, e.g., setting up listeners, starting loading, etc.
             }
         },
         update = { mapView ->
@@ -80,8 +76,6 @@ fun MapboxMap(mapboxMapController: MapboxMapController, isLocationGranted: Boole
             // For instance, you can set the camera position, update the map style, etc.
 //            val defaultLocation = Point.fromLngLat(-104.9687837, 39.7326381)
 //            moveCamera(mapView.getMapboxMap(), defaultLocation)
-
-
         }
     )
 }
